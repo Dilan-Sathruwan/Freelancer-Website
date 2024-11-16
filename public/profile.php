@@ -29,7 +29,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $last_name = $_POST['last_name'];
     $email = $_POST['email'];
     $bio = $_POST['bio'];
-    $status = $_POST['status'];
+    if ($user['role'] == 'freelancer') {
+        $status = $_POST['status'];
+    }
 
     // Validate input
     if (empty($first_name) || empty($last_name) || empty($email)) {
@@ -45,9 +47,20 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
 
         // Update user data in the database
-        $update_query = "UPDATE users SET first_name = ?, last_name = ?, email = ?, bio = ?, profile_picture = ?, status = ? WHERE id = ?";
-        $update_stmt = $pdo->prepare($update_query);
-        $update_stmt->execute([$first_name, $last_name, $email, $bio, $profile_picture, $status, $user_id]);
+        if ($user['role'] == 'freelancer') {
+            $update_query = "UPDATE users SET first_name = ?, last_name = ?, email = ?, bio = ?, profile_picture = ?, status = ? WHERE id = ?";
+        } else {
+            $update_query = "UPDATE users SET first_name = ?, last_name = ?, email = ?, bio = ?, profile_picture = ? WHERE id = ?";
+        }
+
+        $update_stmt = $conn->prepare($update_query);
+
+
+        if ($user['role'] == 'freelancer') {
+            $update_stmt->execute([$first_name, $last_name, $email, $bio, $profile_picture, $status, $user_id]);
+        } else {
+            $update_stmt->execute([$first_name, $last_name, $email, $bio, $profile_picture, $user_id]);
+        }
 
         // Update session data if email or name changed
         $_SESSION['first_name'] = $first_name;
@@ -175,13 +188,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                 <label for="profile_picture" class="form-label">Profile Picture</label>
                                 <input type="file" class="form-control" id="profile_picture" name="profile_picture">
                             </div>
-                            <div class="mb-3">
-                                <label for="status" class="form-label">Status</label>
-                                <select class="form-select" id="status" name="status">
-                                    <option value="active" <?php echo ($user['status'] == 'active') ? 'selected' : ''; ?>>Active</option>
-                                    <option value="inactive" <?php echo ($user['status'] == 'inactive') ? 'selected' : ''; ?>>Inactive</option>
-                                </select>
-                            </div>
+                            <?php
+                            if ($user['role'] == 'freelancer') { ?>
+                                <div class="mb-3">
+                                    <label for="status" class="form-label">Status</label>
+                                    <select class="form-select" id="status" name="status">
+                                        <option value="active" <?php echo ($user['status'] == 'active') ? 'selected' : ''; ?>>Active</option>
+                                        <option value="inactive" <?php echo ($user['status'] == 'inactive') ? 'selected' : ''; ?>>Inactive</option>
+                                    </select>
+                                </div>
+                            <?php }
+                            ?>
                             <button type="submit" class="btn btn-primary profile-button"><i class="fas fa-save"></i> Update Profile</button>
                         </form>
                     </div>
