@@ -118,13 +118,13 @@
                             <a href="register.php" class="nav-link">Register</a>
                         </li>
                         <li class="nav-item">
-                            <a href="profile.php" class="nav-link">Profile</a>
+                            <a href="public/profile.php" class="nav-link">Profile</a>
                         </li>
                     </ul>
 
                     <!-- Login link aligned to the right -->
                     <div class="nav-login">
-                        <a href="login.php" class="nav-link">Login</a>
+                        <a href="public/login.php" class="nav-link">Login</a>
                     </div>
                 </div>
             </div>
