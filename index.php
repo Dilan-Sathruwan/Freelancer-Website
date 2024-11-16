@@ -1,3 +1,9 @@
+<?php
+session_start();
+include_once "./config/db.php";
+
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -88,36 +94,76 @@
             text-decoration: underline;
         }
 
-        .testimonials {
-            background-color: #f8f9fa;
-            padding: 80px 20px;
-        }
+        /* Testimonials Section */
+.testimonials {
+    background-color: #f8f9fa;
+    padding: 80px 20px;
+}
 
-        .testimonial-item {
-            text-align: center;
-            padding: 30px;
-            background-color: #fff;
-            border-radius: 10px;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s ease;
-        }
+.testimonials h2 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 50px;
+}
 
-        .testimonial-item:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 25px rgba(0, 0, 0, 0.1);
-        }
+.testimonial-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 30px;
+    justify-content: center;
+}
 
-        .testimonial-item i {
-            font-size: 3rem;
-            color: #2575fc;
-            margin-bottom: 20px;
-        }
+.testimonial-item {
+    text-align: center;
+    padding: 30px;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    flex: 1 1 calc(33.333% - 30px);
+    max-width: calc(33.333% - 30px);
+}
 
-        .testimonial-item h5 {
-            font-size: 1.25rem;
-            margin-top: 15px;
-            font-weight: 500;
-        }
+.testimonial-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+}
+
+.testimonial-item i {
+    font-size: 3rem;
+    color: #2575fc;
+    margin-bottom: 20px;
+}
+
+.testimonial-item h5 {
+    font-size: 1.25rem;
+    margin-top: 15px;
+    font-weight: 600;
+    color: #333;
+}
+
+.testimonial-item p {
+    color: #555;
+    font-size: 1rem;
+    line-height: 1.6;
+}
+
+.rating {
+    color: #ffc107;
+    margin-top: 10px;
+}
+
+.rating i {
+    margin-right: 2px;
+}
+
+@media (max-width: 768px) {
+    .testimonial-item {
+        flex: 1 1 calc(100% - 30px);
+        max-width: calc(100% - 30px);
+    }
+}
 
 
         /* Add responsiveness */
@@ -138,8 +184,13 @@
 </head>
 
 <body>
-    <?php include './includes/index_header.php';?>
-    <?php include('includes/theme_toggle.php'); ?>
+
+    <?php
+    $loginPage = "./public/login.php";
+    include './includes/index_header.php';
+    include('includes/theme_toggle.php');
+    ?>
+
 
     <!-- Hero Section -->
     <section class="hero">
@@ -181,32 +232,49 @@
         </div>
     </section>
 
-    <!-- Testimonials Section -->
-    <section class="testimonials" id="testimonials">
-        <div class="container">
-            <h2 class="text-center mb-4">What Our Clients Say</h2>
-            <div class="row">
-                <div class="col-md-4 testimonial-item" data-aos="fade-up">
-                    <i class="fas fa-quote-left mb-3"></i>
-                    <p>"FreelanceHub helped me find the perfect freelancer for my project. I couldn't be happier with the results!"</p>
-                    <h5>John Doe</h5>
-                    <p>CEO, Example Corp</p>
-                </div>
-                <div class="col-md-4 testimonial-item" data-aos="fade-up" data-aos-delay="100">
-                    <i class="fas fa-quote-left mb-3"></i>
-                    <p>"Amazing platform for both freelancers and clients. The ease of use is incredible!"</p>
-                    <h5>Jane Smith</h5>
-                    <p>Freelancer</p>
-                </div>
-                <div class="col-md-4 testimonial-item" data-aos="fade-up" data-aos-delay="200">
-                    <i class="fas fa-quote-left mb-3"></i>
-                    <p>"The best experience I've had working with freelancers. Highly recommend!"</p>
-                    <h5>Michael Johnson</h5>
-                    <p>Project Manager, Tech Solutions</p>
-                </div>
-            </div>
+   <!-- Testimonials Section -->
+<section class="testimonials" id="testimonials">
+    <div class="container">
+        <h2 class="text-center mb-4" data-aos="fade-up">What Our Clients Say</h2>
+        <div class="testimonial-row">
+            <?php
+            $sql = "SELECT r.comment, r.rating, u.username FROM reviews r JOIN users u ON r.client_id = u.id";
+            try {
+                $stmt = $conn->prepare($sql);
+                $stmt->execute();
+
+                if ($stmt->rowCount() > 0) {
+                    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                        $comment = $row["comment"];
+                        $rating = $row["rating"];
+                        $userName = $row["username"];
+            ?>
+                        <div class="testimonial-item" data-aos="fade-up" data-aos-delay="<?php echo rand(100, 500); ?>">
+                            <i class="fas fa-quote-left mb-3"></i>
+                            <p><?php echo htmlspecialchars($comment); ?></p>
+                            <h5><?php echo htmlspecialchars($userName); ?></h5>
+                            <div class="rating">
+                                <?php
+                                for ($i = 1; $i <= 5; $i++) {
+                                    echo $i <= $rating ? '<i class="fas fa-star"></i>' : '<i class="far fa-star"></i>';
+                                }
+                                ?>
+                            </div>
+                        </div>
+            <?php
+                    }
+                } else {
+                    echo "<p class='text-center'>No reviews found.</p>";
+                }
+            } catch (PDOException $e) {
+                echo "<p class='text-center'>Error fetching reviews: " . htmlspecialchars($e->getMessage()) . "</p>";
+            }
+            ?>
         </div>
-    </section>
+    </div>
+</section>
+
+
 
     <?php include('includes/footer.php'); ?>
 
@@ -219,7 +287,6 @@
     <script>
         // Initialize AOS Animations
         AOS.init();
-        
     </script>
 
 </body>
