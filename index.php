@@ -137,7 +137,10 @@
 </head>
 
 <body>
-    <?php include './includes/index_header.php';?>
+    <?php
+    $loginPage = "./public/login.php";
+    include './includes/index_header.php';
+    ?>
 
     <!-- Hero Section -->
     <section class="hero">
@@ -224,7 +227,6 @@
     <script>
         // Initialize AOS Animations
         AOS.init();
-        
     </script>
 
 </body>
