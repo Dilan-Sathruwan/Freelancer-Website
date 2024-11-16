@@ -1,3 +1,55 @@
+<?php
+include_once "../../Freelancer-Website/config/db.php";
+
+if (isset($_POST["submit"])) {
+  if (!empty($_POST["username"]) && !empty($_POST["password"])) {
+    $username = trim($_POST["username"]);
+    $password = trim($_POST["password"]);
+
+    try {
+      $sql = "SELECT * FROM users WHERE username = :username";
+
+      $stmt = $conn->prepare($sql);
+      $stmt->bindParam(":username", $username, PDO::PARAM_STR);
+      $stmt->execute();
+
+      if ($stmt->rowCount() > 0) {
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($password == $row["password"]) {
+          session_start();
+          $_SESSION["id"] = $row["id"];
+          $_SESSION["username"] = $row["username"];
+          $_SESSION["role"] = $row["role"];
+
+          if ($row["role"] == "freelancer") {
+            header("Location: ../freelancer/index.php");
+            exit();
+          } else if ($row["role"] == "client") {
+            header("Location: ../client/index.php");
+            exit();
+          } else if ($row["role"] == "admin") {
+            header("Location: ../admin/index.php");
+            exit();
+          }
+          exit();
+        } else {
+          echo "Invalid username or password.";
+        }
+      } else {
+        echo "Invalid username or password.";
+      }
+    } catch (PDOException $e) {
+      echo "Database error: " . $e->getMessage();
+    }
+  } else {
+    echo "Please fill in all required fields.";
+  }
+}
+
+
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -15,9 +67,11 @@
 </head>
 
 <body>
-  <h1 class="backToHome">back to home</h1>
+
+  <button class="backToHome"><a href="../index.php" class="text-white">back to home</a></button>
   <div class="border-red form">
-    <form action="" method="POST">
+    <form action="./login.php" method="POST">
+
       <h1 class="text-center ">Login</h2>
         <div class="input-group">
           <label for="username">Username</label>
@@ -27,7 +81,7 @@
           <label for="password">Password</label>
           <input type="password" id="password" name="password" required />
         </div>
-        <button type="submit">Login</button>
+        <button type="submit" name="submit">Login</button>
         <div class="forgot-password">
           <a href="#">Forgot Password?</a>
         </div>

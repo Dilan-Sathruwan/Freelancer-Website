@@ -6,10 +6,10 @@
 // $dbName = "FreelancerWebsite";
 
 // A 
-// $serverName = "localhost:3307";
-// $username = "root";
-// $password = "1234";
-// $dbName = "FreelancerWebsite";
+$serverName = "localhost:3307";
+$username = "root";
+$password = "1234";
+$dbName = "FreelancerWebsite";
 
 
 
