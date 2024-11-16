@@ -5,10 +5,16 @@
 // $password = "12345";
 // $dbName = "FreelancerWebsite";
 
+// A 
+// $serverName = "localhost";
+// $username = "root";
+// $password = "12345";
+// $dbName = "FreelancerWebsite";
 
-$serverName = "localhost";
+// L 
+$serverName = "localhost:3307";
 $username = "root";
-$password = "";
+$password = "1234";
 $dbName = "FreelancerWebsite";
 
 

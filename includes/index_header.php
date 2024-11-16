@@ -144,12 +144,11 @@
                     <div class="nav-login">
                         <?php
                         if (isset($_SESSION['id'])) {
-                            echo '<a href="../config/logout.php" class="nav-link">Logout</a>';
+                            echo '<a href="' . ($logoutPage ? $logoutPage : "../config/logout.php") . '" class="nav-link">Logout</a>';
                         } else {
                             echo '<a href="' . ($loginPage ? $loginPage : "../public/login.php") . '" class="nav-link">Login</a>';
                         }
                         ?>
-
                     </div>
                 </div>
             </div>
