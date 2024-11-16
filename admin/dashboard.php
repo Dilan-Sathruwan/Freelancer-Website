@@ -2,7 +2,7 @@
 
 // include '../includes/header.php';
 // include '../includes/session.php';
-include '../config/db.php'; 
+include '../config/db.php';
 
 // Ensure only admins can access this page
 // if ($_SESSION['role'] !== 'admin') {
@@ -10,11 +10,17 @@ include '../config/db.php';
 //     exit;
 // }
 
+$freelancerCount = $conn->query("SELECT COUNT(*) FROM users WHERE role = 'freelancer'")->fetchColumn();
+$clientCount = $conn->query("SELECT COUNT(*) FROM users WHERE role = 'client'")->fetchColumn();
+$adminCount = $conn->query("SELECT COUNT(*) FROM users WHERE role = 'admin'")->fetchColumn();
 
+$stmt = $conn->query("SELECT id, username, first_name, last_name, email, status FROM users");
+$users = $stmt->fetchAll();
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -82,11 +88,14 @@ include '../config/db.php';
             margin-bottom: 20px;
         }
 
-        table, th, td {
+        table,
+        th,
+        td {
             border: 1px solid #ddd;
         }
 
-        th, td {
+        th,
+        td {
             padding: 10px;
             text-align: left;
         }
@@ -114,6 +123,7 @@ include '../config/db.php';
         }
     </style>
 </head>
+
 <body>
     <div class="dashboard-container">
         <div class="dashboard-header">
@@ -126,19 +136,25 @@ include '../config/db.php';
         <div class="stats-cards">
             <div class="card">
                 <div class="icon"><i class="fas fa-user-graduate"></i></div>
-                <h3><</h3>
-                <p>Total Students</p>
+                <h3><?php echo $freelancerCount; ?></h3>
+                <p>Total Freelancer</p>
             </div>
             <div class="card">
                 <div class="icon"><i class="fas fa-chalkboard-teacher"></i></div>
-                <h3></h3>
-                <p>Total Lecturers</p>
+                <h3><?php echo $clientCount; ?></h3>
+                <p>Total Client</p>
             </div>
             <div class="card">
                 <div class="icon"><i class="fas fa-building"></i></div>
-                <h3></h3>
-                <p>Total Departments</p>
+                <h3><?php echo $adminCount; ?></h3>
+                <p>Total Admin</p>
             </div>
+        </div>
+        <!-- Button section -->
+        <div class="button-section">
+            <a href="manage_client.php" title="Manage Users"><i class="fas fa-user-plus"></i> Manage Client</a>
+            <a href="manage_admins.php"><i class="fas fa-cogs"></i> Manage Admins</a>
+            <a href="manage_freelancers.php"><i class="fas fa-chart-line"></i> Manage Freelancers</a>
         </div>
 
         <!-- Recent activity -->
@@ -148,18 +164,43 @@ include '../config/db.php';
                 <thead>
                     <tr>
                         <th>ID</th>
-                        <th>Description</th>
-                        <th>Time</th>
+                        <th>Username</th>
+                        <th>First Name</th>
+                        <th>Last Name</th>
+                        <th>Email</th>
+                        <th>Status</th>
+                        <th>Action</th>
                     </tr>
                 </thead>
                 <tbody>
-                    
+                    <?php if (!empty($users)): ?>
+                        <?php foreach ($users as $user): ?>
+                            <tr>
+                                <td><?php echo htmlspecialchars($user['id']); ?></td>
+                                <td><?php echo htmlspecialchars($user['username']); ?></td>
+                                <td><?php echo htmlspecialchars($user['first_name']); ?></td>
+                                <td><?php echo htmlspecialchars($user['last_name']); ?></td>
+                                <td><?php echo htmlspecialchars($user['email']); ?></td>
+                                <td><?php echo htmlspecialchars($user['status']); ?></td>
+                                <td>
+                                    <a href="edit_user.php?id=<?php echo $user['id']; ?>" class="btn btn-warning">Edit</a>
+                                    <a href="delete_user.php?id=<?php echo $user['id']; ?>" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this user?');">Delete</a>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <tr>
+                            <td colspan="7">No users found.</td>
+                        </tr>
+                    <?php endif; ?>
                 </tbody>
             </table>
+
             <a href="reports.php" class="btn">View All Reports</a>
         </div>
     </div>
 </body>
+
 </html>
 <?php
 // Include footer

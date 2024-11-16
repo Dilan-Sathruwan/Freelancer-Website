@@ -188,6 +188,7 @@ include_once "./config/db.php";
 
     <?php
     $loginPage = "./public/login.php";
+    $regPage = "./public/sign_up.php";
     include './includes/index_header.php';
     include('includes/theme_toggle.php');
     ?>
