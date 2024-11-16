@@ -75,7 +75,7 @@ include_once "./config/db.php";
             transform: translateY(-10px);
             box-shadow: 0 15px 25px rgba(0, 0, 0, 0.2);
         }
-        
+
 
         .footer {
             background-color: #343a40;
@@ -94,9 +94,24 @@ include_once "./config/db.php";
             text-decoration: underline;
         }
 
+        /* Testimonials Section */
         .testimonials {
             background-color: #f8f9fa;
             padding: 80px 20px;
+        }
+
+        .testimonials h2 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 50px;
+        }
+
+        .testimonial-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            justify-content: center;
         }
 
         .testimonial-item {
@@ -105,12 +120,14 @@ include_once "./config/db.php";
             background-color: #fff;
             border-radius: 10px;
             box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s ease;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            flex: 1 1 calc(33.333% - 30px);
+            max-width: calc(33.333% - 30px);
         }
 
         .testimonial-item:hover {
             transform: translateY(-5px);
-            box-shadow: 0 15px 25px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
         }
 
         .testimonial-item i {
@@ -122,7 +139,30 @@ include_once "./config/db.php";
         .testimonial-item h5 {
             font-size: 1.25rem;
             margin-top: 15px;
-            font-weight: 500;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .testimonial-item p {
+            color: #555;
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+
+        .rating {
+            color: #ffc107;
+            margin-top: 10px;
+        }
+
+        .rating i {
+            margin-right: 2px;
+        }
+
+        @media (max-width: 768px) {
+            .testimonial-item {
+                flex: 1 1 calc(100% - 30px);
+                max-width: calc(100% - 30px);
+            }
         }
 
 
@@ -145,13 +185,10 @@ include_once "./config/db.php";
 
 <body>
 
-    <?php include './includes/index_header.php';?>
-    <?php include('includes/theme_toggle.php'); ?>
-
     <?php
     $loginPage = "./public/login.php";
-    $regPage = "./public/sign_up.php";
     include './includes/index_header.php';
+    include('includes/theme_toggle.php');
     ?>
 
 
@@ -198,43 +235,48 @@ include_once "./config/db.php";
     <!-- Testimonials Section -->
     <section class="testimonials" id="testimonials">
         <div class="container">
-            <h2 class="text-center mb-4">What Our Clients Say</h2>
-            <?php
-            $sql = "SELECT r.comment, r.rating, u.username FROM reviews r JOIN users u ON r.client_id = u.id";
+            <h2 class="text-center mb-4" data-aos="fade-up">What Our Clients Say</h2>
+            <div class="testimonial-row">
+                <?php
+                $sql = "SELECT r.comment, r.rating, u.username FROM reviews r JOIN users u ON r.client_id = u.id";
+                try {
+                    $stmt = $conn->prepare($sql);
+                    $stmt->execute();
 
-            try {
-                $stmt = $conn->prepare($sql);
-                $stmt->execute();
-
-                if ($stmt->rowCount() > 0) {
-                    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-                        $comment = $row["comment"];
-                        $rating = $row["rating"];
-                        $userName = $row["username"];
-            ?>
-                        <div class="row">
-                            <div class="col-md-4 testimonial-item" data-aos="fade-up">
+                    if ($stmt->rowCount() > 0) {
+                        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                            $comment = $row["comment"];
+                            $rating = $row["rating"];
+                            $userName = $row["username"];
+                ?>
+                            <div class="testimonial-item" data-aos="fade-up" data-aos-delay="<?php echo rand(100, 500); ?>">
                                 <i class="fas fa-quote-left mb-3"></i>
                                 <p><?php echo htmlspecialchars($comment); ?></p>
                                 <h5><?php echo htmlspecialchars($userName); ?></h5>
-                                <p><?php echo htmlspecialchars($rating); ?></p>
+                                <div class="rating">
+                                    <?php
+                                    for ($i = 1; $i <= 5; $i++) {
+                                        echo $i <= $rating ? '<i class="fas fa-star"></i>' : '<i class="far fa-star"></i>';
+                                    }
+                                    ?>
+                                </div>
                             </div>
-                        </div>
-            <?php
+                <?php
+                        }
+                    } else {
+                        echo "<p class='text-center'>No reviews found.</p>";
                     }
-                } else {
-                    echo "<p class='text-center'>No reviews found.</p>";
+                } catch (PDOException $e) {
+                    echo "<p class='text-center'>Error fetching reviews: " . htmlspecialchars($e->getMessage()) . "</p>";
                 }
-            } catch (PDOException $e) {
-                echo "<p class='text-center'>Error fetching reviews: " . htmlspecialchars($e->getMessage()) . "</p>";
-            }
-            ?>
+                ?>
+            </div>
         </div>
     </section>
 
 
-    <?php include('includes/footer.php'); ?>
 
+    <?php include('includes/footer.php'); ?>
 
 
     <!-- Bootstrap JS, Popper.js, and AOS Script -->
