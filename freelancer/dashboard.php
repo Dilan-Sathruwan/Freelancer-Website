@@ -3,6 +3,7 @@ session_start();
 
 include '../config/db.php'; // Include database connection
 
+
 // Fetch freelancer's profile info
 $user_id = $_SESSION['id'];
 $stmt = $conn->prepare("SELECT * FROM users WHERE id = ? AND role = 'freelancer'");
@@ -39,8 +40,7 @@ $freelancer = $stmt->fetch();
             background-color: #0056b3;
         }
 
-        .table th,
-        .table td {
+        .table th, .table td {
             text-align: center;
         }
     </style>
@@ -122,3 +122,4 @@ $freelancer = $stmt->fetch();
 </body>
 
 </html>
+
