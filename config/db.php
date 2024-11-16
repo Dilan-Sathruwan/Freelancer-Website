@@ -3,13 +3,13 @@
 // $serverName = "localhost:3306";
 // $username = "root";
 // $password = "1234";
-// $dbName = "freelancer";
+// $dbName = "FreelancerWebsite";
 
 // A 
 // $serverName = "localhost:3307";
 // $username = "root";
 // $password = "1234";
-// $dbName = "freelancer";
+// $dbName = "FreelancerWebsite";
 
 
 
