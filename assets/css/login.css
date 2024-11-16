@@ -6,12 +6,10 @@ body {
     justify-content: center;
     align-items: center;
     min-height: 100vh;
+    position: relative;
 }
 
-.backToHome{
-    position: absolute;
-    inset: 0;
-}
+
 
 .form {
     background: rgba(255, 255, 255, 0.616);
@@ -62,7 +60,6 @@ button:hover {
 }
 
 .forgot-password a {
-    color: #007bff;
     text-decoration: none;
 }
 
@@ -70,3 +67,10 @@ button:hover {
     text-decoration: underline;
 }
 
+.backToHome{
+    position: absolute;
+    inset: 0;
+    width: 200px;
+    height: 50px;
+
+}

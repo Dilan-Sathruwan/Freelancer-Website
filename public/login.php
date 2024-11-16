@@ -15,7 +15,7 @@
 </head>
 
 <body>
-  <h1 class="backToHome">back to home</h1>
+  <button class="backToHome"><a href="../index.php" class="text-white">back to home</a></button>
   <div class="border-red form">
     <form action="" method="POST">
       <h1 class="text-center ">Login</h2>
