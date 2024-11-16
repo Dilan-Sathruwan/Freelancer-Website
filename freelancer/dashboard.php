@@ -2,10 +2,10 @@
 session_start();
 
 include '../config/db.php'; // Include database connection
-include '../includes/session.php'; // Include session management
+
 
 // Fetch freelancer's profile info
-$user_id = $_SESSION['user_id']; // Assuming the user is logged in and the user ID is stored in session
+$user_id = $_SESSION['id'];
 $stmt = $conn->prepare("SELECT * FROM users WHERE id = ? AND role = 'freelancer'");
 $stmt->execute([$user_id]);
 $freelancer = $stmt->fetch();
@@ -122,3 +122,4 @@ $freelancer = $stmt->fetch();
 </body>
 
 </html>
+

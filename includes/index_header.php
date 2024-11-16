@@ -149,7 +149,9 @@
                             echo '<a href="' . ($loginPage ? $loginPage : "../public/login.php") . '" class="nav-link">Login</a>';
                         }
                         ?>
+
                     </div>
+
 
                     </div>
                 </div>

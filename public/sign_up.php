@@ -9,10 +9,11 @@ if (isset($_POST['submit'])) {
     $username = $_POST['username'];
     $password = $_POST['password'];
     $email = $_POST['email'];
+    $role = $_POST['role'];
 
 
-    $sql = "INSERT INTO users (first_name, last_name, username, password, email) 
-            VALUES (:first_name, :last_name, :username, :password, :email)";
+    $sql = "INSERT INTO users (first_name, last_name, username, password, email,role) 
+            VALUES (:first_name, :last_name, :username, :password, :email,:role)";
 
     $stmt = $conn->prepare($sql);
 
@@ -21,6 +22,7 @@ if (isset($_POST['submit'])) {
     $stmt->bindParam(':username', $username);
     $stmt->bindParam(':password', $password);
     $stmt->bindParam(':email', $email);
+    $stmt->bindParam(':role', $role);
 
     try {
 
@@ -71,6 +73,13 @@ if (isset($_POST['submit'])) {
             <div class="form-group">
                 <label for="password">Password</label>
                 <input type="password" id="password" name="password" class="form-control" required />
+            </div>
+            <div class="form-group">
+                <label for="role">Role</label>
+                <select class="form-control" id="role" name="role" required>
+                    <option value="freelancer">Freelancer</option>
+                    <option value="client">Client</option>
+                </select>
             </div>
             <div class="form-group">
                 <label for="email">Email</label>
