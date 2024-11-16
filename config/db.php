@@ -8,7 +8,7 @@
 // A 
 // $serverName = "localhost";
 // $username = "root";
-// $password = "";
+// $password = "12345";
 // $dbName = "FreelancerWebsite";
 
 // L 

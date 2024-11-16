@@ -95,7 +95,6 @@ include_once "./config/db.php";
         }
 
         /* Testimonials Section */
-
         .testimonials {
             background-color: #f8f9fa;
             padding: 80px 20px;
@@ -166,6 +165,22 @@ include_once "./config/db.php";
             }
         }
 
+        .rating {
+            color: #ffc107;
+            margin-top: 10px;
+        }
+
+        .rating i {
+            margin-right: 2px;
+        }
+
+        @media (max-width: 768px) {
+            .testimonial-item {
+                flex: 1 1 calc(100% - 30px);
+                max-width: calc(100% - 30px);
+            }
+        }
+
 
         /* Add responsiveness */
         @media (max-width: 768px) {
@@ -189,8 +204,6 @@ include_once "./config/db.php";
     <?php
     $loginPage = "./public/login.php";
     $regPage = "./public/sign_up.php";
-    $logoutPage = "./config/logout.php";
-
     include './includes/index_header.php';
     include('includes/theme_toggle.php');
     ?>
@@ -237,6 +250,7 @@ include_once "./config/db.php";
     </section>
 
 
+
     <!-- Testimonials Section -->
     <section class="testimonials" id="testimonials">
         <div class="container">
@@ -265,7 +279,8 @@ include_once "./config/db.php";
                                     }
                                     ?>
                                 </div>
-                    <?php
+                            </div>
+                <?php
                         }
                     } else {
                         echo "<p class='text-center'>No reviews found.</p>";
@@ -273,13 +288,10 @@ include_once "./config/db.php";
                 } catch (PDOException $e) {
                     echo "<p class='text-center'>Error fetching reviews: " . htmlspecialchars($e->getMessage()) . "</p>";
                 }
-                    ?>
-                            </div>
+                ?>
             </div>
         </div>
     </section>
-
-
 
     <?php include('includes/footer.php'); ?>
 
