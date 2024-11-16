@@ -2,28 +2,25 @@
 // Start the session
 session_start();
 
-// Include the database connection and other necessary files
-include('config/db_connection.php');
-include('includes/session.php');
+include('../config/db.php');
 
-// Check if the user is logged in, redirect to login page if not
-if (!isset($_SESSION['user_id'])) {
+if (!isset($_SESSION['id'])) {
     header('Location: login.php');
     exit();
 }
 
-// Get the user ID from the session
-$user_id = $_SESSION['user_id'];
+
+$user_id = $_SESSION['id'];
 
 // Fetch user data from the database
-$query = "SELECT * FROM users WHERE id = ?";
-$stmt = $pdo->prepare($query);
-$stmt->execute([$user_id]);
+$query = "SELECT * FROM users WHERE id = :id";
+$stmt = $conn->prepare($query);
+$stmt->execute(['id' => $user_id]);
 $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
 
 if (!$user) {
     echo "User not found.";
-    exit();
 }
 
 // Handle profile update
@@ -119,7 +116,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 </style>
 
-<?php include('includes/header.php'); ?>
+<?php include('../includes/index_header.php'); ?>
 
 <!-- Profile Section -->
 <section class="profile py-5" data-aos="fade-up" data-aos-duration="1000">
@@ -194,11 +191,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     </div>
 </section>
 
-<?php include('includes/footer.php'); ?>
+<?php include('../includes/footer.php'); ?>
 
 <!-- AOS Library Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
 <script>
     AOS.init();
 </script>
-
