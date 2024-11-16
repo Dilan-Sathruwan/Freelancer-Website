@@ -75,7 +75,7 @@ include_once "./config/db.php";
             transform: translateY(-10px);
             box-shadow: 0 15px 25px rgba(0, 0, 0, 0.2);
         }
-        
+
 
         .footer {
             background-color: #343a40;
@@ -95,6 +95,7 @@ include_once "./config/db.php";
         }
 
         /* Testimonials Section */
+
 .testimonials {
     background-color: #f8f9fa;
     padding: 80px 20px;
@@ -185,9 +186,6 @@ include_once "./config/db.php";
 
 <body>
 
-    <?php include './includes/index_header.php';?>
-    <?php include('includes/theme_toggle.php'); ?>
-
     <?php
     $loginPage = "./public/login.php";
     include './includes/index_header.php';
@@ -235,6 +233,7 @@ include_once "./config/db.php";
         </div>
     </section>
 
+
    <!-- Testimonials Section -->
 <section class="testimonials" id="testimonials">
     <div class="container">
@@ -263,23 +262,23 @@ include_once "./config/db.php";
                                 }
                                 ?>
                             </div>
-                        </div>
-            <?php
+                <?php
+                        }
+                    } else {
+                        echo "<p class='text-center'>No reviews found.</p>";
                     }
-                } else {
-                    echo "<p class='text-center'>No reviews found.</p>";
+                } catch (PDOException $e) {
+                    echo "<p class='text-center'>Error fetching reviews: " . htmlspecialchars($e->getMessage()) . "</p>";
                 }
-            } catch (PDOException $e) {
-                echo "<p class='text-center'>Error fetching reviews: " . htmlspecialchars($e->getMessage()) . "</p>";
-            }
-            ?>
+                ?>
+            </div>
         </div>
     </div>
 </section>
 
 
-    <?php include('includes/footer.php'); ?>
 
+    <?php include('includes/footer.php'); ?>
 
 
     <!-- Bootstrap JS, Popper.js, and AOS Script -->
