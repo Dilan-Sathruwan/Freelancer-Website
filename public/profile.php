@@ -29,6 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $last_name = $_POST['last_name'];
     $email = $_POST['email'];
     $bio = $_POST['bio'];
+
     if ($user['role'] == 'freelancer') {
         $status = $_POST['status'];
     }
