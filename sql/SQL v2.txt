@@ -1,0 +1,140 @@
+-- Create the database
+CREATE DATABASE IF NOT EXISTS FreelancerWebsite;
+USE FreelancerWebsite;
+
+-- Table: Users (Admin, Freelancer, Client)
+CREATE TABLE users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    role ENUM('admin', 'freelancer', 'client') NOT NULL,
+    first_name VARCHAR(50) NOT NULL,
+    last_name VARCHAR(50) NOT NULL,
+    email VARCHAR(100) NOT NULL UNIQUE,
+    profile_picture VARCHAR(255) DEFAULT NULL,
+    bio VARCHAR(255) DEFAULT NULL,
+    status ENUM('active', 'inactive') DEFAULT 'active',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- Table: Categories (Gig Categories)
+CREATE TABLE categories (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL UNIQUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Table: Gigs (Freelancer services)
+CREATE TABLE gigs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    freelancer_id INT NOT NULL,
+    title VARCHAR(100) NOT NULL,
+    description TEXT NOT NULL,
+    category_id INT NOT NULL,
+    price DECIMAL(10, 2) NOT NULL CHECK (price > 0),
+    delivery_time INT NOT NULL CHECK (delivery_time > 0),
+    image VARCHAR(255) DEFAULT NULL,
+    status ENUM('active', 'inactive', 'deleted') DEFAULT 'active',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (freelancer_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE CASCADE
+);
+
+-- Table: Job Requests (Client hires Freelancer)
+CREATE TABLE job_requests (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    client_id INT NOT NULL,
+    freelancer_id INT NOT NULL,
+    gig_id INT NOT NULL,
+    status ENUM('pending', 'accepted', 'completed', 'cancelled') DEFAULT 'pending',
+    request_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    completion_date DATETIME DEFAULT NULL,
+    FOREIGN KEY (client_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (freelancer_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (gig_id) REFERENCES gigs(id) ON DELETE CASCADE
+);
+
+-- Table: Reviews (Clients review Freelancers)
+CREATE TABLE reviews (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    client_id INT NOT NULL,
+    freelancer_id INT NOT NULL,
+    gig_id INT NOT NULL,
+    rating TINYINT NOT NULL CHECK (rating BETWEEN 1 AND 5),
+    comment TEXT DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (client_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (freelancer_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (gig_id) REFERENCES gigs(id) ON DELETE CASCADE
+);
+
+-- Table: Admin Logs (Track admin activities)
+CREATE TABLE admin_logs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    admin_id INT NOT NULL,
+    action VARCHAR(255) NOT NULL,
+    details TEXT DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (admin_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Add indexes for optimization
+CREATE INDEX idx_user_role ON users(role);
+CREATE INDEX idx_user_status ON users(status);
+CREATE INDEX idx_category_name ON categories(name);
+CREATE INDEX idx_gig_status ON gigs(status);
+CREATE INDEX idx_request_status ON job_requests(status);
+CREATE INDEX idx_review_rating ON reviews(rating);
+
+-- Insert sample data
+
+-- Sample Admin
+INSERT INTO users (username, password, role, first_name, last_name, email, status) 
+VALUES 
+('admin', '123', 'admin', 'Admin', 'User', 'admin@example.com', 'active');
+
+-- Sample Freelancers
+INSERT INTO users (username, password, role, first_name, last_name, email, status) 
+VALUES 
+('free1', '123', 'freelancer', 'John', 'Doe', 'john.doe@example.com', 'active'),
+('free2', '456', 'freelancer', 'Jane', 'Smith', 'jane.smith@example.com', 'active');
+
+-- Sample Clients
+INSERT INTO users (username, password, role, first_name, last_name, email, status) 
+VALUES 
+('cl1', '123', 'client', 'Michael', 'Johnson', 'michael.johnson@example.com', 'active'),
+('cl2', '456', 'client', 'Emily', 'Davis', 'emily.davis@example.com', 'active');
+
+-- Sample Categories
+INSERT INTO categories (name) 
+VALUES 
+('Web Development'), 
+('Graphic Design'), 
+('Content Writing'), 
+('Digital Marketing');
+
+-- Sample Gigs
+INSERT INTO gigs (freelancer_id, title, description, category_id, price, delivery_time, image, status) 
+VALUES 
+(2, 'Build a Responsive Website', 'I will create a professional, responsive website using the latest technologies.', 1, 500.00, 7, NULL, 'active'),
+(3, 'Design a Logo', 'Professional logo design for your brand.', 2, 100.00, 3, NULL, 'active');
+
+-- Sample Job Requests
+INSERT INTO job_requests (client_id, freelancer_id, gig_id, status) 
+VALUES 
+(4, 2, 1, 'pending'), 
+(5, 3, 2, 'completed');
+
+-- Sample Reviews
+INSERT INTO reviews (client_id, freelancer_id, gig_id, rating, comment) 
+VALUES 
+(4, 2, 1, 5, 'Great work! Highly recommend.'), 
+(5, 3, 2, 4, 'Good logo design, but took slightly longer than expected.');
+
+-- Sample Admin Logs
+INSERT INTO admin_logs (admin_id, action, details) 
+VALUES 
+(1, 'Create Category', 'Added category: Digital Marketing'), 
+(1, 'Delete User', 'Deactivated user ID: 4');

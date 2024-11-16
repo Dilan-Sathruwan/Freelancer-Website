@@ -1,20 +1,15 @@
 <?php
-// Include necessary files
-include '../includes/header.php'; // Include header/navigation
-include '../includes/session.php'; // Session management
-include '../config/db.php'; // Database connection
+
+// include '../includes/header.php';
+// include '../includes/session.php';
+include '../config/db.php'; 
 
 // Ensure only admins can access this page
-if ($_SESSION['role'] !== 'admin') {
-    header("Location: ../public/index.php");
-    exit;
-}
+// if ($_SESSION['role'] !== 'admin') {
+//     header("Location: ../public/index.php");
+//     exit;
+// }
 
-// Fetch data for dashboard stats
-// Assuming table names: students, lecturers, departments
-$total_students = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) AS count FROM students"))['count'];
-$total_lecturers = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) AS count FROM lecturers"))['count'];
-$total_departments = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) AS count FROM departments"))['count'];
 
 ?>
 
@@ -125,22 +120,23 @@ $total_departments = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) AS 
             <h1>Welcome, Admin!</h1>
             <p>Here is your overview of the system</p>
         </div>
+        <a href="../config/db.php"></a>
 
         <!-- Stats cards -->
         <div class="stats-cards">
             <div class="card">
                 <div class="icon"><i class="fas fa-user-graduate"></i></div>
-                <h3><?php echo $total_students; ?></h3>
+                <h3><</h3>
                 <p>Total Students</p>
             </div>
             <div class="card">
                 <div class="icon"><i class="fas fa-chalkboard-teacher"></i></div>
-                <h3><?php echo $total_lecturers; ?></h3>
+                <h3></h3>
                 <p>Total Lecturers</p>
             </div>
             <div class="card">
                 <div class="icon"><i class="fas fa-building"></i></div>
-                <h3><?php echo $total_departments; ?></h3>
+                <h3></h3>
                 <p>Total Departments</p>
             </div>
         </div>
@@ -157,17 +153,7 @@ $total_departments = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) AS 
                     </tr>
                 </thead>
                 <tbody>
-                    <?php
-                    // Fetch recent activity logs
-                    $logs = mysqli_query($conn, "SELECT * FROM activity_logs ORDER BY created_at DESC LIMIT 5");
-                    while ($row = mysqli_fetch_assoc($logs)) {
-                        echo "<tr>
-                            <td>{$row['id']}</td>
-                            <td>{$row['description']}</td>
-                            <td>{$row['created_at']}</td>
-                        </tr>";
-                    }
-                    ?>
+                    
                 </tbody>
             </table>
             <a href="reports.php" class="btn">View All Reports</a>
@@ -177,5 +163,5 @@ $total_departments = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) AS 
 </html>
 <?php
 // Include footer
-include '../includes/footer.php';
+// include '../includes/footer.php';
 ?>
