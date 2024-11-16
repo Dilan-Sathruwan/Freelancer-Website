@@ -136,7 +136,7 @@
                             <a href="register.php" class="nav-link">Register</a>
                         </li>
                         <li class="nav-item">
-                            <a href="profile.php" class="nav-link">Profile</a>
+                            <a href="public/profile.php" class="nav-link">Profile</a>
                         </li>
                     </ul>
 
@@ -145,9 +145,6 @@
                         <a href="<?php echo $loginPage ? $loginPage : "../public/login.php"; ?>" class="nav-link">Login</a>
                     </div>
                 </div>
-
-                <!-- Include theme toggle from the separate PHP file -->
-                <?php include('includes/theme_toggle.php'); ?>
             </div>
         </nav>
     </header>
