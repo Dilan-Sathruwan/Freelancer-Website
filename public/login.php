@@ -67,9 +67,11 @@ if (isset($_POST["submit"])) {
 </head>
 
 <body>
+
   <button class="backToHome"><a href="../index.php" class="text-white">back to home</a></button>
   <div class="border-red form">
     <form action="./login.php" method="POST">
+
       <h1 class="text-center ">Login</h2>
         <div class="input-group">
           <label for="username">Username</label>

@@ -185,6 +185,9 @@ include_once "./config/db.php";
 
 <body>
 
+    <?php include './includes/index_header.php';?>
+    <?php include('includes/theme_toggle.php'); ?>
+
     <?php
     $loginPage = "./public/login.php";
     include './includes/index_header.php';
@@ -275,8 +278,8 @@ include_once "./config/db.php";
 </section>
 
 
-
     <?php include('includes/footer.php'); ?>
+
 
 
     <!-- Bootstrap JS, Popper.js, and AOS Script -->

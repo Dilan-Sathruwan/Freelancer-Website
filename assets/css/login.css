@@ -6,10 +6,7 @@ body {
     justify-content: center;
     align-items: center;
     min-height: 100vh;
-    position: relative;
 }
-
-
 
 .form {
     background: rgba(255, 255, 255, 0.616);
@@ -67,6 +64,7 @@ button:hover {
     text-decoration: underline;
 }
 
+
 .backToHome{
     position: absolute;
     inset: 0;
@@ -74,3 +72,4 @@ button:hover {
     height: 50px;
 
 }
+
