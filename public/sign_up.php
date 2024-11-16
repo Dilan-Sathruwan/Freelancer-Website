@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 require_once '../config/db.php';
 
@@ -7,7 +7,7 @@ if (isset($_POST['submit'])) {
     $first_name = $_POST['first_name'];
     $last_name = $_POST['last_name'];
     $username = $_POST['username'];
-    $password = $_POST['password']; 
+    $password = $_POST['password'];
     $email = $_POST['email'];
 
 
@@ -31,7 +31,6 @@ if (isset($_POST['submit'])) {
         header('Location: login.php?error=' . $e->getMessage());
         exit;
     }
-
 }
 ?>
 
@@ -54,32 +53,32 @@ if (isset($_POST['submit'])) {
 
 <body>
     <div class="border-red form">
-    <form action="" method="POST">
-    <h1 class="text-center">Sign Up</h1>
-    
-    <div class="form-group">
-        <label for="first_name">First Name</label>
-        <input type="text" id="first_name" name="first_name" class="form-control" required />
-    </div>
-    <div class="form-group">
-        <label for="last_name">Last Name</label>
-        <input type="text" id="last_name" name="last_name" class="form-control" required />
-    </div>
-    <div class="form-group">
-        <label for="username">Username</label>
-        <input type="text" id="username" name="username" class="form-control" required />
-    </div>
-    <div class="form-group">
-        <label for="password">Password</label>
-        <input type="password" id="password" name="password" class="form-control" required />
-    </div>
-    <div class="form-group">
-        <label for="email">Email</label>
-        <input type="email" id="email" name="email" class="form-control" required />
-    </div>
-    <button type="submit" name="submit" class="btn btn-primary">Sign Up</button>
-    <a href="index.php" class="btn btn-secondary">back to home</a>
-</form>
+        <form action="" method="POST">
+            <h1 class="text-center">Sign Up</h1>
+
+            <div class="form-group">
+                <label for="first_name">First Name</label>
+                <input type="text" id="first_name" name="first_name" class="form-control" required />
+            </div>
+            <div class="form-group">
+                <label for="last_name">Last Name</label>
+                <input type="text" id="last_name" name="last_name" class="form-control" required />
+            </div>
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" class="form-control" required />
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" class="form-control" required />
+            </div>
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" class="form-control" required />
+            </div>
+            <button type="submit" name="submit" class="btn btn-primary">Sign Up</button>
+            <a href="../index.php" class="btn btn-secondary">back to home</a>
+        </form>
     </div>
 </body>
 

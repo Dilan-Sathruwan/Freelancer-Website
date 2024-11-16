@@ -145,6 +145,7 @@ include_once "./config/db.php";
 <body>
     <?php
     $loginPage = "./public/login.php";
+    $regPage = "./public/sign_up.php";
     include './includes/index_header.php';
     ?>
 
