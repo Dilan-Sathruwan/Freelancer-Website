@@ -143,8 +143,8 @@
                     <!-- Login link aligned to the right -->
                     <div class="nav-login">
                         <?php
-                        if ($_SESSION['id']) {
-                            echo '<a href="logout.php" class="nav-link">Logout</a>';
+                        if (isset($_SESSION['id'])) {
+                            echo '<a href="../config/logout.php" class="nav-link">Logout</a>';
                         } else {
                             echo '<a href="' . ($loginPage ? $loginPage : "../public/login.php") . '" class="nav-link">Login</a>';
                         }
