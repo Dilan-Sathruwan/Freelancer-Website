@@ -1,3 +1,9 @@
+<?php
+session_start();
+include_once "./config/db.php";
+
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -137,7 +143,10 @@
 </head>
 
 <body>
-    <?php include './includes/index_header.php';?>
+    <?php
+    $loginPage = "./public/login.php";
+    include './includes/index_header.php';
+    ?>
 
     <!-- Hero Section -->
     <section class="hero">
@@ -183,28 +192,39 @@
     <section class="testimonials" id="testimonials">
         <div class="container">
             <h2 class="text-center mb-4">What Our Clients Say</h2>
-            <div class="row">
-                <div class="col-md-4 testimonial-item" data-aos="fade-up">
-                    <i class="fas fa-quote-left mb-3"></i>
-                    <p>"FreelanceHub helped me find the perfect freelancer for my project. I couldn't be happier with the results!"</p>
-                    <h5>John Doe</h5>
-                    <p>CEO, Example Corp</p>
-                </div>
-                <div class="col-md-4 testimonial-item" data-aos="fade-up" data-aos-delay="100">
-                    <i class="fas fa-quote-left mb-3"></i>
-                    <p>"Amazing platform for both freelancers and clients. The ease of use is incredible!"</p>
-                    <h5>Jane Smith</h5>
-                    <p>Freelancer</p>
-                </div>
-                <div class="col-md-4 testimonial-item" data-aos="fade-up" data-aos-delay="200">
-                    <i class="fas fa-quote-left mb-3"></i>
-                    <p>"The best experience I've had working with freelancers. Highly recommend!"</p>
-                    <h5>Michael Johnson</h5>
-                    <p>Project Manager, Tech Solutions</p>
-                </div>
-            </div>
+            <?php
+            $sql = "SELECT r.comment, r.rating, u.username FROM reviews r JOIN users u ON r.client_id = u.id";
+
+            try {
+                $stmt = $conn->prepare($sql);
+                $stmt->execute();
+
+                if ($stmt->rowCount() > 0) {
+                    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                        $comment = $row["comment"];
+                        $rating = $row["rating"];
+                        $userName = $row["username"];
+            ?>
+                        <div class="row">
+                            <div class="col-md-4 testimonial-item" data-aos="fade-up">
+                                <i class="fas fa-quote-left mb-3"></i>
+                                <p><?php echo htmlspecialchars($comment); ?></p>
+                                <h5><?php echo htmlspecialchars($userName); ?></h5>
+                                <p><?php echo htmlspecialchars($rating); ?></p>
+                            </div>
+                        </div>
+            <?php
+                    }
+                } else {
+                    echo "<p class='text-center'>No reviews found.</p>";
+                }
+            } catch (PDOException $e) {
+                echo "<p class='text-center'>Error fetching reviews: " . htmlspecialchars($e->getMessage()) . "</p>";
+            }
+            ?>
         </div>
     </section>
+
 
     <!-- Footer -->
     <footer class="footer">
@@ -224,7 +244,6 @@
     <script>
         // Initialize AOS Animations
         AOS.init();
-        
     </script>
 
 </body>
