@@ -169,6 +169,12 @@ $users = $stmt->fetchAll();
                 <p>Total Admin</p>
             </div>
         </div>
+        <!-- Button section -->
+        <div class="button-section">
+            <a href="manage_client.php" title="Manage Users"><i class="fas fa-user-plus"></i> Manage Client</a>
+            <a href="manage_admins.php"><i class="fas fa-cogs"></i> Manage Admins</a>
+            <a href="manage_freelancers.php"><i class="fas fa-chart-line"></i> Manage Freelancers</a>
+        </div>
 
         <!-- Button section -->
         <div class="button-section">
