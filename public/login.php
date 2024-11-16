@@ -23,13 +23,13 @@ if (isset($_POST["submit"])) {
           $_SESSION["role"] = $row["role"];
 
           if ($row["role"] == "freelancer") {
-            header("Location: ../freelancer/index.php");
+            header("Location: ../freelancer/dashboard.php");
             exit();
           } else if ($row["role"] == "client") {
-            header("Location: ../client/index.php");
+            header("Location: ../client/dashboard.php");
             exit();
           } else if ($row["role"] == "admin") {
-            header("Location: ../admin/index.php");
+            header("Location: ../admin/dashboard.php ");
             exit();
           }
           exit();
