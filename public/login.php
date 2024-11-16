@@ -34,16 +34,20 @@ if (isset($_POST["submit"])) {
           }
           exit();
         } else {
-          echo "Invalid username or password.";
+          header("Location: login.php?error=Invalid username or password.");
+          exit();
         }
       } else {
-        echo "Invalid username or password.";
+        header("Location: login.php?error=Invalid username or password.");
+        exit();
       }
+
     } catch (PDOException $e) {
       echo "Database error: " . $e->getMessage();
     }
   } else {
-    echo "Please fill in all required fields.";
+    header("Location: login.php?error=Please fill in all required fields.");
+    exit();
   }
 }
 

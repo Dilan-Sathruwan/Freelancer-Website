@@ -133,7 +133,7 @@
                             <a href="index.php" class="nav-link">Home</a>
                         </li>
                         <li class="nav-item">
-                            <a href="register.php" class="nav-link">Register</a>
+                            <a href="<?php echo $regPage ? $regPage : "../public/sign_up.php"; ?>" class="nav-link">Register</a>
                         </li>
                         <li class="nav-item">
                             <a href="public/profile.php" class="nav-link">Profile</a>
