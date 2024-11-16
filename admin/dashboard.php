@@ -72,6 +72,26 @@ $users = $stmt->fetchAll();
             color: #007bff;
         }
 
+        .button-section {
+            margin: 30px 0;
+            text-align: center;
+        }
+
+        .button-section a {
+            margin: 10px;
+            padding: 15px 30px;
+            text-decoration: none;
+            background-color: #007bff;
+            color: #fff;
+            border-radius: 5px;
+            font-size: 1rem;
+            transition: background-color 0.3s ease;
+        }
+
+        .button-section a:hover {
+            background-color: #0056b3;
+        }
+
         /* Recent activity table styles */
         .recent-activity {
             margin-top: 40px;
@@ -130,7 +150,6 @@ $users = $stmt->fetchAll();
             <h1>Welcome, Admin!</h1>
             <p>Here is your overview of the system</p>
         </div>
-        <a href="../config/db.php"></a>
 
         <!-- Stats cards -->
         <div class="stats-cards">
@@ -150,6 +169,13 @@ $users = $stmt->fetchAll();
                 <p>Total Admin</p>
             </div>
         </div>
+        <!-- Button section -->
+        <div class="button-section">
+            <a href="manage_client.php" title="Manage Users"><i class="fas fa-user-plus"></i> Manage Client</a>
+            <a href="manage_admins.php"><i class="fas fa-cogs"></i> Manage Admins</a>
+            <a href="manage_freelancers.php"><i class="fas fa-chart-line"></i> Manage Freelancers</a>
+        </div>
+
         <!-- Button section -->
         <div class="button-section">
             <a href="manage_client.php" title="Manage Users"><i class="fas fa-user-plus"></i> Manage Client</a>
@@ -202,6 +228,7 @@ $users = $stmt->fetchAll();
 </body>
 
 </html>
+
 <?php
 // Include footer
 // include '../includes/footer.php';

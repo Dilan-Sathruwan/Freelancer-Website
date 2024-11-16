@@ -95,8 +95,7 @@ include_once "./config/db.php";
         }
 
         /* Testimonials Section */
-
-.testimonials {
+        .testimonials {
     background-color: #f8f9fa;
     padding: 80px 20px;
 }
@@ -148,6 +147,22 @@ include_once "./config/db.php";
     color: #555;
     font-size: 1rem;
     line-height: 1.6;
+}
+
+.rating {
+    color: #ffc107;
+    margin-top: 10px;
+}
+
+.rating i {
+    margin-right: 2px;
+}
+
+@media (max-width: 768px) {
+    .testimonial-item {
+        flex: 1 1 calc(100% - 30px);
+        max-width: calc(100% - 30px);
+    }
 }
 
 .rating {
@@ -235,8 +250,9 @@ include_once "./config/db.php";
     </section>
 
 
+
    <!-- Testimonials Section -->
-<section class="testimonials" id="testimonials">
+   <section class="testimonials" id="testimonials">
     <div class="container">
         <h2 class="text-center mb-4" data-aos="fade-up">What Our Clients Say</h2>
         <div class="testimonial-row">
@@ -263,21 +279,19 @@ include_once "./config/db.php";
                                 }
                                 ?>
                             </div>
-                <?php
-                        }
-                    } else {
-                        echo "<p class='text-center'>No reviews found.</p>";
+                        </div>
+            <?php
                     }
-                } catch (PDOException $e) {
-                    echo "<p class='text-center'>Error fetching reviews: " . htmlspecialchars($e->getMessage()) . "</p>";
+                } else {
+                    echo "<p class='text-center'>No reviews found.</p>";
                 }
-                ?>
-            </div>
+            } catch (PDOException $e) {
+                echo "<p class='text-center'>Error fetching reviews: " . htmlspecialchars($e->getMessage()) . "</p>";
+            }
+            ?>
         </div>
     </div>
 </section>
-
-
 
     <?php include('includes/footer.php'); ?>
 
