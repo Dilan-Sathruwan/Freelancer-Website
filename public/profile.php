@@ -130,7 +130,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 </style>
 
-<?php include('../includes/index_header.php'); ?>
+<?php 
+$logoutPage = "../config/logout.php";
+include('../includes/index_header.php'); 
+?>
 
 <!-- Profile Section -->
 <section class="profile py-5" data-aos="fade-up" data-aos-duration="1000">

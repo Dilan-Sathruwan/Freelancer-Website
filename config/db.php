@@ -12,9 +12,9 @@
 // $dbName = "FreelancerWebsite";
 
 // L 
-$serverName = "localhost:3307";
+$serverName = "localhost";
 $username = "root";
-$password = "1234";
+$password = "";
 $dbName = "FreelancerWebsite";
 
 

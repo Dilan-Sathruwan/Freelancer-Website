@@ -75,25 +75,6 @@ include_once "./config/db.php";
             transform: translateY(-10px);
             box-shadow: 0 15px 25px rgba(0, 0, 0, 0.2);
         }
-
-
-        .footer {
-            background-color: #343a40;
-            color: #fff;
-            text-align: center;
-            padding: 40px 20px;
-        }
-
-        .footer a {
-            color: #f8f9fa;
-            text-decoration: none;
-            margin: 0 15px;
-        }
-
-        .footer a:hover {
-            text-decoration: underline;
-        }
-
         /* Testimonials Section */
         .testimonials {
             background-color: #f8f9fa;
@@ -215,8 +196,8 @@ include_once "./config/db.php";
         <div class="container">
             <h1 data-aos="fade-up">Find the Best Freelancers</h1>
             <p data-aos="fade-up" data-aos-delay="100">Hire professionals for your projects, or showcase your skills to the world. It's that easy!</p>
-            <a href="register.php" class="btn btn-primary btn-lg mt-3" data-aos="zoom-in" data-aos-delay="200">Get Started</a>
-            <a href="#features" class="btn btn-outline-light btn-lg mt-3 ms-2" data-aos="zoom-in" data-aos-delay="250">Explore Features</a>
+            <a href="./public/sign_up.php" class="btn btn-primary btn-lg mt-3" data-aos="zoom-in" data-aos-delay="200">Get Started</a>
+            <a href="./public/gig.php" class="btn btn-outline-light btn-lg mt-3 ms-2" data-aos="zoom-in" data-aos-delay="250">Explore Features</a>
         </div>
     </section>
 
