@@ -52,10 +52,10 @@ if (isset($_POST['submit'])) {
 </head>
 
 <body>
+    <button class="backToHome"><a href="../index.php" class="text-white">back to home</a></button>
     <div class="border-red form">
         <form action="" method="POST">
             <h1 class="text-center">Sign Up</h1>
-
             <div class="form-group">
                 <label for="first_name">First Name</label>
                 <input type="text" id="first_name" name="first_name" class="form-control" required />
@@ -76,8 +76,7 @@ if (isset($_POST['submit'])) {
                 <label for="email">Email</label>
                 <input type="email" id="email" name="email" class="form-control" required />
             </div>
-            <button type="submit" name="submit" class="btn btn-primary">Sign Up</button>
-            <a href="../index.php" class="btn btn-secondary">back to home</a>
+            <button type="submit" name="submit">Sign Up</button>
         </form>
     </div>
 </body>
