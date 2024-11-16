@@ -202,6 +202,7 @@ include_once "./config/db.php";
 <body>
 
     <?php
+    $logoutPage = "./config/logout.php";
     $loginPage = "./public/login.php";
     $regPage = "./public/sign_up.php";
     include './includes/index_header.php';

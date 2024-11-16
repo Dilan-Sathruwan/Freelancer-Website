@@ -219,11 +219,12 @@ $users = $stmt->fetchAll();
             <a href="reports.php" class="btn">View All Reports</a>
         </div>
     </div>
+
+    <?php
+// Include footer
+include '../includes/admin_footer.php';
+?>
+
 </body>
 
 </html>
-
-<?php
-// Include footer
-// include '../includes/footer.php';
-?>
