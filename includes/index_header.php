@@ -142,7 +142,14 @@
 
                     <!-- Login link aligned to the right -->
                     <div class="nav-login">
-                        <a href="<?php echo $loginPage ? $loginPage : "../public/login.php"; ?>" class="nav-link">Login</a>
+                        <?php
+                        if (isset($_SESSION['id'])) {
+                            echo '<a href="../config/logout.php" class="nav-link">Logout</a>';
+                        } else {
+                            echo '<a href="' . ($loginPage ? $loginPage : "../public/login.php") . '" class="nav-link">Login</a>';
+                        }
+                        ?>
+
                     </div>
                 </div>
             </div>
