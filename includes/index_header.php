@@ -127,9 +127,6 @@
                         <a href="login.php" class="nav-link">Login</a>
                     </div>
                 </div>
-
-                <!-- Include theme toggle from the separate PHP file -->
-                <?php include('includes/theme_toggle.php'); ?>
             </div>
         </nav>
     </header>

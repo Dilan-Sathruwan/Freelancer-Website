@@ -69,6 +69,7 @@
             transform: translateY(-10px);
             box-shadow: 0 15px 25px rgba(0, 0, 0, 0.2);
         }
+        
 
         .footer {
             background-color: #343a40;
@@ -138,6 +139,7 @@
 
 <body>
     <?php include './includes/index_header.php';?>
+    <?php include('includes/theme_toggle.php'); ?>
 
     <!-- Hero Section -->
     <section class="hero">
@@ -206,15 +208,8 @@
         </div>
     </section>
 
-    <!-- Footer -->
-    <footer class="footer">
-        <p>&copy; 2024 FreelanceHub. All rights reserved.</p>
-        <div>
-            <a href="#"><i class="fab fa-facebook-f"></i></a>
-            <a href="#"><i class="fab fa-twitter"></i></a>
-            <a href="#"><i class="fab fa-linkedin-in"></i></a>
-        </div>
-    </footer>
+    <?php include('includes/footer.php'); ?>
+
 
     <!-- Bootstrap JS, Popper.js, and AOS Script -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
