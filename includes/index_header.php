@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,46 +14,56 @@
         body {
             font-family: 'Arial', sans-serif;
         }
+
         .navbar {
             background-color: #007bff;
             padding: 1rem;
         }
+
         .navbar a {
             color: white;
             font-weight: bold;
             transition: all 0.3s ease;
         }
+
         .navbar a:hover {
             color: #ffd700;
             text-decoration: none;
         }
+
         .logo img {
             width: 50px;
             height: auto;
         }
+
         /* Positioning logo to the left */
         .navbar .logo {
             flex-grow: 1;
         }
+
         /* Center the navigation links */
         .navbar .nav-links {
             display: flex;
             justify-content: center;
             flex-grow: 2;
         }
+
         .navbar .nav-links li {
             list-style: none;
             margin-right: 1rem;
         }
+
         /* Position login to the right */
         .navbar .nav-login {
             display: flex;
             justify-content: flex-end;
             flex-grow: 1;
         }
+
         .nav-links a {
             position: relative;
         }
+
         .nav-links a:after {
             content: '';
             position: absolute;
@@ -65,26 +76,32 @@
             transform-origin: bottom right;
             transition: transform 0.25s ease-out;
         }
+
         .nav-links a:hover:after {
             transform: scaleX(1);
             transform-origin: bottom left;
         }
+
         /* Responsive design */
         @media (max-width: 768px) {
             .navbar .nav-links {
                 flex-direction: column;
                 align-items: center;
             }
+
             .navbar .nav-login {
                 justify-content: center;
                 margin-top: 1rem;
             }
+
             .theme-toggle {
                 margin-top: 1rem;
             }
+
             .logo img {
                 width: 40px;
             }
+
             .navbar a {
                 margin-right: 0;
                 margin-bottom: 0.5rem;
@@ -92,6 +109,7 @@
         }
     </style>
 </head>
+
 <body>
 
     <!-- Navbar / Header -->
@@ -124,7 +142,7 @@
 
                     <!-- Login link aligned to the right -->
                     <div class="nav-login">
-                        <a href="public/login.php" class="nav-link">Login</a>
+                        <a href="<?php echo $loginPage ? $loginPage : "../public/login.php"; ?>" class="nav-link">Login</a>
                     </div>
                 </div>
             </div>
@@ -136,4 +154,5 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.min.js"></script>
 
 </body>
+
 </html>
