@@ -15,6 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $last_name = $_POST['last_name'];
     $email = $_POST['email'];
     $status = $_POST['status'];
+    $password = $_POST['password'];
 
     if ($id) {
         // Update existing client
@@ -22,8 +23,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->execute([$username, $first_name, $last_name, $email, $status, $id]);
     } else {
         // Add new client
-        $stmt = $conn->prepare("INSERT INTO users (username, first_name, last_name, email, role, status) VALUES (?, ?, ?, ?, 'client', ?)");
-        $stmt->execute([$username, $first_name, $last_name, $email, $status]);
+        $stmt = $conn->prepare("INSERT INTO users (username, password, first_name, last_name, email, role, status) VALUES (?,?, ?, ?, ?, 'client', ?)");
+        $stmt->execute([$username,$password, $first_name, $last_name, $email, $status]);
     }
     header("Location: manage_client.php");
     exit;
@@ -134,6 +135,8 @@ $clients = $stmt->fetchAll();
             <input type="text" name="first_name" value="<?php echo $editClient['first_name'] ?? ''; ?>" required>
             <label>Last Name:</label>
             <input type="text" name="last_name" value="<?php echo $editClient['last_name'] ?? ''; ?>" required>
+            <?php echo isset($_GET['edit']) ? ' ' : '<label>Password:</label>'; ?>
+            <input type="<?php echo isset($_GET['edit']) ? 'hidden' : 'text'; ?>" name="password" value="<?php echo $editClient['password'] ?? ''; ?>" required>
             <label>Email:</label>
             <input type="email" name="email" value="<?php echo $editClient['email'] ?? ''; ?>" required>
             <label>Status:</label>
