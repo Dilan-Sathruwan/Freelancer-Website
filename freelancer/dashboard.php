@@ -27,10 +27,11 @@ if (isset($_GET['deleteId'])) {
 if (isset($_POST['updateGig'])) {
     $gigId = $_POST['gitID'];
     $title = $_POST['title'];
+    $delivery_time = $_POST['delivery_time'];
     $description = $_POST['description'];
     $price = $_POST['price'];
-    $stmt = $conn->prepare("UPDATE gigs SET title = ?, description = ?, price = ? WHERE id = ?");
-    $stmt->execute([$title, $description, $price, $gigId]);
+    $stmt = $conn->prepare("UPDATE gigs SET title = ?, description = ?,delivery_time=?, price = ? WHERE id = ?");
+    $stmt->execute([$title, $description, $delivery_time, $price, $gigId]);
     header("Location: dashboard.php");
 }
 
@@ -172,6 +173,7 @@ if (isset($_POST['addGig'])) {
                         <tr>
                             <th>Gig Title</th>
                             <th>Description</th>
+                            <th>Delivery Days</th>
                             <th>Price</th>
                             <th>Status</th>
                             <th>Actions</th>
@@ -194,6 +196,9 @@ if (isset($_POST['addGig'])) {
                                         </td>
                                         <td>
                                             <textarea name="description" class="border-0" cols="30" rows="10"><?php echo htmlspecialchars($gig['description']); ?></textarea>
+                                        </td>
+                                        <td>
+                                            <input name="delivery_time" class="border-0" value="<?php echo htmlspecialchars($gig['delivery_time']); ?>">
                                         </td>
                                         <td>$<input type="text" name="price" class="border-0" value="<?php echo htmlspecialchars($gig['price']); ?>"></td>
                                         <td><?php echo htmlspecialchars($gig['status']); ?></td>
