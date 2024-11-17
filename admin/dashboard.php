@@ -28,6 +28,15 @@ $adminCount = $conn->query("SELECT COUNT(*) FROM users WHERE role = 'admin'")->f
 
 $stmt = $conn->query("SELECT id, username, first_name, last_name, email, role, status FROM users");
 $users = $stmt->fetchAll();
+
+
+if (isset($_GET['delete'])) {
+    $id = $_GET['delete'];
+    $stmt = $conn->prepare("DELETE FROM users WHERE id = ?");
+    $stmt->execute([$id]);
+    header("Location: dashboard.php");
+    exit;
+}
 ?>
 
 <!DOCTYPE html>
@@ -165,6 +174,11 @@ $users = $stmt->fetchAll();
 </head>
 
 <body>
+    <link rel="stylesheet" href="../assets/css/external.css">
+    <div style="position: fixed; right: 10px; top: 10px;">
+        <a href="../config/logout.php" class="btn btn-danger">Log out</a>
+    </div>
+    
     <div class="dashboard-container">
         <div class="dashboard-header">
             <h1>Welcome, Admin!</h1>
@@ -246,7 +260,7 @@ $users = $stmt->fetchAll();
                     <td>${user.status}</td>
                     <td>${user.role}</td>
                     <td>
-                        <a href="delete_user.php?id=${user.id}" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this user?');">
+                        <a href="dashboard.php?delete=${user.id}" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this user?');">
                             <i class="fas fa-trash-alt"></i>
                         </a>
                     </td>
