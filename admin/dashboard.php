@@ -14,7 +14,7 @@ $freelancerCount = $conn->query("SELECT COUNT(*) FROM users WHERE role = 'freela
 $clientCount = $conn->query("SELECT COUNT(*) FROM users WHERE role = 'client'")->fetchColumn();
 $adminCount = $conn->query("SELECT COUNT(*) FROM users WHERE role = 'admin'")->fetchColumn();
 
-$stmt = $conn->query("SELECT id, username, first_name, last_name, email, status FROM users");
+$stmt = $conn->query("SELECT id, username, first_name, last_name, email, role, status FROM users");
 $users = $stmt->fetchAll();
 ?>
 
@@ -121,7 +121,7 @@ $users = $stmt->fetchAll();
         }
 
         th {
-            background-color: #007bff;
+            background-color: black;
             color: white;
         }
 
@@ -140,6 +140,10 @@ $users = $stmt->fetchAll();
 
         .btn:hover {
             background-color: #0056b3;
+        }
+
+        .btn-danger{
+            background-color: #000000;
         }
     </style>
 </head>
@@ -176,13 +180,6 @@ $users = $stmt->fetchAll();
             <a href="manage_freelancers.php"><i class="fas fa-chart-line"></i> Manage Freelancers</a>
         </div>
 
-        <!-- Button section -->
-        <div class="button-section">
-            <a href="manage_client.php" title="Manage Users"><i class="fas fa-user-plus"></i> Manage Client</a>
-            <a href="manage_admins.php"><i class="fas fa-cogs"></i> Manage Admins</a>
-            <a href="manage_freelancers.php"><i class="fas fa-chart-line"></i> Manage Freelancers</a>
-        </div>
-
         <!-- Recent activity -->
         <div class="recent-activity">
             <h3>Recent Activity</h3>
@@ -195,7 +192,8 @@ $users = $stmt->fetchAll();
                         <th>Last Name</th>
                         <th>Email</th>
                         <th>Status</th>
-                        <th>Action</th>
+                        <th>Role</th>
+                        <th>action</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -208,9 +206,9 @@ $users = $stmt->fetchAll();
                                 <td><?php echo htmlspecialchars($user['last_name']); ?></td>
                                 <td><?php echo htmlspecialchars($user['email']); ?></td>
                                 <td><?php echo htmlspecialchars($user['status']); ?></td>
+                                <td><?php echo htmlspecialchars($user['role']); ?></td>
                                 <td>
-                                    <a href="edit_user.php?id=<?php echo $user['id']; ?>" class="btn btn-warning">Edit</a>
-                                    <a href="delete_user.php?id=<?php echo $user['id']; ?>" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this user?');">Delete</a>
+                                    <a href="delete_user.php?id=<?php echo $user['id']; ?>" class="btn btn-danger " onclick="return confirm('Are you sure you want to delete this user?');"><i class="fas fa-trash-alt"></i></a>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
@@ -221,8 +219,6 @@ $users = $stmt->fetchAll();
                     <?php endif; ?>
                 </tbody>
             </table>
-
-            <a href="reports.php" class="btn">View All Reports</a>
         </div>
     </div>
 
