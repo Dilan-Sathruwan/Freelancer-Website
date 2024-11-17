@@ -98,12 +98,25 @@ $gigs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 margin-bottom: 20px;
             }
         }
+
+        .fa-eye{
+            color: black !important;
+        }
+        .btn_c {
+            background-color: #ff9900bd !important;
+            color: black !important;
+        }
+
+        .btn_c:hover {
+            background-color: #D9641E !important;
+        }
     </style>
 </head>
 
 <body>
     <!-- Include the header -->
     <?php
+      $regPage = "../public/sign_up.php";
     $logoutPage = "../config/logout.php";
     include('../includes/index_header.php');
     ?>
@@ -142,7 +155,7 @@ $gigs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                     <h4><a href="gig_detail.php?id=<?php echo $gigId; ?>"><?php echo $title; ?></a></h4>
                                     <p><?php echo $description; ?></p>
                                     <p class="price">$<?php echo $price; ?></p>
-                                    <a href="gig_detail.php?id=<?php echo $gigId; ?>" class="view-details-btn">
+                                    <a href="gig_detail.php?id=<?php echo $gigId; ?>" class="view-details-btn btn_c">
                                         <i class="fas fa-eye icon"></i> View Details
                                     </a>
                                 </div>

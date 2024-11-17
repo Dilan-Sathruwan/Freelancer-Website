@@ -159,15 +159,6 @@ $isClient = isset($_SESSION['role']) && $_SESSION['role'] === 'client';
             background: #da3300;
         }
 
-        .action-buttons button {
-            background: #28a745;
-            border: none;
-            cursor: pointer;
-        }
-
-        .action-buttons button:hover {
-            background: #218838;
-        }
     </style>
 </head>
 
@@ -194,14 +185,7 @@ $isClient = isset($_SESSION['role']) && $_SESSION['role'] === 'client';
             <p class="gig-price">$<?php echo $price; ?></p>
         </div>
         <div class="action-buttons">
-            <a href="./gig.php"><i class="fas fa-arrow-left"></i> Back to Gigs</a>
-            <?php if ($isClient): ?>
-                <form method="post" action="hire_gig.php" style="display: inline;">
-                    <input type="hidden" name="gig_id" value="<?php echo $gigId; ?>">
-                    <input type="hidden" name="freelancer_id" value="<?php echo $gig['freelancer_id']; ?>">
-                    <button type="submit"><i class="fas fa-briefcase"></i> Hire this Gig</button>
-                </form>
-            <?php endif; ?>
+            <a href="./dashboard.php"><i class="fas fa-arrow-left"></i> Back to Gigs</a>
         </div>
     </div>
 </body>
