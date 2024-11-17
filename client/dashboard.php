@@ -1,123 +1,140 @@
 <?php
-// Include necessary files for connection and session
-include('../config/db_connection.php');
-include('../includes/header.php');
 
-// Assuming the user is logged in and the user ID is stored in session
+include('../config/db.php');
+// include('../includes/header.php');
+
+
 session_start();
-$userId = $_SESSION['user_id'];  // Adjust as per your session variable
+$userId = $_SESSION['id']; 
+$userName = $_SESSION['username'];
+
+
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Client Dashboard</title>
-    <link rel="stylesheet" href="../assets/css/style.css">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet"> <!-- AOS Library -->
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- AOS Animation CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+
+        .navbar {
+            margin-bottom: 20px;
+        }
+
+        .card {
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-header {
+            background-color: #343a40;
+            color: #fff;
+        }
+
+        .btn-primary,
+        .btn-info {
+            transition: transform 0.2s ease;
+        }
+
+        .btn-primary:hover,
+        .btn-info:hover {
+            transform: scale(1.05);
+        }
+
+        img.rounded-circle {
+            border: 3px solid #ddd;
+        }
+    </style>
 </head>
+
 <body>
-    <!-- Dashboard Header -->
-    <section class="dashboard-header">
-        <div class="container">
-            <h1 class="text-center mb-4" data-aos="fade-up">Welcome to Your Dashboard</h1>
-            <div class="row">
-                <!-- Profile Section -->
-                <div class="col-md-4" data-aos="fade-up">
-                    <div class="profile-card text-center">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">Client Dashboard</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="row">
+            <!-- Profile Section -->
+            <div class="col-md-4">
+                <div class="card" data-aos="fade-up">
+                    <div class="card-header">
+                        <h3>Profile</h3>
+                    </div>
+                    <div class="card-body text-center">
                         <img src="../assets/images/default-avatar.png" alt="Profile Picture" class="img-fluid rounded-circle mb-3" width="120">
-                        <h3><?php echo htmlspecialchars($_SESSION['username']); ?></h3>
-                        <p>Client</p>
+                        <h4><?php echo htmlspecialchars($userName);?></h4>
+                        <p class="text-muted">Client</p>
                         <a href="edit_profile.php" class="btn btn-primary">Edit Profile</a>
                     </div>
                 </div>
+            </div>
 
-                <!-- My Gigs Section -->
-                <div class="col-md-8" data-aos="fade-up" data-aos-delay="100">
-                    <h3>Your Gigs</h3>
-                    <div class="row">
-                        <?php
-                        $sql = "SELECT * FROM gigs WHERE client_id = :user_id ORDER BY created_at DESC";
-                        $stmt = $conn->prepare($sql);
-                        $stmt->execute(['user_id' => $userId]);
-
-                        if ($stmt->rowCount() > 0) {
-                            while ($gig = $stmt->fetch(PDO::FETCH_ASSOC)) {
-                                $gigId = $gig['id'];
-                                $title = htmlspecialchars($gig['title']);
-                                $price = number_format($gig['price'], 2);
-                                $description = htmlspecialchars(substr($gig['description'], 0, 150)) . '...'; // Limit description length
-                        ?>
-                            <div class="col-md-4 mb-4">
-                                <div class="gig-card">
-                                    <h5><a href="gig_detail.php?id=<?php echo $gigId; ?>"><?php echo $title; ?></a></h5>
-                                    <p><?php echo $description; ?></p>
-                                    <p><strong>Price: $<?php echo $price; ?></strong></p>
-                                    <a href="gig_detail.php?id=<?php echo $gigId; ?>" class="btn btn-info">View Details</a>
+            <!-- Gigs Section -->
+            <div class="col-md-8">
+                <div class="card" data-aos="fade-up" data-aos-delay="100">
+                    <div class="card-header">
+                        <h3>Your Gigs</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <!-- Example Gig -->
+                            <div class="col-md-6 mb-4">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        
+                                        <h5 class="card-title">
+                                            <a href="gig_detail.php?id=" class="text-decoration-none text-dark">dsdsdsd</a>
+                                        </h5>
+                                        <p class="card-text">fdssd</p>
+                                        <p class="card-text"><strong>Price: $</strong></p>
+                                        <a href="gig_detail.php?id=" class="btn btn-info">View Details</a>
+                                    </div>
                                 </div>
                             </div>
-                        <?php
-                            }
-                        } else {
-                            echo "<p>No gigs found.</p>";
-                        }
-                        ?>
+                            <!-- Add more gig cards here -->
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </section>
 
-    <!-- Active Projects Section -->
-    <section class="active-projects" id="active-projects" style="padding: 50px 0;">
-        <div class="container">
-            <h2 class="text-center" data-aos="fade-up">Active Projects</h2>
-            <div class="row">
-                <?php
-                $sql = "SELECT p.id, p.title, p.status, f.username, p.created_at
-                        FROM projects p
-                        JOIN freelancers f ON p.freelancer_id = f.id
-                        WHERE p.client_id = :user_id AND p.status != 'completed'
-                        ORDER BY p.created_at DESC";
-                $stmt = $conn->prepare($sql);
-                $stmt->execute(['user_id' => $userId]);
-
-                if ($stmt->rowCount() > 0) {
-                    while ($project = $stmt->fetch(PDO::FETCH_ASSOC)) {
-                        $projectId = $project['id'];
-                        $title = htmlspecialchars($project['title']);
-                        $status = htmlspecialchars($project['status']);
-                        $freelancer = htmlspecialchars($project['username']);
-                        $createdAt = date('F j, Y', strtotime($project['created_at']));
-                ?>
-                    <div class="col-md-4 mb-4" data-aos="fade-up" data-aos-delay="100">
-                        <div class="project-card">
-                            <h5><a href="project_detail.php?id=<?php echo $projectId; ?>"><?php echo $title; ?></a></h5>
-                            <p>Status: <strong><?php echo $status; ?></strong></p>
-                            <p>Freelancer: <em><?php echo $freelancer; ?></em></p>
-                            <p><small>Started on: <?php echo $createdAt; ?></small></p>
-                            <a href="project_detail.php?id=<?php echo $projectId; ?>" class="btn btn-info">View Project</a>
-                        </div>
-                    </div>
-                <?php
-                    }
-                } else {
-                    echo "<p>No active projects found.</p>";
-                }
-                ?>
+        <!-- Active Projects Section -->
+        <div class="row mt-4">
+            <div class="col-md-12">
+                <h2 class="text-center" data-aos="fade-up">Active Projects</h2>
             </div>
         </div>
-    </section>
+    </div>
+
 
     <!-- Footer -->
-    <?php include('../includes/footer.php'); ?>
+    <?php include('../includes/footer.php'); ?> <!-- Footer -->
+    <footer>
+        <p>&copy; 2024 Client Dashboard. All Rights Reserved.</p>
+    </footer>
 
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     <!-- AOS Script for Animations -->
     <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
     <script>
         AOS.init();
     </script>
 </body>
+
 </html>
