@@ -87,6 +87,12 @@ try {
 </head>
 
 <body>
+    <?php
+    $myGigsPage = "./dashboard.php";
+
+
+    include_once "../includes/index_header.php";
+    ?>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container-fluid">
             <a class="navbar-brand" href="#">Client Dashboard</a>

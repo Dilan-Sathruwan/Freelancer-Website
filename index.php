@@ -30,6 +30,13 @@ include_once "./config/db.php";
     $regPage = "./public/sign_up.php";
     $profilePage = "./public/profile.php";
     $homePage = "index.php";
+
+    if (isset($_SESSION['role']) == 'client') {
+        $myGigsPage = "../client/dashboard.php";
+    } else {
+        $myGigsPage = "./freelancer/dashboard.php";
+    }
+
     include './includes/index_header.php';
     include('includes/theme_toggle.php');
     ?>
