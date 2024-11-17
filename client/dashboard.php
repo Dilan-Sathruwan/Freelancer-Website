@@ -14,8 +14,8 @@ function check_logged_in()
 // Call the function to check login status
 check_logged_in();
 
-$userId = $_SESSION['id']; // Logged-in user ID
-$userName = $_SESSION['username']; // Logged-in username
+$userId = $_SESSION['id']; 
+$userName = $_SESSION['username']; 
 
 // Fetch gig details for the logged-in client
 try {
@@ -38,6 +38,15 @@ try {
     header("Location: index.php"); // Redirect to home or another page
     exit;
 }
+
+
+$user_id = $_SESSION['id'];
+
+// Fetch user data from the database
+$query = "SELECT * FROM users WHERE id = :id";
+$stmt = $conn->prepare($query);
+$stmt->execute(['id' => $user_id]);
+$user = $stmt->fetch(PDO::FETCH_ASSOC);
 ?>
 
 <!DOCTYPE html>
@@ -111,7 +120,8 @@ try {
                         <h3>Profile</h3>
                     </div>
                     <div class="card-body text-center">
-                        <img src="../assets/images/default-avatar.png" alt="Profile Picture" class="img-fluid rounded-circle mb-3" width="120">
+                       
+                        <img src="<?php echo $user['profile_picture'] ? $user['profile_picture'] : '../assets/img/login.jpg'; ?>" alt="Profile Picture" class="img-fluid rounded-circle mb-3" width="120">
                         <h4><?php echo htmlspecialchars($userName); ?></h4>
                         <p class="text-muted">Client</p>
                         <a href="../public/profile.php" class="btn btn-primary">Edit Profile</a>

@@ -157,6 +157,7 @@ $users = $stmt->fetchAll();
             background-color: #0056b3;
         }
 
+
         .btn-danger {
             background-color: #000000;
         }
@@ -212,8 +213,8 @@ $users = $stmt->fetchAll();
                         <th>action</th>
                     </tr>
                 </thead>
-                <tbody id="tbody">
 
+                <tbody id="tbody">
                 </tbody>
             </table>
         </div>
