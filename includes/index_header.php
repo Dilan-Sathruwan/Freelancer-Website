@@ -129,7 +129,7 @@
         <nav class="navbar navbar-expand-lg navbar-light ">
             <div class="container">
                 <!-- Logo Section -->
-                <a href="index.php" class="logo">
+                <a href="<?php echo isset($homePage) ? $homePage : '../index.php'; ?>" class="logo">
                     <img src="<?php echo isset($logo) ? $logo : '../assets/img/logo.png'; ?>" class="img-fluid" alt="Logo">
                 </a>
 

@@ -159,7 +159,7 @@
 
         <!-- Footer Bottom Text -->
         <div class="footer-alt">
-            <p>2024 Loku Creation© , All Rights Reserved.</p>
+            <p>2024 Group project , All Rights Reserved.</p>
         </div>
     </div>
 </footer>

@@ -95,6 +95,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 
     .profile-button {
+        background-color: #D9641E !important;
+        color: #fff !important;
         transition: background-color 0.3s ease;
     }
 
@@ -111,6 +113,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     .card-text {
         font-size: 1rem;
         color: #6c757d;
+    }
+
+    .card-header {
+        background: linear-gradient(to right,
+                rgba(255, 87, 34, 0.9),
+                rgba(255, 153, 0, 0.9)),
+            url("https://via.placeholder.com/1920x800") no-repeat center center;
+        background-size: cover;
     }
 
     .card-body p {
@@ -138,7 +148,7 @@ include('../includes/index_header.php');
 <!-- Profile Section -->
 <section class="profile py-5" data-aos="fade-up" data-aos-duration="1000">
     <div class="container">
-        <h2 class="my-5 text-center text-primary">Your Profile</h2>
+        <h2 class="my-5 text-center fw-bold ">Your Profile</h2>
 
         <!-- Display success or error messages -->
         <?php if (isset($success)) { ?>
@@ -167,8 +177,8 @@ include('../includes/index_header.php');
             <div class="col-md-8">
                 <!-- Profile Update Form -->
                 <div class="card shadow-lg profile-form-card" data-aos="flip-right" data-aos-duration="1500">
-                    <div class="card-header bg-primary text-white">
-                        <h4><i class="fas fa-edit"></i> Update Your Profile</h4>
+                    <div class="card-header">
+                        <h4 class="text-light mt-2"><i class="fas fa-edit text-light"></i><b> Update Your Profile</b></h4>
                     </div>
                     <div class="card-body">
                         <form action="profile.php" method="POST" enctype="multipart/form-data">
@@ -203,7 +213,7 @@ include('../includes/index_header.php');
                                 </div>
                             <?php }
                             ?>
-                            <button type="submit" class="btn btn-primary profile-button"><i class="fas fa-save"></i> Update Profile</button>
+                            <button type="submit" class="btn profile-button"><i class="fas fa-save"></i> Update Profile</button>
                         </form>
                     </div>
                 </div>

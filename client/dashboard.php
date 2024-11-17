@@ -92,6 +92,11 @@ $user = $stmt->fetch(PDO::FETCH_ASSOC);
         img.rounded-circle {
             border: 3px solid #ddd;
         }
+        .cc {
+            background-color: #D9641E !important;
+            color: #fff !important;
+        }
+
     </style>
 </head>
 
@@ -102,17 +107,17 @@ $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
     include_once "../includes/index_header.php";
     ?>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="#">Client Dashboard</a>
+    <nav class="navbar navbar-expand-lg bg-light">
+        <div class="container-fluid ">
+            <a class="navbar-brand " href="#">Client Dashboard</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
         </div>
     </nav>
 
-    <div class="container">
-        <div class="row">
+    <div class="container ">
+        <div class="row mb-6">
             <!-- Profile Section -->
             <div class="col-md-4">
                 <div class="card" data-aos="fade-up">
@@ -124,13 +129,13 @@ $user = $stmt->fetch(PDO::FETCH_ASSOC);
                         <img src="<?php echo $user['profile_picture'] ? $user['profile_picture'] : '../assets/img/login.jpg'; ?>" alt="Profile Picture" class="img-fluid rounded-circle mb-3" width="120">
                         <h4><?php echo htmlspecialchars($userName); ?></h4>
                         <p class="text-muted">Client</p>
-                        <a href="../public/profile.php" class="btn btn-primary">Edit Profile</a>
+                        <a href="../public/profile.php" class="btn cc">Edit Profile</a>
                     </div>
                 </div>
             </div>
 
             <!-- Gigs Section -->
-            <div class="col-md-8">
+            <div class="col-md-8 mb-5">
                 <div class="card" data-aos="fade-up" data-aos-delay="100">
                     <div class="card-header">
                         <h3>Your Gigs</h3>
@@ -152,7 +157,7 @@ $user = $stmt->fetch(PDO::FETCH_ASSOC);
                                                 <p class="card-text"><?= htmlspecialchars($gig['description']) ?></p>
                                                 <p class="card-text"><strong>Price: $<?= htmlspecialchars($gig['price']) ?></strong></p>
                                                 <p class="card-text">Freelancer: <?= htmlspecialchars($gig['first_name'] . ' ' . $gig['last_name']) ?></p>
-                                                <a href="gig_detail.php?id=<?= htmlspecialchars($gig['gig_id']) ?>" class="btn btn-info">View Details</a>
+                                                <a href="gig_detail.php?id=<?= htmlspecialchars($gig['gig_id']) ?>" class="btn btn-dark">View Details</a>
                                             </div>
                                         </div>
                                     </div>
@@ -169,19 +174,16 @@ $user = $stmt->fetch(PDO::FETCH_ASSOC);
         </div>
 
         <!-- Active Projects Section -->
-        <div class="row mt-4">
+        <!-- <div class="row mt-4">
             <div class="col-md-12">
                 <h2 class="text-center" data-aos="fade-up">Active Projects</h2>
             </div>
-        </div>
+        </div> -->
     </div>
 
 
     <!-- Footer -->
     <?php include('../includes/footer.php'); ?> <!-- Footer -->
-    <footer>
-        <p>&copy; 2024 Client Dashboard. All Rights Reserved.</p>
-    </footer>
 
     <!-- Bootstrap Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>

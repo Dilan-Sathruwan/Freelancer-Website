@@ -92,7 +92,7 @@ if (isset($_POST['addGig'])) {
             margin: 10px;
             padding: 15px 30px;
             text-decoration: none;
-            background-color: #007bff;
+            background-color: #D9641E;
             color: #fff;
             border-radius: 5px;
             font-size: 1rem;
@@ -100,7 +100,7 @@ if (isset($_POST['addGig'])) {
         }
 
         .button-section a:hover {
-            background-color: #0056b3;
+            background-color: #D9641E;
         }
 
         .btn-primary {
@@ -114,6 +114,11 @@ if (isset($_POST['addGig'])) {
         .table th,
         .table td {
             text-align: center;
+        }
+
+        .cc {
+            background-color: #D9641E !important;
+            color: #fff !important;
         }
     </style>
 </head>
@@ -147,7 +152,7 @@ if (isset($_POST['addGig'])) {
                         <input type="text" disabled name="email" value="<?php echo htmlspecialchars($freelancer['email']); ?>" class="border-0">
                     </p>
                     <p><strong>Status:</strong> <?php echo htmlspecialchars($freelancer['status']); ?></p>
-                    <button type="submit" name="profileSubmit" class="btn btn-primary">Update</button>
+                    <button type="submit" name="profileSubmit" class="btn cc">Update</button>
                 </form>
             </div>
         </div>
@@ -155,7 +160,6 @@ if (isset($_POST['addGig'])) {
         <!-- Button section -->
         <div class="button-section">
             <a href="manage_job_requests.php" title="Manage Users"><i class="fas fa-user-plus"></i> Manage Jobs</a>
-            <a href="manage_admins.php"><i class="fas fa-cogs"></i> Manage Admins</a>
             <!-- <a href="manage_freelancers.php"><i class="fas fa-chart-line"></i> Manage Freelancers</a> -->
         </div>
 
@@ -197,7 +201,7 @@ if (isset($_POST['addGig'])) {
                     <div class="mb-3">
                         <input type="file" name="new_image" class="form-control">
                     </div>
-                    <button type="submit" name="addGig" class="btn btn-success"><i class="fas fa-plus-circle"></i> Add Gig</button>
+                    <button type="submit" name="addGig" class="btn cc"><i class="fas fa-plus-circle"></i> Add Gig</button>
                 </form>
 
                 <!-- List Existing Gigs -->
@@ -235,9 +239,9 @@ if (isset($_POST['addGig'])) {
                                         </td>
                                         <td>$<input type="text" name="price" class="border-0" value="<?php echo htmlspecialchars($gig['price']); ?>"></td>
                                         <td><?php echo htmlspecialchars($gig['status']); ?></td>
-                                        <td>
-                                            <button type="submit" name="updateGig" class="btn btn-primary btn-sm">Update</button>
-                                            <a href="dashboard.php?deleteId=<?php echo $gig['id']; ?>" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this gig?');">Delete</a>
+                                        <td style="width: 150px  align-items-center">
+                                            <button type="submit" name="updateGig" class="btn btn-dark btn-sm" style="margin-right: 10px;">Update</button>
+                                            <a href="dashboard.php?deleteId=<?php echo $gig['id']; ?>" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this gig?');" style="margin-right: 10px;">Delete</a>
                                         </td>
                                     </form>
                                 </tr>

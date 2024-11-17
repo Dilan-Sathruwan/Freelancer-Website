@@ -110,10 +110,11 @@ if (isset($_GET['delete'])) {
             border-radius: 5px;
             font-size: 1rem;
             transition: background-color 0.3s ease;
+            background-color: #D9641E ;
         }
 
         .button-section a:hover {
-            background-color: #0056b3;
+            background-color: #c4350a;
         }
 
         /* Recent activity table styles */
@@ -153,30 +154,35 @@ if (isset($_GET['delete'])) {
             background-color: #f1f1f1;
         }
 
-        .btn {
-            padding: 10px 20px;
+        .btn { 
             background-color: #007bff;
             color: white;
             text-decoration: none;
             border-radius: 5px;
             display: inline-block;
+            
         }
 
-        .btn:hover {
-            background-color: #0056b3;
+        .cc {
+            background-color: #D9641E !important;
+            color: #fff !important;
         }
 
+       .ccc {
+            background-color: #000 !important;
+            color: #fff !important;
+        } 
 
-        .btn-danger {
-            background-color: #000000;
+        .ccc i {
+
+            color: red !important;
         }
     </style>
 </head>
 
 <body>
-    <link rel="stylesheet" href="../assets/css/external.css">
     <div style="position: fixed; right: 10px; top: 10px;">
-        <a href="../config/logout.php" class="btn btn-danger">Log out</a>
+        <a href="../config/logout.php" class="btn cc">Log out</a>
     </div>
     
     <div class="dashboard-container">
@@ -260,7 +266,7 @@ if (isset($_GET['delete'])) {
                     <td>${user.status}</td>
                     <td>${user.role}</td>
                     <td>
-                        <a href="dashboard.php?delete=${user.id}" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this user?');">
+                        <a href="dashboard.php?delete=${user.id}" class="btn ccc" onclick="return confirm('Are you sure you want to delete this user?');">
                             <i class="fas fa-trash-alt"></i>
                         </a>
                     </td>
