@@ -195,7 +195,7 @@ if (isset($_POST['addGig'])) {
                                             <input type="text" name="gitID" class="border-0" value="<?php echo htmlspecialchars($gig['id']); ?>">
                                         </td>
                                         <td>
-                                            <textarea name="description" class="border-0" cols="30" rows="10"><?php echo htmlspecialchars($gig['description']); ?></textarea>
+                                            <textarea name="description" class="border-0" cols="30" rows="3"><?php echo htmlspecialchars($gig['description']); ?></textarea>
                                         </td>
                                         <td>
                                             <input name="delivery_time" class="border-0" value="<?php echo htmlspecialchars($gig['delivery_time']); ?>">
