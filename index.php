@@ -18,166 +18,8 @@ include_once "./config/db.php";
     <!-- AOS Animation -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" rel="stylesheet">
     <!-- Custom CSS -->
-    <style>
-        body {
-            font-family: 'Arial', sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f4f4f4;
-        }
+    <link rel="stylesheet" href="./assets/css/index_style.css">
 
-        .hero {
-            background: linear-gradient(to right, rgba(106, 17, 203, 0.8), rgba(37, 117, 252, 0.8)), url('https://via.placeholder.com/1920x800') no-repeat center center;
-            background-size: cover;
-            color: #fff;
-            text-align: center;
-            padding: 120px 20px;
-            position: relative;
-        }
-
-        .hero h1 {
-            font-size: 4rem;
-            font-weight: 700;
-            margin-bottom: 20px;
-        }
-
-        .hero p {
-            font-size: 1.2rem;
-            font-weight: 300;
-        }
-
-        .hero .btn {
-            font-size: 1.1rem;
-            margin-top: 20px;
-            padding: 12px 30px;
-        }
-
-        .features {
-            padding: 80px 20px;
-        }
-
-        .features h2 {
-            text-align: center;
-            margin-bottom: 40px;
-            font-size: 2.5rem;
-            font-weight: 600;
-        }
-
-        .features .feature-card {
-            background-color: #fff;
-            border-radius: 10px;
-            padding: 30px;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .features .feature-card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 15px 25px rgba(0, 0, 0, 0.2);
-        }
-        /* Testimonials Section */
-        .testimonials {
-            background-color: #f8f9fa;
-            padding: 80px 20px;
-        }
-
-        .testimonials h2 {
-            font-size: 2.5rem;
-            font-weight: 700;
-            color: #333;
-            margin-bottom: 50px;
-        }
-
-        .testimonial-row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 30px;
-            justify-content: center;
-        }
-
-        .testimonial-item {
-            text-align: center;
-            padding: 30px;
-            background-color: #fff;
-            border-radius: 10px;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            flex: 1 1 calc(33.333% - 30px);
-            max-width: calc(33.333% - 30px);
-        }
-
-        .testimonial-item:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
-        }
-
-        .testimonial-item i {
-            font-size: 3rem;
-            color: #2575fc;
-            margin-bottom: 20px;
-        }
-
-        .testimonial-item h5 {
-            font-size: 1.25rem;
-            margin-top: 15px;
-            font-weight: 600;
-            color: #333;
-        }
-
-        .testimonial-item p {
-            color: #555;
-            font-size: 1rem;
-            line-height: 1.6;
-        }
-
-        .rating {
-            color: #ffc107;
-            margin-top: 10px;
-        }
-
-        .rating i {
-            margin-right: 2px;
-        }
-
-        @media (max-width: 768px) {
-            .testimonial-item {
-                flex: 1 1 calc(100% - 30px);
-                max-width: calc(100% - 30px);
-            }
-        }
-
-        .rating {
-            color: #ffc107;
-            margin-top: 10px;
-        }
-
-        .rating i {
-            margin-right: 2px;
-        }
-
-        @media (max-width: 768px) {
-            .testimonial-item {
-                flex: 1 1 calc(100% - 30px);
-                max-width: calc(100% - 30px);
-            }
-        }
-
-
-        /* Add responsiveness */
-        @media (max-width: 768px) {
-            .hero h1 {
-                font-size: 2.5rem;
-            }
-
-            .hero p {
-                font-size: 1rem;
-            }
-
-            .features .feature-card {
-                margin-bottom: 30px;
-            }
-        }
-    </style>
 </head>
 
 <body>
@@ -188,43 +30,48 @@ include_once "./config/db.php";
     $regPage = "./public/sign_up.php";
     $profilePage = "./public/profile.php";
     $homePage = "index.php";
+
+    if (isset($_SESSION['role']) == 'client') {
+        $myGigsPage = "../client/dashboard.php";
+    } else {
+        $myGigsPage = "./freelancer/dashboard.php";
+    }
+
     include './includes/index_header.php';
     include('includes/theme_toggle.php');
     ?>
-
 
     <!-- Hero Section -->
     <section class="hero">
         <div class="container">
             <h1 data-aos="fade-up">Find the Best Freelancers</h1>
             <p data-aos="fade-up" data-aos-delay="100">Hire professionals for your projects, or showcase your skills to the world. It's that easy!</p>
-            <a href="./public/sign_up.php" class="btn btn-primary btn-lg mt-3" data-aos="zoom-in" data-aos-delay="200">Get Started</a>
             <a href="./public/gig.php" class="btn btn-outline-light btn-lg mt-3 ms-2" data-aos="zoom-in" data-aos-delay="250">Explore Features</a>
         </div>
     </section>
 
     <!-- Features Section -->
     <section class="features" id="features">
-        <div class="container">
+        <div class="container bg-transparent">
             <h2 data-aos="fade-right">Why Choose Us?</h2>
             <div class="row mt-4">
                 <div class="col-md-4" data-aos="fade-up">
                     <div class="feature-card text-center">
-                        <i class="fas fa-briefcase fa-3x text-primary mb-3"></i>
+                        <i class="fas fa-briefcase fa-4x mb-3 clo"></i>
                         <h5>Hire Professionals</h5>
                         <p>Find and hire the best talent for your project needs.</p>
                     </div>
                 </div>
                 <div class="col-md-4" data-aos="fade-up" data-aos-delay="100">
                     <div class="feature-card text-center">
-                        <i class="fas fa-globe fa-3x text-primary mb-3"></i>
+                        <i class="fas fa-globe fa-4x mb-3 clo"></i>
                         <h5>Global Talent</h5>
                         <p>Access freelancers from around the globe, no matter where you are.</p>
                     </div>
                 </div>
                 <div class="col-md-4" data-aos="fade-up" data-aos-delay="200">
                     <div class="feature-card text-center">
-                        <i class="fas fa-dollar-sign fa-3x text-primary mb-3"></i>
+                        <i class="fas fa-dollar-sign fa-4x mb-3 clo"></i>
                         <h5>Affordable Pricing</h5>
                         <p>Get quality services at competitive rates that fit your budget.</p>
                     </div>
@@ -233,11 +80,9 @@ include_once "./config/db.php";
         </div>
     </section>
 
-
-
     <!-- Testimonials Section -->
     <section class="testimonials" id="testimonials">
-        <div class="container">
+        <div class="containe bg-transparentr">
             <h2 class="text-center mb-4" data-aos="fade-up">What Our Clients Say</h2>
             <div class="testimonial-row">
                 <?php
@@ -277,19 +122,25 @@ include_once "./config/db.php";
         </div>
     </section>
 
+
+    <!-- Call-to-Action Section -->
+    <section class="cta">
+        <div class="container">
+            <h2 data-aos="fade-up">Start Your Journey Today</h2>
+            <p data-aos="fade-up" data-aos-delay="100">Sign up now and join the thousands of users already enjoying our services!</p>
+            <a href="./public/sign_up.php" class="btn btn-light" data-aos="zoom-in" data-aos-delay="200">Sign Up Now</a>
+        </div>
+    </section>
+
     <?php include('includes/footer.php'); ?>
 
-
-    <!-- Bootstrap JS, Popper.js, and AOS Script -->
+    <!-- Bootstrap, AOS Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
 
     <!-- Custom JS -->
     <script>
-        // Initialize AOS Animations
         AOS.init();
     </script>
 
 </body>
-
-</html>

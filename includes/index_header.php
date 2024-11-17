@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -141,13 +140,15 @@
 
                 <!-- Navbar Links (Collapsed on mobile) -->
                 <div class="collapse navbar-collapse" id="navbarNav">
+                    <?php
+                    ?>
                     <ul class="navbar-nav ml-auto nav-links">
                         <li class="nav-item">
-                            <a href="<?php echo $homePage ?? '../index.php'; ?>" class="nav-link">Home</a>
+                            <a href="<?php echo isset($homePage) ? $homePage : '../index.php'; ?>" class="nav-link">Home</a>
                         </li>
 
                         <li class="nav-item">
-                            <a href="<?php echo $profilePage ?? '#'; ?>" class="nav-link">Profile</a>
+                            <a href="<?php echo isset($profilePage) ? $profilePage : '#'; ?>" class="nav-link">Profile</a>
                         </li>
 
                         <li class="nav-item">
@@ -160,11 +161,13 @@
 
                         <li class="nav-item">
                             <?php
-                            if(isset($_SESSION['id'])){
-                                echo '<a href="#" class="nav-link">My Gigs</a>';
+                            if (isset($_SESSION['id'])) {
+                                if (isset($myGigsPage)) {
+                                    echo '<a href="' . $myGigsPage . '" class="nav-link">My Gigs</a>';
+                                }
                             }
                             ?>
-                            
+
                         </li>
                     </ul>
 
@@ -177,9 +180,9 @@
                         }
 
                         if (isset($_SESSION['id'])) {
-                            echo '<a href="' . ($logoutPage ? $logoutPage : "../config/logout.php") . '" class="nav-link">Logout</a>';
+                            echo '<a href="' . (isset($logoutPage) ? $logoutPage : "../config/logout.php") . '" class="nav-link">Logout</a>';
                         } else {
-                            echo '<a href="' . ($loginPage ? $loginPage : "../public/login.php") . '" class="nav-link">Login</a>';
+                            echo '<a href="' . (isset($loginPage) ? $loginPage : "../public/login.php") . '" class="nav-link">Login</a>';
                         }
 
                         ?>
