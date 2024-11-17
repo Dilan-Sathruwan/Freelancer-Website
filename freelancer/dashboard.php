@@ -3,13 +3,11 @@ session_start();
 
 include '../config/db.php'; // Include database connection
 
-
 // Fetch freelancer's profile info
 $user_id = $_SESSION['id'];
 $stmt = $conn->prepare("SELECT * FROM users WHERE id = ? AND role = 'freelancer'");
 $stmt->execute([$user_id]);
 $freelancer = $stmt->fetch();
-
 
 if (isset($_POST['profileSubmit'])) {
     $username = $_POST['username'];
@@ -19,7 +17,6 @@ if (isset($_POST['profileSubmit'])) {
     header("Location: dashboard.php");
 }
 
-
 if (isset($_GET['deleteId'])) {
     $gigId = $_GET['deleteId'];
     $stmt = $conn->prepare("DELETE FROM gigs WHERE id = ?");
@@ -27,18 +24,43 @@ if (isset($_GET['deleteId'])) {
     header("Location: dashboard.php");
 }
 
-
 if (isset($_POST['updateGig'])) {
     $gigId = $_POST['gitID'];
     $title = $_POST['title'];
+    $delivery_time = $_POST['delivery_time'];
     $description = $_POST['description'];
     $price = $_POST['price'];
-    $stmt = $conn->prepare("UPDATE gigs SET title = ?, description = ?, price = ? WHERE id = ?");
-    $stmt->execute([$title, $description, $price, $gigId]);
+    $stmt = $conn->prepare("UPDATE gigs SET title = ?, description = ?,delivery_time=?, price = ? WHERE id = ?");
+    $stmt->execute([$title, $description, $delivery_time, $price, $gigId]);
+    header("Location: dashboard.php");
+}
+
+
+
+if (isset($_POST['addGig'])) {
+    $title = $_POST['new_title'];
+    $description = $_POST['new_description'];
+    $category = $_POST['new_category'];
+    $price = $_POST['new_price'];
+    $delivery_time = $_POST['new_delivery_time'];
+    $image = null;
+
+    // Handle image upload
+    if (isset($_FILES['new_image']) && $_FILES['new_image']['error'] == 0) {
+        $target_dir = "../uploads/gigs/";
+        if (!is_dir($target_dir)) {
+            mkdir($target_dir, 0777, true);
+        }
+        $image = $target_dir . basename($_FILES['new_image']['name']);
+        move_uploaded_file($_FILES['new_image']['tmp_name'], $image);
+    }
+
+    // Insert gig into the database
+    $stmt = $conn->prepare("INSERT INTO gigs (freelancer_id, title, description,category_id, price, delivery_time, image) VALUES (?, ?, ?, ?, ?, ?,?)");
+    $stmt->execute([$user_id, $title, $description, $category, $price, $delivery_time, $image]);
     header("Location: dashboard.php");
 }
 ?>
-
 
 <!DOCTYPE html>
 <html lang="en">
@@ -59,6 +81,26 @@ if (isset($_POST['updateGig'])) {
         .card-header {
             background-color: #007bff;
             color: white;
+        }
+
+        .button-section {
+            margin: 30px 0;
+            text-align: center;
+        }
+
+        .button-section a {
+            margin: 10px;
+            padding: 15px 30px;
+            text-decoration: none;
+            background-color: #007bff;
+            color: #fff;
+            border-radius: 5px;
+            font-size: 1rem;
+            transition: background-color 0.3s ease;
+        }
+
+        .button-section a:hover {
+            background-color: #0056b3;
         }
 
         .btn-primary {
@@ -104,18 +146,61 @@ if (isset($_POST['updateGig'])) {
             </div>
         </div>
 
+        <!-- Button section -->
+        <div class="button-section">
+            <a href="manage_job_requests.php" title="Manage Users"><i class="fas fa-user-plus"></i> Manage Jobs</a>
+            <a href="manage_admins.php"><i class="fas fa-cogs"></i> Manage Admins</a>
+            <!-- <a href="manage_freelancers.php"><i class="fas fa-chart-line"></i> Manage Freelancers</a> -->
+        </div>
+
         <!-- Manage Gigs Section -->
         <div class="card">
             <div class="card-header">
                 <h3>Your Gigs</h3>
             </div>
             <div class="card-body">
-                <a href="add_gig.php" class="btn btn-primary mb-3">Add New Gig</a>
+                <!-- Add Gig Form -->
+
+                <form action="" method="POST" enctype="multipart/form-data" class="mb-4">
+                    <h5 class="mb-3">Add a New Gig</h5>
+                    <div class="mb-3">
+                        <input type="text" name="new_title" class="form-control" placeholder="Gig Title" required>
+                    </div>
+                    <div class="mb-3">
+                        <textarea name="new_description" class="form-control" rows="3" placeholder="Gig Description" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <input type="number" name="new_price" class="form-control" placeholder="Price ($)" required>
+                    </div>
+                    <div class="mb-3">
+                        <input type="number" name="new_delivery_time" class="form-control" placeholder="Delivery Time (Days)" required>
+                    </div>
+                    <div class="mb-3">
+
+                        <select name="new_category" class="form-control" required>
+                            <option value="" disabled selected>Choose a Category</option>
+                            <?php
+                            $stmt = $conn->prepare("SELECT * FROM categories");
+                            $stmt->execute();
+                            $categories = $stmt->fetchAll();
+                            foreach ($categories as $category): ?>
+                                <option value="<?php echo htmlspecialchars($category['id']); ?>"><?php echo htmlspecialchars($category['name']); ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <input type="file" name="new_image" class="form-control">
+                    </div>
+                    <button type="submit" name="addGig" class="btn btn-success"><i class="fas fa-plus-circle"></i> Add Gig</button>
+                </form>
+
+                <!-- List Existing Gigs -->
                 <table class="table table-bordered">
                     <thead>
                         <tr>
                             <th>Gig Title</th>
                             <th>Description</th>
+                            <th>Delivery Days</th>
                             <th>Price</th>
                             <th>Status</th>
                             <th>Actions</th>
@@ -123,7 +208,6 @@ if (isset($_POST['updateGig'])) {
                     </thead>
                     <tbody>
                         <?php
-                        // Fetch freelancer's gigs
                         $stmt = $conn->prepare("SELECT * FROM gigs WHERE freelancer_id = ?");
                         $stmt->execute([$user_id]);
                         $gigs = $stmt->fetchAll();
@@ -138,11 +222,12 @@ if (isset($_POST['updateGig'])) {
                                             <input type="text" name="gitID" class="border-0" value="<?php echo htmlspecialchars($gig['id']); ?>">
                                         </td>
                                         <td>
-                                            <textarea name="description" class="border-0" cols="30" rows="10"><?php echo htmlspecialchars($gig['description']); ?></textarea>
+                                            <textarea name="description" class="border-0" cols="30" rows="3"><?php echo htmlspecialchars($gig['description']); ?></textarea>
                                         </td>
-                                        <td>$
-                                            <input type="text" name="price" class="border-0" value="<?php echo htmlspecialchars($gig['price']); ?>">
+                                        <td>
+                                            <input name="delivery_time" class="border-0" value="<?php echo htmlspecialchars($gig['delivery_time']); ?>">
                                         </td>
+                                        <td>$<input type="text" name="price" class="border-0" value="<?php echo htmlspecialchars($gig['price']); ?>"></td>
                                         <td><?php echo htmlspecialchars($gig['status']); ?></td>
                                         <td>
                                             <button type="submit" name="updateGig" class="btn btn-primary btn-sm">Update</button>
@@ -153,7 +238,7 @@ if (isset($_POST['updateGig'])) {
                             <?php endforeach;
                         else: ?>
                             <tr>
-                                <td colspan="5">No gigs found. <a href="add_gig.php">Add a new gig</a></td>
+                                <td colspan="5">No gigs found. Add one above!</td>
                             </tr>
                         <?php endif; ?>
                     </tbody>

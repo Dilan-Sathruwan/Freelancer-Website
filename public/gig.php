@@ -1,16 +1,27 @@
 <?php
 // Include database connection
 include('../config/db.php');
+session_start();
+
 
 // Fetch all gigs from the database
-$sql = "SELECT g.id, g.title, g.description, g.price, g.created_at, u.username, u.profile_pic 
+$sql = "SELECT g.id, g.title, g.description, g.price, g.created_at, u.username, u.profile_picture 
         FROM gigs g
         JOIN users u ON g.freelancer_id = u.id
         ORDER BY g.created_at DESC";
+
+$stmt = $conn->prepare($sql);
+$stmt->execute();
+$gigs = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+
+
+
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -89,11 +100,13 @@ $sql = "SELECT g.id, g.title, g.description, g.price, g.created_at, u.username, 
         }
     </style>
 </head>
+
 <body>
     <!-- Include the header -->
-    <?php 
+    <?php
     $logoutPage = "../config/logout.php";
-    include('../includes/index_header.php'); ?>
+    include('../includes/index_header.php');
+    ?>
 
     <!-- Gigs Section -->
     <section class="gigs" id="gigs" style="padding: 50px 0;">
@@ -112,26 +125,26 @@ $sql = "SELECT g.id, g.title, g.description, g.price, g.created_at, u.username, 
                             $description = htmlspecialchars(substr($row['description'], 0, 150)) . '...'; // Limit description length
                             $price = number_format($row['price'], 2);
                             $username = htmlspecialchars($row['username']);
-                            $profilePic = htmlspecialchars($row['profile_pic']);
+                            $profilePic = htmlspecialchars($row['profile_picture']);
                             $createdAt = date('F j, Y', strtotime($row['created_at']));
                 ?>
-                    <div class="col-md-4" data-aos="fade-up" data-aos-delay="100">
-                        <div class="gig-card">
-                            <div class="d-flex align-items-center">
-                                <img src="<?php echo $profilePic; ?>" alt="Profile Picture">
-                                <div>
-                                    <h5 class="mb-1"><?php echo $username; ?></h5>
-                                    <p class="text-muted" style="font-size: 14px;">Posted on <?php echo $createdAt; ?></p>
+                            <div class="col-md-4" data-aos="fade-up" data-aos-delay="100">
+                                <div class="gig-card">
+                                    <div class="d-flex align-items-center">
+                                        <img src="<?php echo $profilePic; ?>" alt="Profile Picture">
+                                        <div>
+                                            <h5 class="mb-1"><?php echo $username; ?></h5>
+                                            <p class="text-muted" style="font-size: 14px;">Posted on <?php echo $createdAt; ?></p>
+                                        </div>
+                                    </div>
+                                    <h4><a href="gig_detail.php?id=<?php echo $gigId; ?>"><?php echo $title; ?></a></h4>
+                                    <p><?php echo $description; ?></p>
+                                    <p class="price">$<?php echo $price; ?></p>
+                                    <a href="gig_detail.php?id=<?php echo $gigId; ?>" class="view-details-btn">
+                                        <i class="fas fa-eye icon"></i> View Details
+                                    </a>
                                 </div>
                             </div>
-                            <h4><a href="gig_detail.php?id=<?php echo $gigId; ?>"><?php echo $title; ?></a></h4>
-                            <p><?php echo $description; ?></p>
-                            <p class="price">$<?php echo $price; ?></p>
-                            <a href="gig_detail.php?id=<?php echo $gigId; ?>" class="view-details-btn">
-                                <i class="fas fa-eye icon"></i> View Details
-                            </a>
-                        </div>
-                    </div>
                 <?php
                         }
                     } else {
@@ -146,7 +159,7 @@ $sql = "SELECT g.id, g.title, g.description, g.price, g.created_at, u.username, 
     </section>
 
     <!-- Include footer -->
-    <?php include('includes/footer.php'); ?>
+    <?php include('../includes/footer.php'); ?>
 
     <!-- Include AOS script for animations -->
     <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
@@ -154,4 +167,5 @@ $sql = "SELECT g.id, g.title, g.description, g.price, g.created_at, u.username, 
         AOS.init();
     </script>
 </body>
+
 </html>
