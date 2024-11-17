@@ -18,7 +18,7 @@ include_once "./config/db.php";
     <!-- AOS Animation -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" rel="stylesheet">
     <!-- Custom CSS -->
-     <link rel="stylesheet" href="./assets/css/index_style.css">
+    <link rel="stylesheet" href="./assets/css/index_style.css">
 
 </head>
 
@@ -30,6 +30,13 @@ include_once "./config/db.php";
     $regPage = "./public/sign_up.php";
     $profilePage = "./public/profile.php";
     $homePage = "index.php";
+
+    if (isset($_SESSION['role']) == 'client') {
+        $myGigsPage = "../client/dashboard.php";
+    } else {
+        $myGigsPage = "./freelancer/dashboard.php";
+    }
+
     include './includes/index_header.php';
     include('includes/theme_toggle.php');
     ?>
@@ -73,8 +80,8 @@ include_once "./config/db.php";
         </div>
     </section>
 
- <!-- Testimonials Section -->
- <section class="testimonials" id="testimonials">
+    <!-- Testimonials Section -->
+    <section class="testimonials" id="testimonials">
         <div class="containe bg-transparentr">
             <h2 class="text-center mb-4" data-aos="fade-up">What Our Clients Say</h2>
             <div class="testimonial-row">

@@ -119,10 +119,12 @@ if (isset($_POST['addGig'])) {
 </head>
 
 <body>
-    
+
     <?php
     $logoutPage = "../config/logout.php";
-     include('../includes/index_header.php');?>
+    $myGigsPage = "../public/dashboard.php";
+
+    include('../includes/index_header.php'); ?>
     <div class="container">
         <div class="row mt-5">
             <div class="col-md-12 text-center">
