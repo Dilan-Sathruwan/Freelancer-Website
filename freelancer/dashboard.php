@@ -83,6 +83,26 @@ if (isset($_POST['addGig'])) {
             color: white;
         }
 
+        .button-section {
+            margin: 30px 0;
+            text-align: center;
+        }
+
+        .button-section a {
+            margin: 10px;
+            padding: 15px 30px;
+            text-decoration: none;
+            background-color: #007bff;
+            color: #fff;
+            border-radius: 5px;
+            font-size: 1rem;
+            transition: background-color 0.3s ease;
+        }
+
+        .button-section a:hover {
+            background-color: #0056b3;
+        }
+
         .btn-primary {
             background-color: #007bff;
         }
@@ -124,6 +144,13 @@ if (isset($_POST['addGig'])) {
                     <button type="submit" name="profileSubmit" class="btn btn-primary">Update</button>
                 </form>
             </div>
+        </div>
+
+        <!-- Button section -->
+        <div class="button-section">
+            <a href="manage_job_requests.php" title="Manage Users"><i class="fas fa-user-plus"></i> Manage Jobs</a>
+            <a href="manage_admins.php"><i class="fas fa-cogs"></i> Manage Admins</a>
+            <!-- <a href="manage_freelancers.php"><i class="fas fa-chart-line"></i> Manage Freelancers</a> -->
         </div>
 
         <!-- Manage Gigs Section -->
