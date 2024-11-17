@@ -127,7 +127,9 @@ $gigs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             $username = htmlspecialchars($row['username']);
                             $profilePic = htmlspecialchars($row['profile_picture']);
                             $createdAt = date('F j, Y', strtotime($row['created_at']));
+                            $folderPath = "../uploads/gigs/"
                 ?>
+
                             <div class="col-md-4" data-aos="fade-up" data-aos-delay="100">
                                 <div class="gig-card">
                                     <div class="d-flex align-items-center">
