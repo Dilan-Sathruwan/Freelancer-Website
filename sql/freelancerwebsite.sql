@@ -31,7 +31,7 @@ CREATE TABLE `admin_logs` (
   PRIMARY KEY (`id`),
   KEY `admin_id` (`admin_id`),
   CONSTRAINT `admin_logs_ibfk_1` FOREIGN KEY (`admin_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -40,7 +40,7 @@ CREATE TABLE `admin_logs` (
 
 LOCK TABLES `admin_logs` WRITE;
 /*!40000 ALTER TABLE `admin_logs` DISABLE KEYS */;
-INSERT INTO `admin_logs` VALUES (1,1,'Create Category','Added category: Digital Marketing','2024-11-16 18:18:53'),(2,1,'Delete User','Deactivated user ID: 4','2024-11-16 18:18:53'),(3,1,'Create Category','Added category: Video Editing','2024-11-12 08:30:00'),(4,1,'Update User Status','Deactivated user ID: 6','2024-11-13 05:00:00'),(5,2,'Add Gig','Freelancer ID: 4 added a gig for Video Editing','2024-11-14 09:30:00'),(6,2,'Delete Job Request','Deleted job request ID: 9','2024-11-15 06:15:00');
+INSERT INTO `admin_logs` VALUES (1,1,'Create Category','Added category: Digital Marketing','2024-11-17 07:19:01'),(2,1,'Delete User','Deactivated user ID: 4','2024-11-17 07:19:01');
 /*!40000 ALTER TABLE `admin_logs` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -58,7 +58,7 @@ CREATE TABLE `categories` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `name` (`name`),
   KEY `idx_category_name` (`name`)
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -67,7 +67,7 @@ CREATE TABLE `categories` (
 
 LOCK TABLES `categories` WRITE;
 /*!40000 ALTER TABLE `categories` DISABLE KEYS */;
-INSERT INTO `categories` VALUES (1,'Web Development','2024-11-16 18:18:53'),(2,'Graphic Design','2024-11-16 18:18:53'),(3,'Content Writing','2024-11-16 18:18:53'),(4,'Digital Marketing','2024-11-16 18:18:53'),(5,'Mobile App Development','2024-11-16 18:36:36'),(6,'SEO Services','2024-11-16 18:36:36'),(7,'Video Editing','2024-11-16 18:36:36'),(8,'Social Media Management','2024-11-16 18:36:36');
+INSERT INTO `categories` VALUES (1,'Web Development','2024-11-17 07:19:00'),(2,'Graphic Design','2024-11-17 07:19:00'),(3,'Content Writing','2024-11-17 07:19:00'),(4,'Digital Marketing','2024-11-17 07:19:00');
 /*!40000 ALTER TABLE `categories` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -98,7 +98,7 @@ CREATE TABLE `gigs` (
   CONSTRAINT `gigs_ibfk_2` FOREIGN KEY (`category_id`) REFERENCES `categories` (`id`) ON DELETE CASCADE,
   CONSTRAINT `gigs_chk_1` CHECK ((`price` > 0)),
   CONSTRAINT `gigs_chk_2` CHECK ((`delivery_time` > 0))
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -107,7 +107,7 @@ CREATE TABLE `gigs` (
 
 LOCK TABLES `gigs` WRITE;
 /*!40000 ALTER TABLE `gigs` DISABLE KEYS */;
-INSERT INTO `gigs` VALUES (1,2,'Build a Responsive Website','I will create a professional, responsive website using the latest technologies.',1,500.00,7,NULL,'active','2024-11-16 18:18:53','2024-11-16 18:18:53'),(2,3,'Design a Logo','Professional logo design for your brand.',2,100.00,3,NULL,'active','2024-11-16 18:18:53','2024-11-16 18:18:53'),(3,2,'Develop a Mobile App','Custom Android and iOS app development with user-friendly features.',5,1000.00,30,NULL,'active','2024-11-16 18:36:36','2024-11-16 18:36:36'),(4,3,'SEO Optimization','Improve your website ranking on search engines.',6,300.00,10,NULL,'active','2024-11-16 18:36:36','2024-11-16 18:36:36'),(5,4,'Edit Your Videos Professionally','High-quality video editing for your projects.',7,200.00,5,NULL,'active','2024-11-16 18:36:36','2024-11-16 18:36:36'),(6,5,'Manage Your Social Media','Full social media management for increased engagement.',8,400.00,7,NULL,'active','2024-11-16 18:36:36','2024-11-16 18:36:36');
+INSERT INTO `gigs` VALUES (1,2,'Build a Responsive Website','I will create a professional, responsive website using the latest technologies.',1,500.00,7,NULL,'active','2024-11-17 07:19:01','2024-11-17 07:19:01'),(2,3,'Design a Logo','Professional logo design for your brand.',2,100.00,3,NULL,'active','2024-11-17 07:19:01','2024-11-17 07:19:01'),(3,2,'test','a',1,500.00,1,'../uploads/gigs/images.jfif','active','2024-11-17 08:19:44','2024-11-17 08:19:44');
 /*!40000 ALTER TABLE `gigs` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -125,7 +125,7 @@ CREATE TABLE `job_requests` (
   `gig_id` int NOT NULL,
   `status` enum('pending','accepted','completed','cancelled') DEFAULT 'pending',
   `request_date` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `completion_date` timestamp NULL DEFAULT NULL,
+  `completion_date` datetime DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `client_id` (`client_id`),
   KEY `freelancer_id` (`freelancer_id`),
@@ -143,7 +143,7 @@ CREATE TABLE `job_requests` (
 
 LOCK TABLES `job_requests` WRITE;
 /*!40000 ALTER TABLE `job_requests` DISABLE KEYS */;
-INSERT INTO `job_requests` VALUES (1,4,2,1,'pending','2024-11-16 18:18:53',NULL),(2,5,3,2,'completed','2024-11-16 18:18:53',NULL),(3,6,2,3,'completed','2024-11-01 04:30:00','2024-11-10 12:30:00'),(4,7,3,2,'pending','2024-11-16 18:36:36',NULL),(5,8,4,4,'accepted','2024-11-16 18:36:36',NULL),(6,9,5,5,'cancelled','2024-11-05 06:30:00',NULL);
+INSERT INTO `job_requests` VALUES (1,4,2,1,'completed','2024-11-17 07:19:01','2024-11-17 08:19:16'),(2,5,3,2,'completed','2024-11-17 07:19:01',NULL),(3,4,2,3,'pending','2024-11-17 08:35:56',NULL),(4,4,2,3,'pending','2024-11-17 08:36:18',NULL),(5,4,2,3,'pending','2024-11-17 08:36:20',NULL),(6,4,2,3,'pending','2024-11-17 13:59:48',NULL);
 /*!40000 ALTER TABLE `job_requests` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -171,7 +171,7 @@ CREATE TABLE `reviews` (
   CONSTRAINT `reviews_ibfk_2` FOREIGN KEY (`freelancer_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
   CONSTRAINT `reviews_ibfk_3` FOREIGN KEY (`gig_id`) REFERENCES `gigs` (`id`) ON DELETE CASCADE,
   CONSTRAINT `reviews_chk_1` CHECK ((`rating` between 1 and 5))
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -180,7 +180,7 @@ CREATE TABLE `reviews` (
 
 LOCK TABLES `reviews` WRITE;
 /*!40000 ALTER TABLE `reviews` DISABLE KEYS */;
-INSERT INTO `reviews` VALUES (1,4,2,1,5,'Great work! Highly recommend.','2024-11-16 18:18:53'),(2,5,3,2,4,'Good logo design, but took slightly longer than expected.','2024-11-16 18:18:53'),(3,4,3,2,5,'Fantastic SEO work, I saw great results in just two weeks!','2024-11-16 18:36:36'),(4,6,2,3,4,'Good app design, but a bit delayed delivery.','2024-11-16 18:36:36'),(5,8,4,4,5,'Great video editing skills! Exceeded my expectations.','2024-11-16 18:36:36'),(6,9,5,5,3,'Average work, could have been better.','2024-11-16 18:36:36');
+INSERT INTO `reviews` VALUES (1,4,2,1,5,'Great work! Highly recommend.','2024-11-17 07:19:01'),(2,5,3,2,4,'Good logo design, but took slightly longer than expected.','2024-11-17 07:19:01');
 /*!40000 ALTER TABLE `reviews` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -203,12 +203,13 @@ CREATE TABLE `users` (
   `status` enum('active','inactive') DEFAULT 'active',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `bio` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `username` (`username`),
   UNIQUE KEY `email` (`email`),
   KEY `idx_user_role` (`role`),
   KEY `idx_user_status` (`status`)
-) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -217,7 +218,7 @@ CREATE TABLE `users` (
 
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
-INSERT INTO `users` VALUES (1,'admin','123','admin','Admin','User','admin@example.com',NULL,'active','2024-11-16 18:18:52','2024-11-16 18:18:52'),(2,'free1','123','freelancer','John','Doe','john.doe@example.com',NULL,'active','2024-11-16 18:18:53','2024-11-16 18:18:53'),(3,'free2','456','freelancer','Jane','Smith','jane.smith@example.com',NULL,'active','2024-11-16 18:18:53','2024-11-16 18:18:53'),(4,'cl1','123','client','Michael','Johnson','michael.johnson@example.com',NULL,'active','2024-11-16 18:18:53','2024-11-16 18:18:53'),(5,'cl2','456','client','Emily','Davis','emily.davis@example.com',NULL,'active','2024-11-16 18:18:53','2024-11-16 18:18:53'),(6,'admin2','456','admin','Alice','Brown','alice.brown@example.com',NULL,'active','2024-11-16 18:36:36','2024-11-16 18:36:36'),(7,'free3','789','freelancer','Robert','Taylor','robert.taylor@example.com',NULL,'active','2024-11-16 18:36:36','2024-11-16 18:36:36'),(8,'free4','321','freelancer','Sophia','Martinez','sophia.martinez@example.com',NULL,'active','2024-11-16 18:36:36','2024-11-16 18:36:36'),(9,'cl3','789','client','David','Harris','david.harris@example.com',NULL,'active','2024-11-16 18:36:36','2024-11-16 18:36:36'),(10,'cl4','321','client','Emma','Clark','emma.clark@example.com',NULL,'active','2024-11-16 18:36:36','2024-11-16 18:36:36');
+INSERT INTO `users` VALUES (1,'admin','123','admin','Admin','User','admin@example.com',NULL,'active','2024-11-17 07:19:00','2024-11-17 07:19:00',NULL),(2,'free1','123','freelancer','John','Doe','john.doe@example.com','../uploads/proPic/DP (10).jpg','active','2024-11-17 07:19:00','2024-11-17 17:03:02',''),(3,'free2','456','freelancer','Jane','Smith','jane.smith@example.com',NULL,'active','2024-11-17 07:19:00','2024-11-17 07:19:00',NULL),(4,'cl1','123','client','Michael','Johnson','michael.johnson@example.com','../uploads/proPic/DP (10).jpg','active','2024-11-17 07:19:00','2024-11-17 08:15:00',''),(5,'cl2','456','client','Emily','Davis','emily.davis@example.com',NULL,'active','2024-11-17 07:19:00','2024-11-17 07:19:00',NULL);
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -230,4 +231,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2024-11-17  0:08:02
+-- Dump completed on 2024-11-17 22:36:38
