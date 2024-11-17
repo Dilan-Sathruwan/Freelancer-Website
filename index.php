@@ -30,9 +30,10 @@ include_once "./config/db.php";
     $regPage = "./public/sign_up.php";
     $profilePage = "./public/profile.php";
     $homePage = "index.php";
+    $logo = "./assets/img/Logo.png";
 
     if (isset($_SESSION['role']) == 'client') {
-        $myGigsPage = "../client/dashboard.php";
+        $myGigsPage = "./client/dashboard.php";
     } else {
         $myGigsPage = "./freelancer/dashboard.php";
     }
@@ -49,7 +50,6 @@ include_once "./config/db.php";
             <a href="./public/gig.php" class="btn btn-outline-light btn-lg mt-3 ms-2" data-aos="zoom-in" data-aos-delay="250">Explore Features</a>
         </div>
     </section>
-
     <!-- Features Section -->
     <section class="features" id="features">
         <div class="container bg-transparent">

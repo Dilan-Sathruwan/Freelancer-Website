@@ -21,9 +21,9 @@
 
         }
 
-        .navbar:hover {
+        /* .navbar:hover {
             background-color: #ff9900;
-        }
+        } */
 
         .navbar a {
             color: #141414;
@@ -130,7 +130,7 @@
             <div class="container">
                 <!-- Logo Section -->
                 <a href="index.php" class="logo">
-                    <img src="assets/img/logo.png" class="img-fluid" alt="Logo">
+                    <img src="<?php echo isset($logo) ? $logo : '../assets/img/logo.png'; ?>" class="img-fluid" alt="Logo">
                 </a>
 
                 <!-- Mobile Toggle Button -->
@@ -148,7 +148,7 @@
                         </li>
 
                         <li class="nav-item">
-                            <a href="<?php echo isset($profilePage) ? $profilePage : '#'; ?>" class="nav-link">Profile</a>
+                            <a href="<?php echo isset($profilePage) ? $profilePage : '../public/profile.php'; ?>" class="nav-link">Profile</a>
                         </li>
 
                         <li class="nav-item">
@@ -162,12 +162,13 @@
                         <li class="nav-item">
                             <?php
                             if (isset($_SESSION['id'])) {
-                                if (isset($myGigsPage)) {
-                                    echo '<a href="' . $myGigsPage . '" class="nav-link">My Gigs</a>';
+                                if (isset($_SESSION['role']) && $_SESSION['role'] == 'client') {
+                                    echo '<a href="' . (isset($myGigsPage) ? $myGigsPage : "../client/dashboard.php") . '" class="nav-link">My Gigs</a>';
+                                } else {
+                                    echo '<a href="' . (isset($myGigsPage) ? $myGigsPage : "../freelancer/dashboard.php") . '" class="nav-link">My Gigs</a>';
                                 }
                             }
                             ?>
-
                         </li>
                     </ul>
 
