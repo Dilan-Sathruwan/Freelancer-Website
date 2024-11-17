@@ -122,7 +122,7 @@ if (isset($_POST['addGig'])) {
 
     <?php
     $logoutPage = "../config/logout.php";
-    $myGigsPage = "../public/dashboard.php";
+    $myGigsPage = "../freelancer/dashboard.php";
 
     include('../includes/index_header.php'); ?>
     <div class="container">

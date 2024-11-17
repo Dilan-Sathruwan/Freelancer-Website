@@ -189,7 +189,7 @@ $isClient = isset($_SESSION['role']) && $_SESSION['role'] === 'client';
             <p class="gig-price">$<?php echo $price; ?></p>
         </div>
         <div class="action-buttons">
-            <a href="index.php#gigs"><i class="fas fa-arrow-left"></i> Back to Gigs</a>
+            <a href="./gig.php"><i class="fas fa-arrow-left"></i> Back to Gigs</a>
             <?php if ($isClient): ?>
                 <form method="post" action="hire_gig.php" style="display: inline;">
                     <input type="hidden" name="gig_id" value="<?php echo $gigId; ?>">
