@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -16,18 +17,24 @@
         }
 
         .navbar {
-            background-color: #007bff;
-            padding: 1rem;
+            /* background-color: #D9641E; */
+            background-color: #ff9900bd;
+
+        }
+
+        .navbar:hover {
+            background-color: #ff9900;
         }
 
         .navbar a {
-            color: white;
+            color: #141414;
             font-weight: bold;
             transition: all 0.3s ease;
         }
 
         .navbar a:hover {
-            color: #ffd700;
+            /* color: #ffd700; */
+            color: #41423A;
             text-decoration: none;
         }
 
@@ -36,10 +43,9 @@
             height: auto;
         }
 
-        /* Positioning logo to the left */
-        .navbar .logo {
+        /* .navbar .logo {
             flex-grow: 1;
-        }
+        } */
 
         /* Center the navigation links */
         .navbar .nav-links {
@@ -57,7 +63,7 @@
         .navbar .nav-login {
             display: flex;
             justify-content: flex-end;
-            flex-grow: 1;
+            flex-grow: 0.1;
         }
 
         .nav-links a {
@@ -81,6 +87,13 @@
             transform: scaleX(1);
             transform-origin: bottom left;
         }
+
+        .img-fluid.rounded-circle {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+        }
+
 
         /* Responsive design */
         @media (max-width: 768px) {
@@ -114,11 +127,11 @@
 
     <!-- Navbar / Header -->
     <header>
-        <nav class="navbar navbar-expand-lg navbar-light">
+        <nav class="navbar navbar-expand-lg navbar-light ">
             <div class="container">
                 <!-- Logo Section -->
                 <a href="index.php" class="logo">
-                    <img src="assets/images/logo.png" alt="Logo">
+                    <img src="assets/img/logo.png" class="img-fluid" alt="Logo">
                 </a>
 
                 <!-- Mobile Toggle Button -->
@@ -130,13 +143,28 @@
                 <div class="collapse navbar-collapse" id="navbarNav">
                     <ul class="navbar-nav ml-auto nav-links">
                         <li class="nav-item">
-                            <a href="index.php" class="nav-link">Home</a>
+                            <a href="<?php echo $homePage ?? '../index.php'; ?>" class="nav-link">Home</a>
                         </li>
+
                         <li class="nav-item">
-                            <a href="<?php echo $regPage ? $regPage : "../public/sign_up.php"; ?>" class="nav-link">Register</a>
+                            <a href="<?php echo $profilePage ?? '#'; ?>" class="nav-link">Profile</a>
                         </li>
+
                         <li class="nav-item">
-                            <a href="public/profile.php" class="nav-link">Profile</a>
+                            <a href="#" class="nav-link">About</a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a href="#" class="nav-link">Contact</a>
+                        </li>
+
+                        <li class="nav-item">
+                            <?php
+                            if(isset($_SESSION['id'])){
+                                echo '<a href="#" class="nav-link">My Gigs</a>';
+                            }
+                            ?>
+                            
                         </li>
                     </ul>
 
@@ -152,6 +180,15 @@
                             echo '<a href="' . ($logoutPage ? $logoutPage : "../config/logout.php") . '" class="nav-link">Logout</a>';
                         } else {
                             echo '<a href="' . ($loginPage ? $loginPage : "../public/login.php") . '" class="nav-link">Login</a>';
+                        }
+
+                        ?>
+
+                    </div>
+                    <div class="nav-login">
+                        <?php
+                        if (!isset($_SESSION['id'])) {
+                            echo '<a href="' . ($regPage ? $regPage : "../public/sign_up.php") . '" class="nav-link">Register</a>';
                         }
                         ?>
 

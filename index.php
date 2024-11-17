@@ -186,6 +186,8 @@ include_once "./config/db.php";
     $logoutPage = "./config/logout.php";
     $loginPage = "./public/login.php";
     $regPage = "./public/sign_up.php";
+    $profilePage = "./public/profile.php";
+    $homePage = "index.php";
     include './includes/index_header.php';
     include('includes/theme_toggle.php');
     ?>

@@ -1,123 +1,157 @@
-<?php
-
-include('../config/db.php');
-// include('../includes/header.php');
-
-
-// session_start();
-// $userId = $_SESSION['user_id']; 
-
-?>
-
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Client Dashboard</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet"> <!-- AOS Library -->
+    <title>Campus Attendance Management System</title>
+    <link rel="stylesheet" href="assets/css/style.css"> <!-- Main stylesheet -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet"> <!-- Font Awesome icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet"> <!-- Bootstrap -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script> <!-- jQuery (optional for certain interactions) -->
+    <style>
+        /* Additional styling for header */
+        body {
+            font-family: 'Arial', sans-serif;
+        }
+
+        .navbar {
+            background-color: #00001a;
+            padding: 1rem;
+        }
+
+        .navbar a {
+            color: white;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .navbar a:hover {
+            color:  #ED7D27;
+            text-decoration: none;
+        }
+
+        .logo img {
+            width: 50px;
+            height: auto;
+        }
+
+        /* Positioning logo to the left */
+        .navbar .logo {
+            flex-grow: 1;
+        }
+
+        /* Center the navigation links */
+        .navbar .nav-links {
+            display: flex;
+            justify-content: center;
+            flex-grow: 2;
+        }
+
+        .navbar .nav-links li {
+            list-style: none;
+            margin-right: 1rem;
+        }
+
+        /* Position login to the right */
+        .navbar .nav-login {
+            display: flex;
+            justify-content: flex-end;
+            flex-grow: 1;
+        }
+
+        .nav-links a {
+            position: relative;
+        }
+
+        .nav-links a:after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color:  #ED7D27;
+            transform: scaleX(0);
+            transform-origin: bottom right;
+            transition: transform 0.25s ease-out;
+        }
+
+        .nav-links a:hover:after {
+            transform: scaleX(1);
+            transform-origin: bottom left;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .navbar .nav-links {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .navbar .nav-login {
+                justify-content: center;
+                margin-top: 1rem;
+            }
+
+            .theme-toggle {
+                margin-top: 1rem;
+            }
+
+            .logo img {
+                width: 40px;
+            }
+
+            .navbar a {
+                margin-right: 0;
+                margin-bottom: 0.5rem;
+            }
+        }
+    </style>
 </head>
+
 <body>
-    <!-- Dashboard Header -->
-    <section class="dashboard-header">
-        <div class="container">
-            <h1 class="text-center mb-4" data-aos="fade-up">Welcome to Your Dashboard</h1>
-            <div class="row">
-                <!-- Profile Section -->
-                <div class="col-md-4" data-aos="fade-up">
-                    <div class="profile-card text-center">
-                        <img src="../assets/images/default-avatar.png" alt="Profile Picture" class="img-fluid rounded-circle mb-3" width="120">
-                        <h3><?php echo htmlspecialchars($_SESSION['username']); ?></h3>
-                        <p>Client</p>
-                        <a href="edit_profile.php" class="btn btn-primary">Edit Profile</a>
-                    </div>
-                </div>
 
-                <!-- My Gigs Section -->
-                <div class="col-md-8" data-aos="fade-up" data-aos-delay="100">
-                    <h3>Your Gigs</h3>
-                    <div class="row">
-                        <?php
-                        $sql = "SELECT * FROM gigs WHERE client_id = :user_id ORDER BY created_at DESC";
-                        $stmt = $conn->prepare($sql);
-                        $stmt->execute(['user_id' => $userId]);
+    <!-- Navbar / Header -->
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-light">
+            <div class="container">
+                <!-- Logo Section -->
+                <a href="index.php" class="logo">
+                    <img src="assets/images/logo.png" alt="Logo">
+                </a>
 
-                        if ($stmt->rowCount() > 0) {
-                            while ($gig = $stmt->fetch(PDO::FETCH_ASSOC)) {
-                                $gigId = $gig['id'];
-                                $title = htmlspecialchars($gig['title']);
-                                $price = number_format($gig['price'], 2);
-                                $description = htmlspecialchars(substr($gig['description'], 0, 150)) . '...'; // Limit description length
-                        ?>
-                            <div class="col-md-4 mb-4">
-                                <div class="gig-card">
-                                    <h5><a href="gig_detail.php?id=<?php echo $gigId; ?>"><?php echo $title; ?></a></h5>
-                                    <p><?php echo $description; ?></p>
-                                    <p><strong>Price: $<?php echo $price; ?></strong></p>
-                                    <a href="gig_detail.php?id=<?php echo $gigId; ?>" class="btn btn-info">View Details</a>
-                                </div>
-                            </div>
-                        <?php
-                            }
-                        } else {
-                            echo "<p>No gigs found.</p>";
-                        }
-                        ?>
+                <!-- Mobile Toggle Button -->
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <!-- Navbar Links (Collapsed on mobile) -->
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav ml-auto nav-links">
+                        <li class="nav-item">
+                            <a href="index.php" class="nav-link">Home</a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="public/gig.php" class="nav-link">Gigs</a>
+                        </li>
+                        <!-- Role-specific Links (Client, Freelancer, Admin) -->
+                        
+                    </ul>
+
+                    <!-- Login/Logout link aligned to the right -->
+                    <div class="nav-login">
+                        
                     </div>
                 </div>
             </div>
-        </div>
-    </section>
+        </nav>
+    </header>
 
-    <!-- Active Projects Section -->
-    <section class="active-projects" id="active-projects" style="padding: 50px 0;">
-        <div class="container">
-            <h2 class="text-center" data-aos="fade-up">Active Projects</h2>
-            <div class="row">
-                <?php
-                $sql = "SELECT p.id, p.title, p.status, f.username, p.created_at
-                        FROM projects p
-                        JOIN freelancers f ON p.freelancer_id = f.id
-                        WHERE p.client_id = :user_id AND p.status != 'completed'
-                        ORDER BY p.created_at DESC";
-                $stmt = $conn->prepare($sql);
-                $stmt->execute(['user_id' => $userId]);
+    <!-- Bootstrap JS and Popper.js (for responsive navbar toggle) -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.min.js"></script>
 
-                if ($stmt->rowCount() > 0) {
-                    while ($project = $stmt->fetch(PDO::FETCH_ASSOC)) {
-                        $projectId = $project['id'];
-                        $title = htmlspecialchars($project['title']);
-                        $status = htmlspecialchars($project['status']);
-                        $freelancer = htmlspecialchars($project['username']);
-                        $createdAt = date('F j, Y', strtotime($project['created_at']));
-                ?>
-                    <div class="col-md-4 mb-4" data-aos="fade-up" data-aos-delay="100">
-                        <div class="project-card">
-                            <h5><a href="project_detail.php?id=<?php echo $projectId; ?>"><?php echo $title; ?></a></h5>
-                            <p>Status: <strong><?php echo $status; ?></strong></p>
-                            <p>Freelancer: <em><?php echo $freelancer; ?></em></p>
-                            <p><small>Started on: <?php echo $createdAt; ?></small></p>
-                            <a href="project_detail.php?id=<?php echo $projectId; ?>" class="btn btn-info">View Project</a>
-                        </div>
-                    </div>
-                <?php
-                    }
-                } else {
-                    echo "<p>No active projects found.</p>";
-                }
-                ?>
-            </div>
-        </div>
-    </section>
-
-
-
-    <!-- AOS Script for Animations -->
-    <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
-    <script>
-        AOS.init();
-    </script>
 </body>
+
 </html>
