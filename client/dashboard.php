@@ -1,24 +1,43 @@
 <?php
-include('../config/db.php');
+include_once "../config/db.php";
 session_start();
+
+// Helper function to ensure the user is logged in
+function check_logged_in()
+{
+    if (!isset($_SESSION['id']) || !isset($_SESSION['username'])) {
+        header("Location: login.php");
+        exit;
+    }
+}
+
+// Call the function to check login status
+check_logged_in();
 
 $userId = $_SESSION['id']; // Logged-in user ID
 $userName = $_SESSION['username']; // Logged-in username
 
-// Fetch gig details for the logged-in user
-$sql = "
-    SELECT g.id AS gig_id, g.title, g.description, g.price, g.image, u.first_name, u.last_name 
-    FROM client_gigs cg
-    JOIN gigs g ON cg.gig_id = g.id
-    JOIN users u ON g.freelancer_id = u.id
-    WHERE cg.user_id = :user_id
-    AND g.status = 'active';
-";
-$stmt = $conn->prepare($sql);
-$stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
-$stmt->execute();
-$gigs = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
+// Fetch gig details for the logged-in client
+try {
+    $sql = "
+        SELECT g.id AS gig_id, g.title, g.description, g.price, g.image, u.first_name, u.last_name 
+        FROM job_requests jr
+        JOIN gigs g ON jr.gig_id = g.id
+        JOIN users u ON g.freelancer_id = u.id
+        WHERE jr.client_id = :user_id
+        AND g.status = 'active'
+        AND jr.status IN ('pending', 'accepted', 'completed');
+    ";
+    $stmt = $conn->prepare($sql);
+    $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
+    $stmt->execute();
+    $gigs = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    // Handle database error gracefully and redirect
+    $_SESSION['error'] = "Error fetching gigs: " . $e->getMessage();
+    header("Location: index.php"); // Redirect to home or another page
+    exit;
+}
 ?>
 
 <!DOCTYPE html>
@@ -89,7 +108,7 @@ $gigs = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         <img src="../assets/images/default-avatar.png" alt="Profile Picture" class="img-fluid rounded-circle mb-3" width="120">
                         <h4><?php echo htmlspecialchars($userName); ?></h4>
                         <p class="text-muted">Client</p>
-                        <a href="edit_profile.php" class="btn btn-primary">Edit Profile</a>
+                        <a href="../public/profile.php" class="btn btn-primary">Edit Profile</a>
                     </div>
                 </div>
             </div>

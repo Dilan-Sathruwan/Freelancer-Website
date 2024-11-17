@@ -40,7 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     } else {
         // Handle profile picture upload if it exists
         if (isset($_FILES['profile_picture']) && $_FILES['profile_picture']['error'] == 0) {
-            $profile_picture = 'uploads/' . basename($_FILES['profile_picture']['name']);
+            $profile_picture = '../uploads/proPic/' . basename($_FILES['profile_picture']['name']);
             move_uploaded_file($_FILES['profile_picture']['tmp_name'], $profile_picture);
         } else {
             // If no new profile picture, retain old one
@@ -130,9 +130,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 </style>
 
-<?php 
+<?php
 $logoutPage = "../config/logout.php";
-include('../includes/index_header.php'); 
+include('../includes/index_header.php');
 ?>
 
 <!-- Profile Section -->
