@@ -1,8 +1,20 @@
 <?php
+include '../config/db.php';
+
+if (isset($_GET["search"])) {
+    $sql = "SELECT id, username, first_name, last_name, email, role, status FROM users WHERE username LIKE :search OR first_name LIKE :search OR last_name LIKE :search OR email LIKE :search";
+    $stmt = $conn->prepare($sql);
+    $stmt->bindValue(':search', '%' . $_GET["search"] . '%', PDO::PARAM_STR);
+    $result = $stmt->execute();
+    echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
+    exit;
+} else {
+    $sql = "SELECT id, username, first_name, last_name, email, role, status FROM users";
+    $stmt = $conn->query($sql);
+}
 
 // include '../includes/header.php';
 // include '../includes/session.php';
-include '../config/db.php';
 
 // Ensure only admins can access this page
 // if ($_SESSION['role'] !== 'admin') {
@@ -14,7 +26,7 @@ $freelancerCount = $conn->query("SELECT COUNT(*) FROM users WHERE role = 'freela
 $clientCount = $conn->query("SELECT COUNT(*) FROM users WHERE role = 'client'")->fetchColumn();
 $adminCount = $conn->query("SELECT COUNT(*) FROM users WHERE role = 'admin'")->fetchColumn();
 
-$stmt = $conn->query("SELECT id, username, first_name, last_name, email, status FROM users");
+$stmt = $conn->query("SELECT id, username, first_name, last_name, email, role, status FROM users");
 $users = $stmt->fetchAll();
 ?>
 
@@ -25,6 +37,9 @@ $users = $stmt->fetchAll();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+
     <link rel="stylesheet" href="../assets/css/style.css"> <!-- Your custom CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"> <!-- Font Awesome -->
     <style>
@@ -121,7 +136,7 @@ $users = $stmt->fetchAll();
         }
 
         th {
-            background-color: #007bff;
+            background-color: black;
             color: white;
         }
 
@@ -140,6 +155,10 @@ $users = $stmt->fetchAll();
 
         .btn:hover {
             background-color: #0056b3;
+        }
+
+        .btn-danger {
+            background-color: #000000;
         }
     </style>
 </head>
@@ -176,14 +195,8 @@ $users = $stmt->fetchAll();
             <a href="manage_freelancers.php"><i class="fas fa-chart-line"></i> Manage Freelancers</a>
         </div>
 
-        <!-- Button section -->
-        <div class="button-section">
-            <a href="manage_client.php" title="Manage Users"><i class="fas fa-user-plus"></i> Manage Client</a>
-            <a href="manage_admins.php"><i class="fas fa-cogs"></i> Manage Admins</a>
-            <a href="manage_freelancers.php"><i class="fas fa-chart-line"></i> Manage Freelancers</a>
-        </div>
-
         <!-- Recent activity -->
+        <input type="text" id="searchInput" placeholder="Type to Search by username" onkeyup="Search(event)" class="w-100 mt-5 p-2 border-0">
         <div class="recent-activity">
             <h3>Recent Activity</h3>
             <table>
@@ -195,41 +208,61 @@ $users = $stmt->fetchAll();
                         <th>Last Name</th>
                         <th>Email</th>
                         <th>Status</th>
-                        <th>Action</th>
+                        <th>Role</th>
+                        <th>action</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <?php if (!empty($users)): ?>
-                        <?php foreach ($users as $user): ?>
-                            <tr>
-                                <td><?php echo htmlspecialchars($user['id']); ?></td>
-                                <td><?php echo htmlspecialchars($user['username']); ?></td>
-                                <td><?php echo htmlspecialchars($user['first_name']); ?></td>
-                                <td><?php echo htmlspecialchars($user['last_name']); ?></td>
-                                <td><?php echo htmlspecialchars($user['email']); ?></td>
-                                <td><?php echo htmlspecialchars($user['status']); ?></td>
-                                <td>
-                                    <a href="edit_user.php?id=<?php echo $user['id']; ?>" class="btn btn-warning">Edit</a>
-                                    <a href="delete_user.php?id=<?php echo $user['id']; ?>" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this user?');">Delete</a>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    <?php else: ?>
-                        <tr>
-                            <td colspan="7">No users found.</td>
-                        </tr>
-                    <?php endif; ?>
+                <tbody id="tbody">
+
                 </tbody>
             </table>
-
-            <a href="reports.php" class="btn">View All Reports</a>
         </div>
     </div>
 
     <?php
-// Include footer
-include '../includes/admin_footer.php';
-?>
+    // Include footer
+    include '../includes/admin_footer.php';
+    ?>
+
+    <script>
+        function Search(event) {
+            const tbody = document.getElementById('tbody');
+            tbody.innerHTML = '';
+
+            const xhr = new XMLHttpRequest();
+            xhr.open('GET', 'dashboard.php?search=' + encodeURIComponent(event.target.value));
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    const users = JSON.parse(xhr.responseText);
+                    users.forEach(user => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                    <td>${user.id}</td>
+                    <td>${user.username}</td>
+                    <td>${user.first_name}</td>
+                    <td>${user.last_name}</td>
+                    <td>${user.email}</td>
+                    <td>${user.status}</td>
+                    <td>${user.role}</td>
+                    <td>
+                        <a href="delete_user.php?id=${user.id}" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this user?');">
+                            <i class="fas fa-trash-alt"></i>
+                        </a>
+                    </td>
+                `;
+                        tbody.appendChild(row);
+                    });
+                }
+            };
+            xhr.send();
+        }
+
+        Search({
+            target: {
+                value: ''
+            }
+        });
+    </script>
 
 </body>
 
