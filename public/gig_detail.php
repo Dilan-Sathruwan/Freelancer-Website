@@ -176,7 +176,7 @@ $isClient = isset($_SESSION['role']) && $_SESSION['role'] === 'client';
             </div>
         </div>
         <div class="gig-image">
-            <img src="<?php echo $image; ?>" alt="Gig Image">
+            <img src="<?php echo $image; ?>" alt="<?php echo $image ?>">
         </div>
         <div class="gig-details">
             <h4>Category:</h4>
@@ -190,7 +190,7 @@ $isClient = isset($_SESSION['role']) && $_SESSION['role'] === 'client';
         </div>
         <div class="action-buttons">
             <a href="index.php#gigs"><i class="fas fa-arrow-left"></i> Back to Gigs</a>
-            <?php if (!$isClient): ?>
+            <?php if ($isClient): ?>
                 <form method="post" action="hire_gig.php" style="display: inline;">
                     <input type="hidden" name="gig_id" value="<?php echo $gigId; ?>">
                     <input type="hidden" name="freelancer_id" value="<?php echo $gig['freelancer_id']; ?>">
