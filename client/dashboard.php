@@ -1,13 +1,23 @@
 <?php
-
 include('../config/db.php');
-// include('../includes/header.php');
-
-
 session_start();
-$userId = $_SESSION['id']; 
-$userName = $_SESSION['username'];
 
+$userId = $_SESSION['id']; // Logged-in user ID
+$userName = $_SESSION['username']; // Logged-in username
+
+// Fetch gig details for the logged-in user
+$sql = "
+    SELECT g.id AS gig_id, g.title, g.description, g.price, g.image, u.first_name, u.last_name 
+    FROM client_gigs cg
+    JOIN gigs g ON cg.gig_id = g.id
+    JOIN users u ON g.freelancer_id = u.id
+    WHERE cg.user_id = :user_id
+    AND g.status = 'active';
+";
+$stmt = $conn->prepare($sql);
+$stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
+$stmt->execute();
+$gigs = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 ?>
 
@@ -77,7 +87,7 @@ $userName = $_SESSION['username'];
                     </div>
                     <div class="card-body text-center">
                         <img src="../assets/images/default-avatar.png" alt="Profile Picture" class="img-fluid rounded-circle mb-3" width="120">
-                        <h4><?php echo htmlspecialchars($userName);?></h4>
+                        <h4><?php echo htmlspecialchars($userName); ?></h4>
                         <p class="text-muted">Client</p>
                         <a href="edit_profile.php" class="btn btn-primary">Edit Profile</a>
                     </div>
@@ -92,21 +102,31 @@ $userName = $_SESSION['username'];
                     </div>
                     <div class="card-body">
                         <div class="row">
-                            <!-- Example Gig -->
-                            <div class="col-md-6 mb-4">
-                                <div class="card h-100">
-                                    <div class="card-body">
-                                        
-                                        <h5 class="card-title">
-                                            <a href="gig_detail.php?id=" class="text-decoration-none text-dark">dsdsdsd</a>
-                                        </h5>
-                                        <p class="card-text">fdssd</p>
-                                        <p class="card-text"><strong>Price: $</strong></p>
-                                        <a href="gig_detail.php?id=" class="btn btn-info">View Details</a>
+                            <?php if (!empty($gigs)): ?>
+                                <?php foreach ($gigs as $gig): ?>
+                                    <div class="col-md-6 mb-4">
+                                        <div class="card h-100">
+                                            <img src="<?= htmlspecialchars($gig['image'] ?? 'default.jpg') ?>" class="card-img-top" alt="Gig Image">
+                                            <div class="card-body">
+                                                <h5 class="card-title">
+                                                    <a href="gig_detail.php?id=<?= htmlspecialchars($gig['gig_id']) ?>"
+                                                        class="text-decoration-none text-dark">
+                                                        <?= htmlspecialchars($gig['title']) ?>
+                                                    </a>
+                                                </h5>
+                                                <p class="card-text"><?= htmlspecialchars($gig['description']) ?></p>
+                                                <p class="card-text"><strong>Price: $<?= htmlspecialchars($gig['price']) ?></strong></p>
+                                                <p class="card-text">Freelancer: <?= htmlspecialchars($gig['first_name'] . ' ' . $gig['last_name']) ?></p>
+                                                <a href="gig_detail.php?id=<?= htmlspecialchars($gig['gig_id']) ?>" class="btn btn-info">View Details</a>
+                                            </div>
+                                        </div>
                                     </div>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <div class="col-12">
+                                    <p class="text-center">No gigs available for you.</p>
                                 </div>
-                            </div>
-                            <!-- Add more gig cards here -->
+                            <?php endif; ?>
                         </div>
                     </div>
                 </div>
