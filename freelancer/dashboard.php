@@ -9,7 +9,36 @@ $user_id = $_SESSION['id'];
 $stmt = $conn->prepare("SELECT * FROM users WHERE id = ? AND role = 'freelancer'");
 $stmt->execute([$user_id]);
 $freelancer = $stmt->fetch();
+
+
+if (isset($_POST['profileSubmit'])) {
+    $username = $_POST['username'];
+
+    $stmt = $conn->prepare("UPDATE users SET username = ? WHERE id = ? AND role = 'freelancer'");
+    $stmt->execute([$username, $user_id]);
+    header("Location: dashboard.php");
+}
+
+
+if (isset($_GET['deleteId'])) {
+    $gigId = $_GET['deleteId'];
+    $stmt = $conn->prepare("DELETE FROM gigs WHERE id = ?");
+    $stmt->execute([$gigId]);
+    header("Location: dashboard.php");
+}
+
+
+if (isset($_POST['updateGig'])) {
+    $gigId = $_POST['gitID'];
+    $title = $_POST['title'];
+    $description = $_POST['description'];
+    $price = $_POST['price'];
+    $stmt = $conn->prepare("UPDATE gigs SET title = ?, description = ?, price = ? WHERE id = ?");
+    $stmt->execute([$title, $description, $price, $gigId]);
+    header("Location: dashboard.php");
+}
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -40,7 +69,8 @@ $freelancer = $stmt->fetch();
             background-color: #0056b3;
         }
 
-        .table th, .table td {
+        .table th,
+        .table td {
             text-align: center;
         }
     </style>
@@ -61,10 +91,16 @@ $freelancer = $stmt->fetch();
                 <h3>Your Profile</h3>
             </div>
             <div class="card-body">
-                <p><strong>Username:</strong> <?php echo htmlspecialchars($freelancer['username']); ?></p>
-                <p><strong>Email:</strong> <?php echo htmlspecialchars($freelancer['email']); ?></p>
-                <p><strong>Status:</strong> <?php echo htmlspecialchars($freelancer['status']); ?></p>
-                <a href="edit_profile.php" class="btn btn-primary">Edit Profile</a>
+                <form action="" method="post">
+                    <p><strong>Username:</strong>
+                        <input class="border-0" name="username" type="text" value="<?php echo htmlspecialchars($freelancer['username']); ?>">
+                    </p>
+                    <p><strong>Email:</strong>
+                        <input type="text" disabled name="email" value="<?php echo htmlspecialchars($freelancer['email']); ?>" class="border-0">
+                    </p>
+                    <p><strong>Status:</strong> <?php echo htmlspecialchars($freelancer['status']); ?></p>
+                    <button type="submit" name="profileSubmit" class="btn btn-primary">Update</button>
+                </form>
             </div>
         </div>
 
@@ -94,14 +130,25 @@ $freelancer = $stmt->fetch();
                         if ($gigs):
                             foreach ($gigs as $gig): ?>
                                 <tr>
-                                    <td><?php echo htmlspecialchars($gig['title']); ?></td>
-                                    <td><?php echo htmlspecialchars($gig['description']); ?></td>
-                                    <td>$<?php echo htmlspecialchars($gig['price']); ?></td>
-                                    <td><?php echo htmlspecialchars($gig['status']); ?></td>
-                                    <td>
-                                        <a href="edit_gig.php?id=<?php echo $gig['id']; ?>" class="btn btn-warning btn-sm">Edit</a>
-                                        <a href="delete_gig.php?id=<?php echo $gig['id']; ?>" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this gig?');">Delete</a>
-                                    </td>
+                                    <form action="" method="POST">
+                                        <td>
+                                            <input type="text" name="title" class="border-0" value="<?php echo htmlspecialchars($gig['title']); ?>">
+                                        </td>
+                                        <td class="d-none">
+                                            <input type="text" name="gitID" class="border-0" value="<?php echo htmlspecialchars($gig['id']); ?>">
+                                        </td>
+                                        <td>
+                                            <textarea name="description" class="border-0" cols="30" rows="10"><?php echo htmlspecialchars($gig['description']); ?></textarea>
+                                        </td>
+                                        <td>$
+                                            <input type="text" name="price" class="border-0" value="<?php echo htmlspecialchars($gig['price']); ?>">
+                                        </td>
+                                        <td><?php echo htmlspecialchars($gig['status']); ?></td>
+                                        <td>
+                                            <button type="submit" name="updateGig" class="btn btn-primary btn-sm">Update</button>
+                                            <a href="dashboard.php?deleteId=<?php echo $gig['id']; ?>" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this gig?');">Delete</a>
+                                        </td>
+                                    </form>
                                 </tr>
                             <?php endforeach;
                         else: ?>
@@ -122,4 +169,3 @@ $freelancer = $stmt->fetch();
 </body>
 
 </html>
-
