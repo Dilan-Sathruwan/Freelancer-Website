@@ -2,73 +2,88 @@
 // Start the session
 session_start();
 
-include('../config/db.php');
+// Include the database connection
+include('../config/db.con.php');
 
-if (!isset($_SESSION['id'])) {
-    header('Location: login.php');
+// Redirect if not logged in
+if (!isset($_SESSION['user_id'])) {
+    header('Location: ../auth/login.php');
     exit();
 }
 
+$user_id = $_SESSION['user_id'];
 
-$user_id = $_SESSION['id'];
-
-// Fetch user data from the database
-$query = "SELECT * FROM users WHERE id = :id";
-$stmt = $conn->prepare($query);
-$stmt->execute(['id' => $user_id]);
-$user = $stmt->fetch(PDO::FETCH_ASSOC);
-
-
-if (!$user) {
-    echo "User not found.";
+// Fetch user data from the database using prepared statement
+try {
+    $query = "SELECT * FROM users WHERE id = ?";
+    $stmt = $conn->prepare($query);
+    $stmt->execute([$user_id]);
+    $user = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    if (!$user) {
+        echo "User not found.";
+        exit();
+    }
+} catch (PDOException $e) {
+    error_log("Profile fetch error: " . $e->getMessage());
+    $error = "An error occurred while fetching profile data.";
 }
 
 // Handle profile update
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $first_name = $_POST['first_name'];
-    $last_name = $_POST['last_name'];
-    $email = $_POST['email'];
-    $bio = $_POST['bio'];
-
+    // Sanitize inputs
+    $first_name = sanitizeInput($_POST['first_name']);
+    $last_name = sanitizeInput($_POST['last_name']);
+    $email = sanitizeInput($_POST['email']);
+    $bio = sanitizeInput($_POST['bio']);
+    
     if ($user['role'] == 'freelancer') {
-        $status = $_POST['status'];
+        $status = sanitizeInput($_POST['status']);
     }
 
     // Validate input
     if (empty($first_name) || empty($last_name) || empty($email)) {
         $error = "First name, last name, and email are required.";
     } else {
-        // Handle profile picture upload if it exists
-        if (isset($_FILES['profile_picture']) && $_FILES['profile_picture']['error'] == 0) {
-            $profile_picture = '../uploads/proPic/' . basename($_FILES['profile_picture']['name']);
-            move_uploaded_file($_FILES['profile_picture']['tmp_name'], $profile_picture);
-        } else {
-            // If no new profile picture, retain old one
-            $profile_picture = $user['profile_picture'];
+        try {
+            // Handle profile picture upload if it exists
+            if (isset($_FILES['profile_picture']) && $_FILES['profile_picture']['error'] == 0) {
+                // Create uploads directory if it doesn't exist
+                $uploadDir = '../uploads/proPic/';
+                if (!file_exists($uploadDir)) {
+                    mkdir($uploadDir, 0777, true);
+                }
+                
+                $profile_picture = $uploadDir . basename($_FILES['profile_picture']['name']);
+                move_uploaded_file($_FILES['profile_picture']['tmp_name'], $profile_picture);
+            } else {
+                // If no new profile picture, retain old one
+                $profile_picture = $user['profile_picture'];
+            }
+
+            // Update user data in the database
+            if ($user['role'] == 'freelancer') {
+                $update_query = "UPDATE users SET first_name = ?, last_name = ?, email = ?, bio = ?, profile_picture = ?, status = ? WHERE id = ?";
+                $update_stmt = $conn->prepare($update_query);
+                $update_stmt->execute([$first_name, $last_name, $email, $bio, $profile_picture, $status, $user_id]);
+            } else {
+                $update_query = "UPDATE users SET first_name = ?, last_name = ?, email = ?, bio = ?, profile_picture = ? WHERE id = ?";
+                $update_stmt = $conn->prepare($update_query);
+                $update_stmt->execute([$first_name, $last_name, $email, $bio, $profile_picture, $user_id]);
+            }
+
+            // Update session data
+            $_SESSION['username'] = $first_name . ' ' . $last_name;
+            
+            $success = "Profile updated successfully!";
+            
+            // Refresh user data
+            $stmt->execute([$user_id]);
+            $user = $stmt->fetch(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("Profile update error: " . $e->getMessage());
+            $error = "An error occurred while updating profile.";
         }
-
-        // Update user data in the database
-        if ($user['role'] == 'freelancer') {
-            $update_query = "UPDATE users SET first_name = ?, last_name = ?, email = ?, bio = ?, profile_picture = ?, status = ? WHERE id = ?";
-        } else {
-            $update_query = "UPDATE users SET first_name = ?, last_name = ?, email = ?, bio = ?, profile_picture = ? WHERE id = ?";
-        }
-
-        $update_stmt = $conn->prepare($update_query);
-
-
-        if ($user['role'] == 'freelancer') {
-            $update_stmt->execute([$first_name, $last_name, $email, $bio, $profile_picture, $status, $user_id]);
-        } else {
-            $update_stmt->execute([$first_name, $last_name, $email, $bio, $profile_picture, $user_id]);
-        }
-
-        // Update session data if email or name changed
-        $_SESSION['first_name'] = $first_name;
-        $_SESSION['last_name'] = $last_name;
-        $_SESSION['email'] = $email;
-
-        $success = "Profile updated successfully!";
     }
 }
 ?>
@@ -153,18 +168,18 @@ include('../includes/index_header.php');
         <!-- Display success or error messages -->
         <?php if (isset($success)) { ?>
             <div class="alert alert-success">
-                <?php echo $success; ?>
+                <?php echo htmlspecialchars($success); ?>
             </div>
         <?php } elseif (isset($error)) { ?>
             <div class="alert alert-danger">
-                <?php echo $error; ?>
+                <?php echo htmlspecialchars($error); ?>
             </div>
         <?php } ?>
 
         <div class="row justify-content-center">
             <div class="col-md-4">
                 <div class="card shadow-lg profile-card" data-aos="flip-left" data-aos-duration="1500">
-                    <img src="<?php echo $user['profile_picture'] ? $user['profile_picture'] : 'assets/images/default-avatar.jpg'; ?>" alt="Profile Picture" class="card-img-top rounded-circle mx-auto mt-4" style="width: 150px; height: 150px; object-fit: cover;">
+                    <img src="<?php echo $user['profile_picture'] ? htmlspecialchars($user['profile_picture']) : '../assets/images/default-avatar.jpg'; ?>" alt="Profile Picture" class="card-img-top rounded-circle mx-auto mt-4" style="width: 150px; height: 150px; object-fit: cover;">
                     <div class="card-body text-center">
                         <h5 class="card-title"><?php echo htmlspecialchars($user['first_name'] . ' ' . $user['last_name']); ?></h5>
                         <p class="card-text text-muted"><?php echo htmlspecialchars($user['bio']); ?></p>

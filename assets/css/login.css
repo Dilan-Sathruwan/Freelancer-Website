@@ -1,75 +1,95 @@
-body {
-    font-family: Arial, sans-serif;
-    background: url(../img/login.jpg)no-repeat center center/cover;
-    background-color: rgba(255,255,255,0.9);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
+/* Custom Login/Signup Styles */
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .max-w-md {
+        max-width: 100%;
+    }
+    
+    .max-w-2xl {
+        max-width: 100%;
+    }
+    
+    .grid-cols-1.md\:grid-cols-2 {
+        grid-template-columns: 1fr;
+    }
+    
+    .p-6 {
+        padding: 1.5rem;
+    }
 }
 
-.form {
-    background: rgba(255, 255, 255, 0.616);
-    border-radius: 10px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    padding: 50px;
-width: 500px;
+/* Focus states for accessibility */
+input:focus, select:focus, textarea:focus, button:focus {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
 }
 
-h2 {
-    margin-bottom: 20px;
+/* Smooth transitions */
+.transition-all {
+    transition-property: all;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms;
 }
 
-.input-group {
-    margin-bottom: 15px;
+/* Form animations */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
-label {
-    display: block;
-    margin-bottom: 5px;
+.animate-fade-in-up {
+    animation: fadeInUp 0.5s ease forwards;
 }
 
-input[type="text"],
-input[type="password"] {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
+/* Input field enhancements */
+input::placeholder {
+    color: #9ca3af;
 }
 
-button {
-    width: 100%;
-    padding: 10px;
-    background-color: #ff9900bd;
-    border: none;
-    color: white;
-    border-radius: 4px;
-    cursor: pointer;
-}
-
+/* Button hover effects */
 button:hover {
-    background-color: #ff9900;
+    transform: translateY(-2px);
 }
 
-.forgot-password {
-    text-align: center;
-    margin-top: 10px;
+/* Error and success message animations */
+.bg-red-50, .bg-green-50 {
+    animation: fadeIn 0.3s ease-in-out;
 }
 
-.forgot-password a {
-    text-decoration: none;
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
 }
 
-.forgot-password a:hover {
-    text-decoration: underline;
+/* Role selection styling */
+.role-option {
+    transition: all 0.2s ease-in-out;
 }
 
-
-.backToHome{
-    position: absolute;
-    inset: 0;
-    width: 200px;
-    height: 50px;
-
+.role-option:hover {
+    transform: translateY(-2px);
 }
 
+/* Shadow enhancements */
+.shadow-xl {
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* Gradient backgrounds */
+.bg-gradient-to-br {
+    background-size: 200% 200%;
+    animation: gradientShift 10s ease infinite;
+}
+
+@keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}

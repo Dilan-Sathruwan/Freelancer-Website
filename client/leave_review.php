@@ -1,7 +1,7 @@
 
 <?php
 // Include necessary files for connection and session
-include('../config/db_connection.php');
+include('../config/db.con.php');
 include('../includes/header.php');
 
 // Assuming the user is logged in and the user ID is stored in session

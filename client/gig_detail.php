@@ -1,6 +1,6 @@
 <?php
 // Include database connection and session management
-include('../config/db.php');
+include('../config/db.con.php');
 session_start();
 
 // Check if 'id' is provided in the query string

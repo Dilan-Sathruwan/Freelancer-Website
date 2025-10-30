@@ -1,52 +1,84 @@
 <?php
 session_start();
-include '../config/db.php'; // Include database connection
+include '../config/db.con.php'; // Include database connection
 
 // Ensure only freelancers access this page
-if ($_SESSION['role'] !== 'freelancer') {
-    header("Location: ../public/index.php");
+if (!isset($_SESSION['user_id']) || !isset($_SESSION['role']) || $_SESSION['role'] !== 'freelancer') {
+    header("Location: ../auth/login.php");
     exit;
 }
 
-$freelancer_id = $_SESSION['id'];
+$freelancer_id = $_SESSION['user_id'];
 
 // Handle Accept Job Request
 if (isset($_POST['accept_request'])) {
-    $job_request_id = $_POST['job_request_id'];
-    $stmt = $conn->prepare("UPDATE job_requests SET status = 'accepted' WHERE id = ? AND freelancer_id = ?");
-    $stmt->execute([$job_request_id, $freelancer_id]);
-    header("Location: manage_job_requests.php");
-    exit;
+    // Validate input
+    $job_request_id = validateInteger($_POST['job_request_id']);
+    
+    if ($job_request_id) {
+        try {
+            $stmt = $conn->prepare("UPDATE job_requests SET status = 'accepted' WHERE id = ? AND freelancer_id = ?");
+            $stmt->execute([$job_request_id, $freelancer_id]);
+            header("Location: manage_job_requests.php");
+            exit;
+        } catch (PDOException $e) {
+            error_log("Error accepting job request: " . $e->getMessage());
+            $error = "Error accepting job request.";
+        }
+    }
 }
 
 // Handle Complete Job Request
 if (isset($_POST['complete_request'])) {
-    $job_request_id = $_POST['job_request_id'];
-    $completion_date = date('Y-m-d H:i:s');
-    $stmt = $conn->prepare("UPDATE job_requests SET status = 'completed', completion_date = ? WHERE id = ? AND freelancer_id = ?");
-    $stmt->execute([$completion_date, $job_request_id, $freelancer_id]);
-    header("Location: manage_job_requests.php");
-    exit;
+    // Validate input
+    $job_request_id = validateInteger($_POST['job_request_id']);
+    
+    if ($job_request_id) {
+        try {
+            $completion_date = date('Y-m-d H:i:s');
+            $stmt = $conn->prepare("UPDATE job_requests SET status = 'completed', completion_date = ? WHERE id = ? AND freelancer_id = ?");
+            $stmt->execute([$completion_date, $job_request_id, $freelancer_id]);
+            header("Location: manage_job_requests.php");
+            exit;
+        } catch (PDOException $e) {
+            error_log("Error completing job request: " . $e->getMessage());
+            $error = "Error completing job request.";
+        }
+    }
 }
 
 // Handle Cancel Job Request
 if (isset($_POST['cancel_request'])) {
-    $job_request_id = $_POST['job_request_id'];
-    $stmt = $conn->prepare("UPDATE job_requests SET status = 'cancelled' WHERE id = ? AND freelancer_id = ?");
-    $stmt->execute([$job_request_id, $freelancer_id]);
-    header("Location: manage_job_requests.php");
-    exit;
+    // Validate input
+    $job_request_id = validateInteger($_POST['job_request_id']);
+    
+    if ($job_request_id) {
+        try {
+            $stmt = $conn->prepare("UPDATE job_requests SET status = 'cancelled' WHERE id = ? AND freelancer_id = ?");
+            $stmt->execute([$job_request_id, $freelancer_id]);
+            header("Location: manage_job_requests.php");
+            exit;
+        } catch (PDOException $e) {
+            error_log("Error canceling job request: " . $e->getMessage());
+            $error = "Error canceling job request.";
+        }
+    }
 }
 
 // Fetch Job Requests for the Freelancer
-$stmt = $conn->prepare("SELECT jr.id, jr.status, jr.request_date, jr.completion_date, g.title AS gig_title, u.first_name AS client_name, u.email AS client_email
-                         FROM job_requests jr
-                         JOIN gigs g ON jr.gig_id = g.id
-                         JOIN users u ON jr.client_id = u.id
-                         WHERE jr.freelancer_id = ?
-                         ORDER BY jr.request_date DESC");
-$stmt->execute([$freelancer_id]);
-$job_requests = $stmt->fetchAll();
+try {
+    $stmt = $conn->prepare("SELECT jr.id, jr.status, jr.request_date, jr.completion_date, g.title AS gig_title, u.first_name AS client_name, u.email AS client_email
+                             FROM job_requests jr
+                             JOIN gigs g ON jr.gig_id = g.id
+                             JOIN users u ON jr.client_id = u.id
+                             WHERE jr.freelancer_id = ?
+                             ORDER BY jr.request_date DESC");
+    $stmt->execute([$freelancer_id]);
+    $job_requests = $stmt->fetchAll();
+} catch (PDOException $e) {
+    error_log("Error fetching job requests: " . $e->getMessage());
+    $error = "Error fetching job requests.";
+}
 ?>
 
 <!DOCTYPE html>
@@ -70,9 +102,16 @@ $job_requests = $stmt->fetchAll();
 
 <body>
     <div class="container mt-5">
+        <!-- Display error message if any -->
+        <?php if (isset($error)): ?>
+            <div class="alert alert-danger">
+                <?php echo htmlspecialchars($error); ?>
+            </div>
+        <?php endif; ?>
+        
         <h1 class="text-center">Manage Job Requests</h1>
 
-        <?php if (count($job_requests) > 0): ?>
+        <?php if (isset($job_requests) && count($job_requests) > 0): ?>
             <table class="table table-bordered mt-4">
                 <thead>
                     <tr>

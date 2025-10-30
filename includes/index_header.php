@@ -161,7 +161,7 @@
 
                         <li class="nav-item">
                             <?php
-                            if (isset($_SESSION['id'])) {
+                            if (isset($_SESSION['user_id'])) {
                                 if (isset($_SESSION['role']) && $_SESSION['role'] == 'client') {
                                     echo '<a href="' . (isset($myGigsPage) ? $myGigsPage : "../client/dashboard.php") . '" class="nav-link">My Gigs</a>';
                                 } else {
@@ -177,13 +177,13 @@
 
                         <?php
                         if (!isset($loginPage)) {
-                            $loginPage = "../public/login.php";
+                            $loginPage = "../auth/login.php";
                         }
 
-                        if (isset($_SESSION['id'])) {
+                        if (isset($_SESSION['user_id'])) {
                             echo '<a href="' . (isset($logoutPage) ? $logoutPage : "../config/logout.php") . '" class="nav-link">Logout</a>';
                         } else {
-                            echo '<a href="' . (isset($loginPage) ? $loginPage : "../public/login.php") . '" class="nav-link">Login</a>';
+                            echo '<a href="' . (isset($loginPage) ? $loginPage : "../auth/login.php") . '" class="nav-link">Login</a>';
                         }
 
                         ?>
@@ -191,8 +191,8 @@
                     </div>
                     <div class="nav-login">
                         <?php
-                        if (!isset($_SESSION['id'])) {
-                            echo '<a href="' . ($regPage ? $regPage : "../public/sign_up.php") . '" class="nav-link">Register</a>';
+                        if (!isset($_SESSION['user_id'])) {
+                            echo '<a href="' . ($regPage ? $regPage : "../auth/signup.php") . '" class="nav-link">Register</a>';
                         }
                         ?>
 

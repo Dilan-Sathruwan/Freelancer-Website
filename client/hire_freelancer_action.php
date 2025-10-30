@@ -1,7 +1,7 @@
 <?php
 // hire_freelancer_action.php
 
-include('../config/db_connection.php');
+include('../config/db.con.php');
 session_start();
 
 $clientId = $_POST['clientId'];

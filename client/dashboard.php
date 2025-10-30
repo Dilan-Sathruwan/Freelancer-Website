@@ -1,12 +1,12 @@
 <?php
-include_once "../config/db.php";
+include_once "../config/db.con.php";
 session_start();
 
 // Helper function to ensure the user is logged in
 function check_logged_in()
 {
-    if (!isset($_SESSION['id']) || !isset($_SESSION['username'])) {
-        header("Location: login.php");
+    if (!isset($_SESSION['user_id']) || !isset($_SESSION['username']) || !isset($_SESSION['role']) || $_SESSION['role'] !== 'client') {
+        header("Location: ../auth/login.php");
         exit;
     }
 }
@@ -14,7 +14,7 @@ function check_logged_in()
 // Call the function to check login status
 check_logged_in();
 
-$userId = $_SESSION['id']; 
+$userId = $_SESSION['user_id']; 
 $userName = $_SESSION['username']; 
 
 // Fetch gig details for the logged-in client
@@ -24,29 +24,39 @@ try {
         FROM job_requests jr
         JOIN gigs g ON jr.gig_id = g.id
         JOIN users u ON g.freelancer_id = u.id
-        WHERE jr.client_id = :user_id
+        WHERE jr.client_id = ?
         AND g.status = 'active'
         AND jr.status IN ('pending', 'accepted', 'completed');
     ";
     $stmt = $conn->prepare($sql);
-    $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
-    $stmt->execute();
+    $stmt->execute([$userId]);
     $gigs = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
     // Handle database error gracefully and redirect
-    $_SESSION['error'] = "Error fetching gigs: " . $e->getMessage();
-    header("Location: index.php"); // Redirect to home or another page
+    error_log("Error fetching gigs: " . $e->getMessage());
+    $_SESSION['error'] = "Error fetching gigs.";
+    header("Location: ../index.php"); // Redirect to home or another page
     exit;
 }
 
-
-$user_id = $_SESSION['id'];
-
 // Fetch user data from the database
-$query = "SELECT * FROM users WHERE id = :id";
-$stmt = $conn->prepare($query);
-$stmt->execute(['id' => $user_id]);
-$user = $stmt->fetch(PDO::FETCH_ASSOC);
+try {
+    $query = "SELECT * FROM users WHERE id = ?";
+    $stmt = $conn->prepare($query);
+    $stmt->execute([$userId]);
+    $user = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    if (!$user) {
+        $_SESSION['error'] = "User not found.";
+        header("Location: ../index.php");
+        exit;
+    }
+} catch (PDOException $e) {
+    error_log("Error fetching user: " . $e->getMessage());
+    $_SESSION['error'] = "Error fetching user data.";
+    header("Location: ../index.php");
+    exit;
+}
 ?>
 
 <!DOCTYPE html>
@@ -103,8 +113,6 @@ $user = $stmt->fetch(PDO::FETCH_ASSOC);
 <body>
     <?php
     $myGigsPage = "./dashboard.php";
-
-
     include_once "../includes/index_header.php";
     ?>
     <nav class="navbar navbar-expand-lg bg-light">
@@ -125,9 +133,8 @@ $user = $stmt->fetch(PDO::FETCH_ASSOC);
                         <h3>Profile</h3>
                     </div>
                     <div class="card-body text-center">
-                       
-                        <img src="<?php echo $user['profile_picture'] ? $user['profile_picture'] : '../assets/img/login.jpg'; ?>" alt="Profile Picture" class="img-fluid rounded-circle mb-3" width="120">
-                        <h4><?php echo htmlspecialchars($userName); ?></h4>
+                        <img src="<?php echo $user['profile_picture'] ? htmlspecialchars($user['profile_picture']) : '../assets/img/login.jpg'; ?>" alt="Profile Picture" class="img-fluid rounded-circle mb-3" width="120">
+                        <h4><?php echo htmlspecialchars($user['first_name'] . ' ' . $user['last_name']); ?></h4>
                         <p class="text-muted">Client</p>
                         <a href="../public/profile.php" class="btn cc">Edit Profile</a>
                     </div>

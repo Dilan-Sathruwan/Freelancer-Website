@@ -1,0 +1,648 @@
+-- ============================================================
+-- FREELANCER MARKETPLACE - SAMPLE DATA INSERT
+-- ============================================================
+
+USE freelancerwebsite;
+
+-- Disable foreign key checks temporarily for easier insertion
+SET FOREIGN_KEY_CHECKS = 0;
+SET AUTOCOMMIT = 0;
+START TRANSACTION;
+
+-- ============================================================
+-- 1. INSERT USERS (Admin, Freelancers, Clients)
+-- ============================================================
+
+INSERT INTO users (id, username, password, role, first_name, last_name, email, phone, profile_picture, bio, country, city, address, postal_code, status, email_verified, last_login, last_activity, created_at) VALUES
+-- Admin Users
+(1, 'admin', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin', 'John', 'Admin', 'admin@freelancerhub.com', '+1234567890', 'admin.jpg', 'System Administrator', 'USA', 'New York', '123 Admin Street', '10001', 'active', 1, NOW(), NOW(), '2023-01-01 10:00:00'),
+(2, 'admin2', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin', 'Sarah', 'Manager', 'manager@freelancerhub.com', '+1234567891', 'admin2.jpg', 'Platform Manager', 'USA', 'Los Angeles', '456 Manager Ave', '90001', 'active', 1, NOW(), NOW(), '2023-01-02 10:00:00'),
+
+-- Freelancers (IDs 3-12)
+(3, 'user1', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'freelancer', 'Alex', 'Johnson', 'alex.johnson@email.com', '+1234567892', 'freelancer1.jpg', 'Full-stack web developer with 5+ years of experience in React, Node.js, and cloud technologies.', 'USA', 'San Francisco', '789 Tech Street', '94102', 'active', 1, NOW(), NOW(), '2023-02-01 10:00:00'),
+(4, 'user2', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'freelancer', 'Maria', 'Garcia', 'maria.garcia@email.com', '+1234567893', 'freelancer2.jpg', 'Creative graphic designer specializing in branding, logos, and UI/UX design.', 'Spain', 'Barcelona', '123 Design Plaza', '08001', 'active', 1, NOW(), NOW(), '2023-02-05 10:00:00'),
+(5, 'user3', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'freelancer', 'James', 'Smith', 'james.smith@email.com', '+1234567894', 'freelancer3.jpg', 'SEO expert and content writer with proven track record of ranking websites on Google first page.', 'UK', 'London', '456 SEO Lane', 'SW1A 1AA', 'active', 1, NOW(), NOW(), '2023-02-10 10:00:00'),
+(6, 'user4', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'freelancer', 'Emily', 'Chen', 'emily.chen@email.com', '+1234567895', 'freelancer4.jpg', 'Mobile app developer specializing in iOS and Android native development.', 'Canada', 'Toronto', '789 Mobile Rd', 'M5H 2N2', 'active', 1, NOW(), NOW(), '2023-02-15 10:00:00'),
+(7, 'user5', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'freelancer', 'David', 'Kumar', 'david.kumar@email.com', '+1234567896', 'freelancer5.jpg', 'Professional video editor and motion graphics designer. Adobe Premiere & After Effects expert.', 'India', 'Mumbai', '321 Video Street', '400001', 'active', 1, NOW(), NOW(), '2023-02-20 10:00:00'),
+(8, 'user6', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'freelancer', 'Sophie', 'Martin', 'sophie.martin@email.com', '+1234567897', 'freelancer6.jpg', 'Digital marketing strategist specializing in Facebook Ads, Google Ads, and social media marketing.', 'France', 'Paris', '654 Marketing Blvd', '75001', 'active', 1, NOW(), NOW(), '2023-03-01 10:00:00'),
+(9, 'user7', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'freelancer', 'Michael', 'Brown', 'michael.brown@email.com', '+1234567898', 'freelancer7.jpg', 'WordPress expert with 7+ years experience. Custom themes, plugins, and WooCommerce specialist.', 'Australia', 'Sydney', '987 WordPress Way', '2000', 'active', 1, NOW(), NOW(), '2023-03-05 10:00:00'),
+(10, 'user8', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'freelancer', 'Anna', 'Kowalski', 'anna.kowalski@email.com', '+1234567899', 'freelancer8.jpg', '3D modeling and animation artist. Blender and Maya expert for games and product visualization.', 'Poland', 'Warsaw', '147 3D Avenue', '00-001', 'active', 1, NOW(), NOW(), '2023-03-10 10:00:00'),
+(11, 'user9', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'freelancer', 'Carlos', 'Rodriguez', 'carlos.rodriguez@email.com', '+1234567800', 'freelancer9.jpg', 'Data scientist and machine learning engineer. Python, TensorFlow, and big data specialist.', 'Mexico', 'Mexico City', '258 Data Drive', '01000', 'active', 1, NOW(), NOW(), '2023-03-15 10:00:00'),
+(12, 'user10', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'freelancer', 'Lisa', 'Anderson', 'lisa.anderson@email.com', '+1234567801', 'freelancer10.jpg', 'Professional translator and copywriter. English, Spanish, French, and German fluent.', 'Germany', 'Berlin', '369 Language St', '10115', 'active', 1, NOW(), NOW(), '2023-03-20 10:00:00'),
+
+-- Clients (IDs 13-22)
+(13, 'client1', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'client', 'Robert', 'Wilson', 'robert.wilson@company.com', '+1234567802', 'client1.jpg', 'Tech startup founder looking for talented developers', 'USA', 'Austin', '111 Startup Ave', '73301', 'active', 1, NOW(), NOW(), '2023-04-01 10:00:00'),
+(14, 'client2', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'client', 'Jennifer', 'Lee', 'jennifer.lee@business.com', '+1234567803', 'client2.jpg', 'Marketing director at e-commerce company', 'USA', 'Seattle', '222 Business Park', '98101', 'active', 1, NOW(), NOW(), '2023-04-05 10:00:00'),
+(15, 'client3', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'client', 'Thomas', 'Davis', 'thomas.davis@firm.com', '+1234567804', 'client3.jpg', 'Small business owner', 'UK', 'Manchester', '333 Commerce St', 'M1 1AA', 'active', 1, NOW(), NOW(), '2023-04-10 10:00:00'),
+(16, 'client4', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'client', 'Patricia', 'Martinez', 'patricia.martinez@corp.com', '+1234567805', 'client4.jpg', 'HR Manager at tech company', 'Spain', 'Madrid', '444 Corporate Blvd', '28001', 'active', 1, NOW(), NOW(), '2023-04-15 10:00:00'),
+(17, 'client5', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'client', 'Daniel', 'Taylor', 'daniel.taylor@agency.com', '+1234567806', 'client5.jpg', 'Creative director at advertising agency', 'Canada', 'Vancouver', '555 Agency Road', 'V6B 1A1', 'active', 1, NOW(), NOW(), '2023-04-20 10:00:00'),
+(18, 'client6', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'client', 'Jessica', 'White', 'jessica.white@enterprise.com', '+1234567807', 'client6.jpg', 'Project manager', 'Australia', 'Melbourne', '666 Project Lane', '3000', 'active', 1, NOW(), NOW(), '2023-04-25 10:00:00'),
+(19, 'client7', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'client', 'Andrew', 'Thompson', 'andrew.thompson@shop.com', '+1234567808', 'client7.jpg', 'E-commerce store owner', 'USA', 'Miami', '777 Shop Street', '33101', 'active', 1, NOW(), NOW(), '2023-05-01 10:00:00'),
+(20, 'client8', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'client', 'Michelle', 'Harris', 'michelle.harris@brand.com', '+1234567809', 'client8.jpg', 'Brand manager', 'France', 'Lyon', '888 Brand Ave', '69001', 'active', 1, NOW(), NOW(), '2023-05-05 10:00:00'),
+(21, 'client9', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'client', 'Christopher', 'Clark', 'christopher.clark@startup.com', '+1234567810', 'client9.jpg', 'Startup CEO', 'Germany', 'Munich', '999 Innovation St', '80331', 'active', 1, NOW(), NOW(), '2023-05-10 10:00:00'),
+(22, 'client10', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'client', 'Amanda', 'Lopez', 'amanda.lopez@company.com', '+1234567811', 'client10.jpg', 'Product owner', 'Italy', 'Rome', '101 Product Road', '00100', 'active', 1, NOW(), NOW(), '2023-05-15 10:00:00');
+
+-- ============================================================
+-- 2. INSERT FREELANCER PROFILES
+-- ============================================================
+
+INSERT INTO freelancer_profiles (user_id, title, tagline, hourly_rate, availability_status, experience_level, total_earnings, completed_jobs, cancelled_jobs, success_rate, response_time, response_rate, on_time_delivery_rate, languages, portfolio_url, timezone, profile_completeness, featured, created_at) VALUES
+(3, 'Full-Stack Web Developer', 'Building scalable web applications with modern technologies', 75.00, 'available', 'expert', 45000.00, 87, 3, 96.67, 45, 98.50, 95.40, JSON_ARRAY(JSON_OBJECT('language', 'English', 'proficiency', 'native'), JSON_OBJECT('language', 'Spanish', 'proficiency', 'intermediate')), 'https://alexjohnson.dev', 'America/Los_Angeles', 95, 1, '2023-02-01 10:00:00'),
+(4, 'Brand & UI/UX Designer', 'Creating beautiful and functional designs that convert', 60.00, 'available', 'expert', 38000.00, 102, 2, 98.08, 30, 99.20, 97.00, JSON_ARRAY(JSON_OBJECT('language', 'Spanish', 'proficiency', 'native'), JSON_OBJECT('language', 'English', 'proficiency', 'fluent')), 'https://mariagarcia.design', 'Europe/Madrid', 100, 1, '2023-02-05 10:00:00'),
+(5, 'SEO & Content Specialist', 'Boost your rankings and traffic with proven SEO strategies', 55.00, 'busy', 'expert', 32000.00, 145, 5, 96.67, 60, 95.00, 93.00, JSON_ARRAY(JSON_OBJECT('language', 'English', 'proficiency', 'native')), 'https://jamessmith.seo', 'Europe/London', 90, 0, '2023-02-10 10:00:00'),
+(6, 'iOS & Android Developer', 'Native mobile apps that users love', 80.00, 'available', 'expert', 52000.00, 64, 1, 98.46, 90, 97.00, 96.50, JSON_ARRAY(JSON_OBJECT('language', 'English', 'proficiency', 'native'), JSON_OBJECT('language', 'Mandarin', 'proficiency', 'native')), 'https://emilychen.mobile', 'America/Toronto', 92, 1, '2023-02-15 10:00:00'),
+(7, 'Video Editor & Motion Designer', 'Professional video editing for businesses and creators', 50.00, 'available', 'intermediate', 18000.00, 78, 4, 95.12, 120, 92.00, 90.00, JSON_ARRAY(JSON_OBJECT('language', 'Hindi', 'proficiency', 'native'), JSON_OBJECT('language', 'English', 'proficiency', 'fluent')), 'https://davidkumar.video', 'Asia/Kolkata', 85, 0, '2023-02-20 10:00:00'),
+(8, 'Digital Marketing Expert', 'Data-driven marketing campaigns that deliver ROI', 65.00, 'available', 'expert', 41000.00, 93, 2, 97.89, 50, 98.00, 95.00, JSON_ARRAY(JSON_OBJECT('language', 'French', 'proficiency', 'native'), JSON_OBJECT('language', 'English', 'proficiency', 'fluent')), 'https://sophiemartin.marketing', 'Europe/Paris', 88, 1, '2023-03-01 10:00:00'),
+(9, 'WordPress Specialist', 'Custom WordPress solutions for any business need', 45.00, 'available', 'expert', 35000.00, 156, 6, 96.30, 75, 94.00, 92.00, JSON_ARRAY(JSON_OBJECT('language', 'English', 'proficiency', 'native')), 'https://michaelbrown.wp', 'Australia/Sydney', 93, 0, '2023-03-05 10:00:00'),
+(10, '3D Artist & Animator', 'Stunning 3D visuals for games and products', 70.00, 'busy', 'intermediate', 22000.00, 47, 2, 95.92, 100, 91.00, 89.00, JSON_ARRAY(JSON_OBJECT('language', 'Polish', 'proficiency', 'native'), JSON_OBJECT('language', 'English', 'proficiency', 'fluent')), 'https://annakowalski.3d', 'Europe/Warsaw', 87, 0, '2023-03-10 10:00:00'),
+(11, 'Data Scientist & ML Engineer', 'Transform your data into actionable insights', 90.00, 'available', 'expert', 28000.00, 31, 1, 96.88, 110, 96.00, 94.00, JSON_ARRAY(JSON_OBJECT('language', 'Spanish', 'proficiency', 'native'), JSON_OBJECT('language', 'English', 'proficiency', 'fluent')), 'https://carlosrodriguez.ai', 'America/Mexico_City', 90, 1, '2023-03-15 10:00:00'),
+(12, 'Translator & Copywriter', 'Multilingual content that resonates with your audience', 40.00, 'available', 'expert', 29000.00, 189, 7, 96.43, 40, 97.50, 96.00, JSON_ARRAY(JSON_OBJECT('language', 'German', 'proficiency', 'native'), JSON_OBJECT('language', 'English', 'proficiency', 'native'), JSON_OBJECT('language', 'French', 'proficiency', 'fluent'), JSON_OBJECT('language', 'Spanish', 'proficiency', 'fluent')), 'https://lisaanderson.words', 'Europe/Berlin', 98, 0, '2023-03-20 10:00:00');
+
+-- ============================================================
+-- 3. INSERT CLIENT PROFILES
+-- ============================================================
+
+INSERT INTO client_profiles (user_id, company_name, company_website, company_size, industry, total_spent, jobs_posted, jobs_completed, payment_verified, created_at) VALUES
+(13, 'TechVenture Inc', 'https://techventure.com', '11-50', 'Technology', 8500.00, 12, 10, 1, '2023-04-01 10:00:00'),
+(14, 'MarketPro Solutions', 'https://marketpro.com', '51-200', 'Marketing', 15200.00, 18, 16, 1, '2023-04-05 10:00:00'),
+(15, 'Davis Consulting', 'https://davisconsult.co.uk', '1-10', 'Consulting', 3400.00, 5, 5, 1, '2023-04-10 10:00:00'),
+(16, 'GlobalTech Corp', 'https://globaltech.es', '201-500', 'Technology', 22000.00, 25, 22, 1, '2023-04-15 10:00:00'),
+(17, 'Creative Minds Agency', 'https://creativeminds.ca', '11-50', 'Advertising', 11500.00, 14, 12, 1, '2023-04-20 10:00:00'),
+(18, 'Enterprise Solutions Ltd', 'https://entsolutions.au', '51-200', 'IT Services', 18900.00, 20, 18, 1, '2023-04-25 10:00:00'),
+(19, 'ShopEasy', 'https://shopeasy.com', '1-10', 'E-commerce', 5600.00, 8, 7, 1, '2023-05-01 10:00:00'),
+(20, 'BrandCrafters', 'https://brandcrafters.fr', '11-50', 'Branding', 7800.00, 10, 9, 1, '2023-05-05 10:00:00'),
+(21, 'InnoStartup GmbH', 'https://innostartup.de', '1-10', 'Technology', 4200.00, 6, 5, 1, '2023-05-10 10:00:00'),
+(22, 'ProductFlow', 'https://productflow.it', '11-50', 'Software', 9300.00, 11, 10, 1, '2023-05-15 10:00:00');
+
+-- ============================================================
+-- 4. INSERT CATEGORIES
+-- ============================================================
+
+INSERT INTO categories (id, name, slug, description, parent_id, level, path, icon, display_order, status, gigs_count, created_at) VALUES
+-- Main Categories
+(1, 'Web Development', 'web-development', 'Custom websites and web applications', NULL, 0, '1', 'icon-code.svg', 1, 'active', 0, '2023-01-01 10:00:00'),
+(2, 'Mobile Development', 'mobile-development', 'iOS and Android mobile apps', NULL, 0, '2', 'icon-mobile.svg', 2, 'active', 0, '2023-01-01 10:00:00'),
+(3, 'Design & Creative', 'design-creative', 'Graphic design, branding, and creative services', NULL, 0, '3', 'icon-design.svg', 3, 'active', 0, '2023-01-01 10:00:00'),
+(4, 'Digital Marketing', 'digital-marketing', 'SEO, social media, and online advertising', NULL, 0, '4', 'icon-marketing.svg', 4, 'active', 0, '2023-01-01 10:00:00'),
+(5, 'Video & Animation', 'video-animation', 'Video editing, animation, and motion graphics', NULL, 0, '5', 'icon-video.svg', 5, 'active', 0, '2023-01-01 10:00:00'),
+(6, 'Writing & Translation', 'writing-translation', 'Content writing, copywriting, and translation', NULL, 0, '6', 'icon-writing.svg', 6, 'active', 0, '2023-01-01 10:00:00'),
+(7, 'Data & AI', 'data-ai', 'Data science, machine learning, and AI', NULL, 0, '7', 'icon-ai.svg', 7, 'active', 0, '2023-01-01 10:00:00'),
+(8, 'Business', 'business', 'Business consulting and virtual assistance', NULL, 0, '8', 'icon-business.svg', 8, 'active', 0, '2023-01-01 10:00:00'),
+
+-- Subcategories for Web Development
+(9, 'WordPress', 'wordpress', 'WordPress development and customization', 1, 1, '1/9', NULL, 1, 'active', 0, '2023-01-01 10:00:00'),
+(10, 'E-commerce', 'ecommerce', 'Online stores and shopping platforms', 1, 1, '1/10', NULL, 2, 'active', 0, '2023-01-01 10:00:00'),
+(11, 'Full-Stack Development', 'full-stack', 'Complete web application development', 1, 1, '1/11', NULL, 3, 'active', 0, '2023-01-01 10:00:00'),
+(12, 'Frontend Development', 'frontend', 'User interface development', 1, 1, '1/12', NULL, 4, 'active', 0, '2023-01-01 10:00:00'),
+
+-- Subcategories for Mobile Development
+(13, 'iOS Development', 'ios-development', 'iPhone and iPad apps', 2, 1, '2/13', NULL, 1, 'active', 0, '2023-01-01 10:00:00'),
+(14, 'Android Development', 'android-development', 'Android mobile apps', 2, 1, '2/14', NULL, 2, 'active', 0, '2023-01-01 10:00:00'),
+(15, 'Cross-Platform Apps', 'cross-platform', 'React Native, Flutter apps', 2, 1, '2/15', NULL, 3, 'active', 0, '2023-01-01 10:00:00'),
+
+-- Subcategories for Design & Creative
+(16, 'Logo Design', 'logo-design', 'Brand identity and logo creation', 3, 1, '3/16', NULL, 1, 'active', 0, '2023-01-01 10:00:00'),
+(17, 'UI/UX Design', 'ui-ux-design', 'User interface and experience design', 3, 1, '3/17', NULL, 2, 'active', 0, '2023-01-01 10:00:00'),
+(18, 'Illustration', 'illustration', 'Custom illustrations and artwork', 3, 1, '3/18', NULL, 3, 'active', 0, '2023-01-01 10:00:00'),
+
+-- Subcategories for Digital Marketing
+(19, 'SEO', 'seo', 'Search engine optimization', 4, 1, '4/19', NULL, 1, 'active', 0, '2023-01-01 10:00:00'),
+(20, 'Social Media Marketing', 'social-media', 'Facebook, Instagram, Twitter marketing', 4, 1, '4/20', NULL, 2, 'active', 0, '2023-01-01 10:00:00'),
+(21, 'Google Ads', 'google-ads', 'PPC and Google advertising', 4, 1, '4/21', NULL, 3, 'active', 0, '2023-01-01 10:00:00');
+
+-- ============================================================
+-- 5. INSERT SKILLS
+-- ============================================================
+
+INSERT INTO skills (id, name, slug, category_id, description, usage_count, status, created_at) VALUES
+-- Web Development Skills
+(1, 'JavaScript', 'javascript', 1, 'Programming language for web development', 0, 'active', '2023-01-01 10:00:00'),
+(2, 'React', 'react', 1, 'JavaScript library for building user interfaces', 0, 'active', '2023-01-01 10:00:00'),
+(3, 'Node.js', 'nodejs', 1, 'JavaScript runtime for server-side development', 0, 'active', '2023-01-01 10:00:00'),
+(4, 'PHP', 'php', 1, 'Server-side scripting language', 0, 'active', '2023-01-01 10:00:00'),
+(5, 'WordPress', 'wordpress', 1, 'Content management system', 0, 'active', '2023-01-01 10:00:00'),
+(6, 'HTML/CSS', 'html-css', 1, 'Web markup and styling', 0, 'active', '2023-01-01 10:00:00'),
+(7, 'Vue.js', 'vuejs', 1, 'Progressive JavaScript framework', 0, 'active', '2023-01-01 10:00:00'),
+(8, 'Angular', 'angular', 1, 'TypeScript-based web framework', 0, 'active', '2023-01-01 10:00:00'),
+
+-- Mobile Development Skills
+(9, 'Swift', 'swift', 2, 'Programming language for iOS', 0, 'active', '2023-01-01 10:00:00'),
+(10, 'Kotlin', 'kotlin', 2, 'Programming language for Android', 0, 'active', '2023-01-01 10:00:00'),
+(11, 'React Native', 'react-native', 2, 'Cross-platform mobile framework', 0, 'active', '2023-01-01 10:00:00'),
+(12, 'Flutter', 'flutter', 2, 'Google mobile UI framework', 0, 'active', '2023-01-01 10:00:00'),
+
+-- Design Skills
+(13, 'Adobe Photoshop', 'photoshop', 3, 'Image editing software', 0, 'active', '2023-01-01 10:00:00'),
+(14, 'Adobe Illustrator', 'illustrator', 3, 'Vector graphics editor', 0, 'active', '2023-01-01 10:00:00'),
+(15, 'Figma', 'figma', 3, 'Collaborative design tool', 0, 'active', '2023-01-01 10:00:00'),
+(16, 'Adobe XD', 'adobe-xd', 3, 'UI/UX design tool', 0, 'active', '2023-01-01 10:00:00'),
+(17, 'Sketch', 'sketch', 3, 'Digital design toolkit', 0, 'active', '2023-01-01 10:00:00'),
+
+-- Marketing Skills
+(18, 'SEO', 'seo', 4, 'Search engine optimization', 0, 'active', '2023-01-01 10:00:00'),
+(19, 'Google Analytics', 'google-analytics', 4, 'Web analytics service', 0, 'active', '2023-01-01 10:00:00'),
+(20, 'Facebook Ads', 'facebook-ads', 4, 'Facebook advertising platform', 0, 'active', '2023-01-01 10:00:00'),
+(21, 'Google Ads', 'google-ads', 4, 'Google advertising platform', 0, 'active', '2023-01-01 10:00:00'),
+(22, 'Content Marketing', 'content-marketing', 4, 'Strategic marketing approach', 0, 'active', '2023-01-01 10:00:00'),
+
+-- Video Skills
+(23, 'Adobe Premiere Pro', 'premiere-pro', 5, 'Video editing software', 0, 'active', '2023-01-01 10:00:00'),
+(24, 'After Effects', 'after-effects', 5, 'Motion graphics and VFX', 0, 'active', '2023-01-01 10:00:00'),
+(25, 'Final Cut Pro', 'final-cut-pro', 5, 'Video editing software for Mac', 0, 'active', '2023-01-01 10:00:00'),
+
+-- Writing Skills
+(26, 'Content Writing', 'content-writing', 6, 'Creating written content', 0, 'active', '2023-01-01 10:00:00'),
+(27, 'Copywriting', 'copywriting', 6, 'Writing persuasive marketing copy', 0, 'active', '2023-01-01 10:00:00'),
+(28, 'Translation', 'translation', 6, 'Converting text between languages', 0, 'active', '2023-01-01 10:00:00'),
+(29, 'Proofreading', 'proofreading', 6, 'Reviewing and correcting text', 0, 'active', '2023-01-01 10:00:00'),
+
+-- Data & AI Skills
+(30, 'Python', 'python', 7, 'Programming language for data science', 0, 'active', '2023-01-01 10:00:00'),
+(31, 'Machine Learning', 'machine-learning', 7, 'AI and predictive modeling', 0, 'active', '2023-01-01 10:00:00'),
+(32, 'TensorFlow', 'tensorflow', 7, 'Machine learning framework', 0, 'active', '2023-01-01 10:00:00'),
+(33, 'Data Analysis', 'data-analysis', 7, 'Analyzing and interpreting data', 0, 'active', '2023-01-01 10:00:00'),
+
+-- 3D Skills
+(34, 'Blender', 'blender', 5, '3D modeling and animation', 0, 'active', '2023-01-01 10:00:00'),
+(35, '3D Modeling', '3d-modeling', 5, 'Creating 3D objects', 0, 'active', '2023-01-01 10:00:00'),
+(36, 'Maya', 'maya', 5, '3D animation software', 0, 'active', '2023-01-01 10:00:00');
+
+-- ============================================================
+-- 6. INSERT FREELANCER SKILLS
+-- ============================================================
+
+INSERT INTO freelancer_skills (freelancer_id, skill_id, proficiency_level, years_experience, verified, created_at) VALUES
+-- User 3 (Alex Johnson - Full-Stack Developer)
+(3, 1, 'expert', 5.0, 1, '2023-02-01 10:00:00'),
+(3, 2, 'expert', 4.0, 1, '2023-02-01 10:00:00'),
+(3, 3, 'expert', 5.0, 1, '2023-02-01 10:00:00'),
+(3, 6, 'expert', 6.0, 1, '2023-02-01 10:00:00'),
+(3, 7, 'advanced', 3.0, 0, '2023-02-01 10:00:00'),
+
+-- User 4 (Maria Garcia - Designer)
+(4, 13, 'expert', 6.0, 1, '2023-02-05 10:00:00'),
+(4, 14, 'expert', 6.0, 1, '2023-02-05 10:00:00'),
+(4, 15, 'expert', 4.0, 1, '2023-02-05 10:00:00'),
+(4, 16, 'advanced', 3.0, 1, '2023-02-05 10:00:00'),
+(4, 17, 'advanced', 3.0, 0, '2023-02-05 10:00:00'),
+
+-- User 5 (James Smith - SEO Specialist)
+(5, 18, 'expert', 7.0, 1, '2023-02-10 10:00:00'),
+(5, 19, 'expert', 5.0, 1, '2023-02-10 10:00:00'),
+(5, 22, 'advanced', 4.0, 1, '2023-02-10 10:00:00'),
+(5, 26, 'expert', 6.0, 1, '2023-02-10 10:00:00'),
+(5, 27, 'advanced', 5.0, 0, '2023-02-10 10:00:00'),
+
+-- User 6 (Emily Chen - Mobile Developer)
+(6, 9, 'expert', 5.0, 1, '2023-02-15 10:00:00'),
+(6, 10, 'expert', 4.0, 1, '2023-02-15 10:00:00'),
+(6, 11, 'advanced', 3.0, 1, '2023-02-15 10:00:00'),
+(6, 12, 'intermediate', 2.0, 0, '2023-02-15 10:00:00'),
+
+-- User 7 (David Kumar - Video Editor)
+(7, 23, 'expert', 5.0, 1, '2023-02-20 10:00:00'),
+(7, 24, 'advanced', 4.0, 1, '2023-02-20 10:00:00'),
+(7, 25, 'intermediate', 2.0, 0, '2023-02-20 10:00:00'),
+
+-- User 8 (Sophie Martin - Digital Marketer)
+(8, 18, 'advanced', 4.0, 1, '2023-03-01 10:00:00'),
+(8, 20, 'expert', 5.0, 1, '2023-03-01 10:00:00'),
+(8, 21, 'expert', 5.0, 1, '2023-03-01 10:00:00'),
+(8, 19, 'advanced', 4.0, 1, '2023-03-01 10:00:00'),
+(8, 22, 'advanced', 4.0, 0, '2023-03-01 10:00:00'),
+
+-- User 9 (Michael Brown - WordPress Specialist)
+(9, 4, 'expert', 7.0, 1, '2023-03-05 10:00:00'),
+(9, 5, 'expert', 7.0, 1, '2023-03-05 10:00:00'),
+(9, 6, 'expert', 8.0, 1, '2023-03-05 10:00:00'),
+(9, 1, 'advanced', 5.0, 1, '2023-03-05 10:00:00'),
+
+-- User 10 (Anna Kowalski - 3D Artist)
+(10, 34, 'expert', 5.0, 1, '2023-03-10 10:00:00'),
+(10, 35, 'advanced', 5.0, 1, '2023-03-10 10:00:00'),
+(10, 36, 'intermediate', 3.0, 0, '2023-03-10 10:00:00'),
+
+-- User 11 (Carlos Rodriguez - Data Scientist)
+(11, 30, 'expert', 6.0, 1, '2023-03-15 10:00:00'),
+(11, 31, 'expert', 5.0, 1, '2023-03-15 10:00:00'),
+(11, 32, 'advanced', 4.0, 1, '2023-03-15 10:00:00'),
+(11, 33, 'expert', 6.0, 1, '2023-03-15 10:00:00'),
+
+-- User 12 (Lisa Anderson - Translator)
+(12, 26, 'expert', 8.0, 1, '2023-03-20 10:00:00'),
+(12, 27, 'expert', 7.0, 1, '2023-03-20 10:00:00'),
+(12, 28, 'expert', 10.0, 1, '2023-03-20 10:00:00'),
+(12, 29, 'expert', 9.0, 1, '2023-03-20 10:00:00');
+
+-- ============================================================
+-- 7. INSERT GIGS
+-- ============================================================
+
+INSERT INTO gigs (id, freelancer_id, title, slug, description, category_id, subcategory_id, price, pricing_type, delivery_time, revisions_included, image, status, featured, views_count, clicks_count, orders_count, avg_rating, reviews_count, tags, created_at) VALUES
+-- Alex Johnson's Gigs (Full-Stack Developer)
+(1, 3, 'I will build a professional full-stack web application', 'build-professional-fullstack-web-application', 'I will create a modern, responsive, and scalable web application using React, Node.js, and MongoDB. Perfect for startups and businesses looking to digitize their operations.\n\nWhat you get:\n✓ Clean, maintainable code\n✓ Responsive design for all devices\n✓ RESTful API development\n✓ Database design and optimization\n✓ Authentication & authorization\n✓ Deployment assistance', 1, 11, 1500.00, 'fixed', 14, 2, 'fullstack-app.jpg', 'active', 1, 452, 89, 15, 4.93, 15, JSON_ARRAY('React', 'Node.js', 'MongoDB', 'Full-Stack', 'Web App'), '2023-02-15 10:00:00'),
+
+(2, 3, 'I will develop a custom React web application', 'develop-custom-react-web-application', 'Professional React development service with modern best practices. I specialize in creating fast, SEO-friendly, and user-friendly web applications.\n\nServices include:\n✓ React 18+ with hooks\n✓ State management (Redux/Context)\n✓ Integration with APIs\n✓ Performance optimization\n✓ Unit testing', 1, 12, 800.00, 'fixed', 7, 3, 'react-app.jpg', 'active', 0, 298, 54, 12, 4.83, 12, JSON_ARRAY('React', 'JavaScript', 'Frontend', 'SPA'), '2023-03-01 10:00:00'),
+
+-- Maria Garcia's Gigs (Designer)
+(3, 4, 'I will design a modern logo and brand identity', 'design-modern-logo-brand-identity', 'Professional brand identity design that makes your business stand out. I will create a unique logo along with complete brand guidelines.\n\nPackage includes:\n✓ Custom logo design (3 concepts)\n✓ Unlimited revisions\n✓ Brand color palette\n✓ Typography selection\n✓ Business card design\n✓ Social media kit\n✓ Source files (AI, PSD, PNG, JPG)', 3, 16, 350.00, 'fixed', 5, 999, 'logo-design.jpg', 'active', 1, 678, 143, 28, 4.96, 28, JSON_ARRAY('Logo Design', 'Branding', 'Graphic Design', 'Identity'), '2023-02-20 10:00:00'),
+
+(4, 4, 'I will create stunning UI/UX design for web and mobile', 'create-stunning-ui-ux-design', 'Transform your ideas into beautiful and functional designs. I specialize in creating user-centered designs that convert visitors into customers.\n\nWhat I offer:\n✓ User research & personas\n✓ Wireframes & prototypes\n✓ High-fidelity mockups\n✓ Interactive prototypes in Figma\n✓ Design system creation\n✓ Responsive design for all screens', 3, 17, 600.00, 'fixed', 7, 5, 'uiux-design.jpg', 'active', 1, 534, 98, 22, 4.91, 22, JSON_ARRAY('UI Design', 'UX Design', 'Figma', 'Mobile Design'), '2023-03-10 10:00:00'),
+
+-- James Smith's Gigs (SEO Specialist)
+(5, 5, 'I will boost your website ranking with advanced SEO', 'boost-website-ranking-advanced-seo', 'Professional SEO services to increase your organic traffic and rankings. I use white-hat techniques that comply with Google guidelines.\n\nSEO services include:\n✓ Complete SEO audit\n✓ Keyword research & strategy\n✓ On-page optimization\n✓ Technical SEO fixes\n✓ Competitor analysis\n✓ Monthly progress reports\n✓ Link building strategy', 4, 19, 500.00, 'fixed', 10, 2, 'seo-service.jpg', 'active', 0, 412, 87, 24, 4.88, 24, JSON_ARRAY('SEO', 'Google Ranking', 'Organic Traffic', 'Keywords'), '2023-02-25 10:00:00'),
+
+(6, 5, 'I will write SEO optimized blog posts and articles', 'write-seo-optimized-blog-posts', 'High-quality, engaging content that ranks on Google and converts readers. Every article is thoroughly researched and optimized for search engines.\n\nYou will get:\n✓ 100% original content\n✓ SEO keyword optimization\n✓ Engaging headlines\n✓ Meta descriptions\n✓ Internal linking suggestions\n✓ Plagiarism-free guarantee', 6, NULL, 100.00, 'fixed', 3, 2, 'seo-writing.jpg', 'active', 0, 267, 61, 35, 4.89, 35, JSON_ARRAY('Content Writing', 'SEO', 'Blog Posts', 'Articles'), '2023-03-15 10:00:00'),
+
+-- Emily Chen's Gigs (Mobile Developer)
+(7, 6, 'I will develop a native iOS app in Swift', 'develop-native-ios-app-swift', 'Professional iOS app development using the latest Swift and SwiftUI. I create apps that are fast, beautiful, and ready for the App Store.\n\nFeatures:\n✓ Native iOS development\n✓ SwiftUI for modern UI\n✓ Core Data integration\n✓ API integration\n✓ Push notifications\n✓ App Store submission help\n✓ 30 days post-launch support', 2, 13, 2000.00, 'fixed', 21, 2, 'ios-app.jpg', 'active', 1, 389, 67, 10, 4.90, 10, JSON_ARRAY('iOS', 'Swift', 'Mobile App', 'iPhone'), '2023-02-28 10:00:00'),
+
+(8, 6, 'I will create a cross-platform mobile app with React Native', 'create-cross-platform-app-react-native', 'Build your app once and deploy to both iOS and Android. Cost-effective solution for startups and businesses.\n\nServices:\n✓ React Native development\n✓ Works on iOS & Android\n✓ Native-like performance\n✓ Redux state management\n✓ Firebase integration\n✓ Push notifications\n✓ In-app purchases', 2, 15, 1600.00, 'fixed', 18, 3, 'react-native-app.jpg', 'active', 0, 301, 58, 8, 4.88, 8, JSON_ARRAY('React Native', 'Mobile App', 'Cross-Platform', 'iOS', 'Android'), '2023-03-20 10:00:00'),
+
+-- David Kumar's Gigs (Video Editor)
+(9, 7, 'I will edit professional videos for YouTube and social media', 'edit-professional-videos-youtube', 'Professional video editing that keeps viewers engaged. Perfect for YouTubers, businesses, and content creators.\n\nEditing includes:\n✓ Color grading & correction\n✓ Audio mixing & enhancement\n✓ Motion graphics & transitions\n✓ Text animations\n✓ Background music\n✓ Intro/outro creation\n✓ Fast delivery', 5, NULL, 150.00, 'fixed', 3, 2, 'video-editing.jpg', 'active', 0, 445, 102, 31, 4.87, 31, JSON_ARRAY('Video Editing', 'YouTube', 'Premiere Pro', 'Social Media'), '2023-03-05 10:00:00'),
+
+(10, 7, 'I will create amazing motion graphics and animations', 'create-motion-graphics-animations', 'Eye-catching motion graphics for your videos, presentations, and marketing materials. I bring your ideas to life with professional animations.\n\nServices:\n✓ Logo animations\n✓ Text animations\n✓ Explainer video graphics\n✓ Lower thirds\n✓ Infographic animations\n✓ Social media animations', 5, NULL, 250.00, 'fixed', 5, 3, 'motion-graphics.jpg', 'active', 0, 312, 71, 18, 4.83, 18, JSON_ARRAY('Motion Graphics', 'Animation', 'After Effects', 'Video'), '2023-03-25 10:00:00'),
+
+-- Sophie Martin's Gigs (Digital Marketer)
+(11, 8, 'I will manage and optimize your Facebook Ads campaigns', 'manage-optimize-facebook-ads', 'Professional Facebook advertising services that deliver real ROI. I create, manage, and optimize campaigns for maximum conversions.\n\nWhat I do:\n✓ Campaign strategy & planning\n✓ Audience research & targeting\n✓ Ad creative recommendations\n✓ A/B testing\n✓ Daily monitoring & optimization\n✓ Detailed reporting\n✓ Conversion tracking setup', 4, 20, 400.00, 'fixed', 7, 2, 'facebook-ads.jpg', 'active', 1, 523, 115, 19, 4.95, 19, JSON_ARRAY('Facebook Ads', 'Social Media Marketing', 'PPC', 'Advertising'), '2023-03-08 10:00:00'),
+
+(12, 8, 'I will run effective Google Ads campaigns for your business', 'run-google-ads-campaigns', 'Certified Google Ads expert helping businesses grow through targeted advertising. I maximize your ad spend with data-driven strategies.\n\nServices include:\n✓ Keyword research\n✓ Campaign setup\n✓ Ad copywriting\n✓ Landing page optimization tips\n✓ Conversion tracking\n✓ Weekly optimization\n✓ Monthly performance reports', 4, 21, 450.00, 'fixed', 5, 2, 'google-ads.jpg', 'active', 1, 467, 98, 17, 4.94, 17, JSON_ARRAY('Google Ads', 'PPC', 'Search Ads', 'Digital Marketing'), '2023-04-01 10:00:00'),
+
+-- Michael Brown's Gigs (WordPress Specialist)
+(13, 9, 'I will build a professional WordPress website', 'build-professional-wordpress-website', 'Custom WordPress website development for businesses of all sizes. I create fast, secure, and SEO-friendly websites.\n\nFeatures:\n✓ Responsive design\n✓ Custom theme development\n✓ Plugin installation & setup\n✓ SEO optimization\n✓ Speed optimization\n✓ Security hardening\n✓ Training & documentation\n✓ 30 days support', 1, 9, 600.00, 'fixed', 7, 3, 'wordpress-website.jpg', 'active', 0, 589, 134, 32, 4.91, 32, JSON_ARRAY('WordPress', 'Website', 'CMS', 'Responsive'), '2023-03-12 10:00:00'),
+
+(14, 9, 'I will develop a WooCommerce online store', 'develop-woocommerce-online-store', 'Complete e-commerce solution using WooCommerce. I build online stores that are easy to manage and convert visitors into customers.\n\nStore features:\n✓ Product catalog setup\n✓ Payment gateway integration\n✓ Shipping configuration\n✓ Tax settings\n✓ Responsive design\n✓ SEO optimization\n✓ Security features\n✓ Admin training', 1, 10, 800.00, 'fixed', 10, 2, 'woocommerce-store.jpg', 'active', 0, 478, 89, 21, 4.86, 21, JSON_ARRAY('WooCommerce', 'E-commerce', 'Online Store', 'WordPress'), '2023-04-05 10:00:00'),
+
+-- Anna Kowalski's Gigs (3D Artist)
+(15, 10, 'I will create stunning 3D models for your project', 'create-stunning-3d-models', 'Professional 3D modeling services for games, products, and architectural visualization. High-quality models optimized for your needs.\n\nWhat you get:\n✓ High or low poly models\n✓ Clean topology\n✓ UV unwrapping\n✓ Texturing & materials\n✓ Multiple file formats\n✓ Rendering services\n✓ Source files included', 5, NULL, 300.00, 'fixed', 7, 2, '3d-modeling.jpg', 'active', 0, 278, 54, 12, 4.92, 12, JSON_ARRAY('3D Modeling', 'Blender', '3D Design', 'Rendering'), '2023-03-18 10:00:00'),
+
+-- Carlos Rodriguez's Gigs (Data Scientist)
+(16, 11, 'I will build machine learning models for your data', 'build-machine-learning-models', 'Data science and machine learning solutions tailored to your business needs. I help you extract insights and make predictions from your data.\n\nServices:\n✓ Data analysis & exploration\n✓ Feature engineering\n✓ Model development & training\n✓ Model evaluation & tuning\n✓ Deployment guidance\n✓ Documentation\n✓ Python notebooks included', 7, NULL, 1000.00, 'fixed', 14, 2, 'machine-learning.jpg', 'active', 1, 256, 47, 7, 4.86, 7, JSON_ARRAY('Machine Learning', 'Data Science', 'Python', 'AI'), '2023-03-22 10:00:00'),
+
+-- Lisa Anderson's Gigs (Translator)
+(17, 12, 'I will translate English to German, French, or Spanish', 'translate-english-german-french-spanish', 'Professional translation services by a native speaker. I provide accurate, culturally appropriate translations for any type of content.\n\nTranslation services:\n✓ Documents & articles\n✓ Website content\n✓ Marketing materials\n✓ Technical documents\n✓ Proofreading included\n✓ Fast delivery\n✓ Certified translations available', 6, NULL, 80.00, 'fixed', 2, 2, 'translation.jpg', 'active', 0, 334, 78, 42, 4.95, 42, JSON_ARRAY('Translation', 'German', 'French', 'Spanish', 'English'), '2023-03-28 10:00:00'),
+
+(18, 12, 'I will write compelling copy for your business', 'write-compelling-copy-business', 'Professional copywriting that sells. I craft persuasive copy for websites, ads, emails, and marketing materials.\n\nCopywriting for:\n✓ Website pages\n✓ Sales pages\n✓ Email campaigns\n✓ Ad copy\n✓ Product descriptions\n✓ Brochures\n✓ Social media posts', 6, NULL, 120.00, 'fixed', 3, 3, 'copywriting.jpg', 'active', 0, 289, 65, 28, 4.93, 28, JSON_ARRAY('Copywriting', 'Content Writing', 'Marketing', 'Sales Copy'), '2023-04-10 10:00:00');
+
+-- ============================================================
+-- 8. INSERT GIG PACKAGES
+-- ============================================================
+
+INSERT INTO gig_packages (gig_id, package_type, name, description, price, delivery_time, revisions, features, created_at) VALUES
+-- Packages for Gig 1 (Full-Stack Web App)
+(1, 'basic', 'Basic Package', 'Simple web application with basic features', 1500.00, 14, 2, JSON_ARRAY('Up to 5 pages', 'Basic CRUD operations', 'User authentication', 'Responsive design', 'Basic database'), '2023-02-15 10:00:00'),
+(1, 'standard', 'Standard Package', 'Advanced web application with more features', 2500.00, 21, 3, JSON_ARRAY('Up to 10 pages', 'Advanced features', 'User roles & permissions', 'API integration', 'Optimized database', 'Admin panel'), '2023-02-15 10:00:00'),
+(1, 'premium', 'Premium Package', 'Enterprise-level application', 4000.00, 30, 5, JSON_ARRAY('Unlimited pages', 'Custom features', 'Advanced security', 'Third-party integrations', 'Performance optimization', 'Deployment', 'Documentation', '30 days support'), '2023-02-15 10:00:00'),
+
+-- Packages for Gig 3 (Logo Design)
+(3, 'basic', 'Basic Package', 'Logo design with essential files', 350.00, 5, 999, JSON_ARRAY('3 logo concepts', 'Unlimited revisions', '2 file formats', 'Basic color variations'), '2023-02-20 10:00:00'),
+(3, 'standard', 'Standard Package', 'Complete brand identity', 600.00, 7, 999, JSON_ARRAY('5 logo concepts', 'Unlimited revisions', 'All file formats', 'Brand guidelines', 'Business card design', 'Social media kit'), '2023-02-20 10:00:00'),
+(3, 'premium', 'Premium Package', 'Full branding package', 1000.00, 10, 999, JSON_ARRAY('7 logo concepts', 'Unlimited revisions', 'All file formats', 'Complete brand book', 'Stationery design', 'Social media kit', 'Email signature', 'Brand presentation'), '2023-02-20 10:00:00'),
+
+-- Packages for Gig 7 (iOS App)
+(7, 'basic', 'Basic Package', 'Simple iOS app', 2000.00, 21, 2, JSON_ARRAY('Up to 5 screens', 'Basic functionality', 'App Store submission'), '2023-02-28 10:00:00'),
+(7, 'standard', 'Standard Package', 'Advanced iOS app', 3500.00, 30, 3, JSON_ARRAY('Up to 10 screens', 'Advanced features', 'API integration', 'Push notifications', 'App Store optimization'), '2023-02-28 10:00:00'),
+(7, 'premium', 'Premium Package', 'Enterprise iOS app', 6000.00, 45, 5, JSON_ARRAY('Unlimited screens', 'Complex features', 'Backend integration', 'In-app purchases', 'Analytics', 'App Store submission', '60 days support'), '2023-02-28 10:00:00');
+
+-- ============================================================
+-- 9. INSERT GIG FAQs
+-- ============================================================
+
+INSERT INTO gig_faqs (gig_id, question, answer, display_order, created_at) VALUES
+(1, 'What technologies do you use?', 'I use React for frontend, Node.js with Express for backend, and MongoDB for database. I can also work with other tech stacks based on your requirements.', 1, '2023-02-15 10:00:00'),
+(1, 'Do you provide hosting?', 'I can help with deployment and recommend hosting solutions, but hosting costs are not included in the package. I can deploy to platforms like Heroku, AWS, or DigitalOcean.', 2, '2023-02-15 10:00:00'),
+(1, 'Will the code be clean and documented?', 'Yes! I follow industry best practices and provide clean, well-commented code. Documentation is included in the Standard and Premium packages.', 3, '2023-02-15 10:00:00'),
+
+(3, 'How many revisions do I get?', 'You get unlimited revisions until you are 100% satisfied with the design. Your satisfaction is my priority!', 1, '2023-02-20 10:00:00'),
+(3, 'What file formats will I receive?', 'You will receive AI, EPS, PDF, PNG, and JPG files. Source files are always included.', 2, '2023-02-20 10:00:00'),
+(3, 'Do you design in any specific style?', 'I can design in any style - modern, minimalist, vintage, corporate, playful, etc. Just let me know your preferences!', 3, '2023-02-20 10:00:00'),
+
+(5, 'How long before I see results?', 'SEO is a long-term strategy. You may start seeing improvements in 2-3 months, with significant results in 4-6 months. It depends on competition and current site status.', 1, '2023-02-25 10:00:00'),
+(5, 'Do you guarantee first page rankings?', 'No one can guarantee specific rankings as Google algorithm changes constantly. However, I use proven white-hat techniques that consistently improve rankings over time.', 2, '2023-02-25 10:00:00'),
+(5, 'Do you provide ongoing SEO support?', 'Yes! I offer monthly SEO packages for continuous optimization and monitoring. Contact me for custom packages.', 3, '2023-02-25 10:00:00');
+
+-- ============================================================
+-- 10. INSERT GIG REQUIREMENTS
+-- ============================================================
+
+INSERT INTO gig_requirements (gig_id, question, answer_type, required, display_order, created_at) VALUES
+(1, 'Please describe your project in detail', 'text', 1, 1, '2023-02-15 10:00:00'),
+(1, 'Do you have any design preferences or examples?', 'text', 0, 2, '2023-02-15 10:00:00'),
+(1, 'Do you have a domain name and hosting?', 'multiple_choice', 1, 3, '2023-02-15 10:00:00'),
+(1, 'Please provide any existing assets (logo, images, content)', 'file', 0, 4, '2023-02-15 10:00:00'),
+
+(3, 'What is your business name?', 'text', 1, 1, '2023-02-20 10:00:00'),
+(3, 'What industry are you in?', 'text', 1, 2, '2023-02-20 10:00:00'),
+(3, 'Do you have any design preferences or inspiration?', 'text', 0, 3, '2023-02-20 10:00:00'),
+(3, 'What colors do you prefer?', 'text', 0, 4, '2023-02-20 10:00:00'),
+
+(7, 'What is the main purpose of your app?', 'text', 1, 1, '2023-02-28 10:00:00'),
+(7, 'Do you have designs ready?', 'multiple_choice', 1, 2, '2023-02-28 10:00:00'),
+(7, 'Will you need a backend/API?', 'multiple_choice', 1, 3, '2023-02-28 10:00:00'),
+(7, 'Please describe all features you need', 'text', 1, 4, '2023-02-28 10:00:00');
+
+-- ============================================================
+-- 11. INSERT WALLETS
+-- ============================================================
+
+INSERT INTO wallets (user_id, balance, pending_clearance, total_earned, total_withdrawn, total_spent, created_at) VALUES
+-- Freelancer wallets
+(3, 2500.50, 1200.00, 45000.00, 42500.00, 0.00, '2023-02-01 10:00:00'),
+(4, 3200.75, 800.00, 38000.00, 34800.00, 0.00, '2023-02-05 10:00:00'),
+(5, 1800.00, 600.00, 32000.00, 30200.00, 0.00, '2023-02-10 10:00:00'),
+(6, 4500.00, 1500.00, 52000.00, 47500.00, 0.00, '2023-02-15 10:00:00'),
+(7, 950.25, 400.00, 18000.00, 17050.00, 0.00, '2023-02-20 10:00:00'),
+(8, 2100.00, 700.00, 41000.00, 38900.00, 0.00, '2023-03-01 10:00:00'),
+(9, 1600.50, 500.00, 35000.00, 33400.00, 0.00, '2023-03-05 10:00:00'),
+(10, 1200.00, 350.00, 22000.00, 20800.00, 0.00, '2023-03-10 10:00:00'),
+(11, 1850.00, 450.00, 28000.00, 26150.00, 0.00, '2023-03-15 10:00:00'),
+(12, 1450.75, 300.00, 29000.00, 27550.00, 0.00, '2023-03-20 10:00:00'),
+
+-- Client wallets
+(13, 500.00, 0.00, 0.00, 0.00, 8500.00, '2023-04-01 10:00:00'),
+(14, 300.00, 0.00, 0.00, 0.00, 15200.00, '2023-04-05 10:00:00'),
+(15, 100.00, 0.00, 0.00, 0.00, 3400.00, '2023-04-10 10:00:00'),
+(16, 800.00, 0.00, 0.00, 0.00, 22000.00, '2023-04-15 10:00:00'),
+(17, 400.00, 0.00, 0.00, 0.00, 11500.00, '2023-04-20 10:00:00'),
+(18, 600.00, 0.00, 0.00, 0.00, 18900.00, '2023-04-25 10:00:00'),
+(19, 200.00, 0.00, 0.00, 0.00, 5600.00, '2023-05-01 10:00:00'),
+(20, 250.00, 0.00, 0.00, 0.00, 7800.00, '2023-05-05 10:00:00'),
+(21, 150.00, 0.00, 0.00, 0.00, 4200.00, '2023-05-10 10:00:00'),
+(22, 350.00, 0.00, 0.00, 0.00, 9300.00, '2023-05-15 10:00:00');
+
+-- ============================================================
+-- 12. INSERT ORDERS
+-- ============================================================
+
+INSERT INTO orders (id, order_number, client_id, freelancer_id, gig_id, package_type, status, amount, service_fee, total_amount, delivery_time, special_instructions, started_at, delivered_at, completed_at, created_at) VALUES
+-- Completed Orders
+(1, 'ORD-2024-000001', 13, 3, 1, 'basic', 'completed', 1500.00, 225.00, 1725.00, 14, 'Please focus on user experience and mobile responsiveness.', '2024-01-05 10:00:00', '2024-01-18 15:30:00', '2024-01-20 10:00:00', '2024-01-05 09:00:00'),
+(2, 'ORD-2024-000002', 14, 4, 3, 'standard', 'completed', 600.00, 90.00, 690.00, 7, 'Modern and minimalist style preferred.', '2024-01-10 11:00:00', '2024-01-16 14:00:00', '2024-01-18 09:00:00', '2024-01-10 10:00:00'),
+(3, 'ORD-2024-000003', 15, 5, 5, 'basic', 'completed', 500.00, 75.00, 575.00, 10, 'Focus on local SEO for UK market.', '2024-01-12 14:00:00', '2024-01-21 16:00:00', '2024-01-23 10:00:00', '2024-01-12 13:00:00'),
+(4, 'ORD-2024-000004', 16, 6, 7, 'basic', 'completed', 2000.00, 300.00, 2300.00, 21, 'Need clean code and comprehensive documentation.', '2024-01-15 09:00:00', '2024-02-04 17:00:00', '2024-02-07 10:00:00', '2024-01-15 08:00:00'),
+(5, 'ORD-2024-000005', 17, 7, 9, 'basic', 'completed', 150.00, 22.50, 172.50, 3, 'Upbeat and energetic style for promotional video.', '2024-01-20 10:00:00', '2024-01-22 18:00:00', '2024-01-24 10:00:00', '2024-01-20 09:00:00'),
+(6, 'ORD-2024-000006', 18, 8, 11, 'basic', 'completed', 400.00, 60.00, 460.00, 7, 'Target audience is women 25-45 in USA.', '2024-01-25 11:00:00', '2024-01-31 15:00:00', '2024-02-02 10:00:00', '2024-01-25 10:00:00'),
+(7, 'ORD-2024-000007', 19, 9, 13, 'basic', 'completed', 600.00, 90.00, 690.00, 7, 'Need e-commerce functionality.', '2024-02-01 09:00:00', '2024-02-07 16:00:00', '2024-02-09 10:00:00', '2024-02-01 08:00:00'),
+(8, 'ORD-2024-000008', 20, 12, 17, 'basic', 'completed', 80.00, 12.00, 92.00, 2, 'Translate from English to German - marketing brochure.', '2024-02-05 10:00:00', '2024-02-06 14:00:00', '2024-02-08 10:00:00', '2024-02-05 09:00:00'),
+
+-- In Progress Orders
+(9, 'ORD-2024-000009', 13, 3, 2, 'basic', 'in_progress', 800.00, 120.00, 920.00, 7, 'Integration with existing API required.', '2024-05-20 10:00:00', NULL, NULL, '2024-05-20 09:00:00'),
+(10, 'ORD-2024-000010', 14, 4, 4, 'basic', 'in_progress', 600.00, 90.00, 690.00, 7, 'Mobile-first design approach.', '2024-05-22 11:00:00', NULL, NULL, '2024-05-22 10:00:00'),
+(11, 'ORD-2024-000011', 16, 8, 12, 'basic', 'in_progress', 450.00, 67.50, 517.50, 5, 'B2B service targeting small businesses.', '2024-05-24 14:00:00', NULL, NULL, '2024-05-24 13:00:00'),
+
+-- Delivered Orders (awaiting review)
+(12, 'ORD-2024-000012', 15, 5, 6, 'basic', 'delivered', 100.00, 15.00, 115.00, 3, '1500 words article about digital marketing trends.', '2024-05-18 10:00:00', '2024-05-20 16:00:00', NULL, '2024-05-18 09:00:00'),
+(13, 'ORD-2024-000013', 17, 7, 10, 'basic', 'delivered', 250.00, 37.50, 287.50, 5, 'Logo animation for company intro video.', '2024-05-19 11:00:00', '2024-05-23 15:00:00', NULL, '2024-05-19 10:00:00'),
+
+-- Pending Orders (payment made, waiting to start)
+(14, 'ORD-2024-000014', 18, 9, 14, 'basic', 'pending', 800.00, 120.00, 920.00, 10, 'WooCommerce store for handmade products.', NULL, NULL, NULL, '2024-05-25 10:00:00'),
+(15, 'ORD-2024-000015', 19, 10, 15, 'basic', 'pending', 300.00, 45.00, 345.00, 7, '3D product visualization for new furniture line.', NULL, NULL, NULL, '2024-05-25 14:00:00'),
+
+-- More Completed Orders for review data
+(16, 'ORD-2024-000016', 20, 4, 3, 'basic', 'completed', 350.00, 52.50, 402.50, 5, 'Logo for new tech startup.', '2024-02-10 10:00:00', '2024-02-14 16:00:00', '2024-02-16 10:00:00', '2024-02-10 09:00:00'),
+(17, 'ORD-2024-000017', 21, 5, 5, 'basic', 'completed', 500.00, 75.00, 575.00, 10, 'SEO for e-commerce website.', '2024-02-15 11:00:00', '2024-02-24 15:00:00', '2024-02-26 10:00:00', '2024-02-15 10:00:00'),
+(18, 'ORD-2024-000018', 22, 11, 16, 'basic', 'completed', 1000.00, 150.00, 1150.00, 14, 'Customer churn prediction model.', '2024-03-01 09:00:00', '2024-03-14 17:00:00', '2024-03-16 10:00:00', '2024-03-01 08:00:00'),
+(19, 'ORD-2024-000019', 13, 12, 18, 'basic', 'completed', 120.00, 18.00, 138.00, 3, 'Website copy for homepage and about page.', '2024-03-10 10:00:00', '2024-03-12 15:00:00', '2024-03-14 10:00:00', '2024-03-10 09:00:00'),
+(20, 'ORD-2024-000020', 14, 3, 1, 'standard', 'completed', 2500.00, 375.00, 2875.00, 21, 'CRM system for sales team.', '2024-03-15 10:00:00', '2024-04-04 16:00:00', '2024-04-07 10:00:00', '2024-03-15 09:00:00');
+
+-- ============================================================
+-- 13. INSERT TRANSACTIONS
+-- ============================================================
+
+INSERT INTO transactions (transaction_id, order_id, user_id, transaction_type, amount, currency, status, payment_method, description, processed_at, created_at) VALUES
+-- Payments for completed orders
+('TXN-2024-000001', 1, 13, 'payment', 1725.00, 'USD', 'completed', 'credit_card', 'Payment for Order #ORD-2024-000001', '2024-01-05 09:05:00', '2024-01-05 09:00:00'),
+('TXN-2024-000002', 1, 3, 'payment', 1275.00, 'USD', 'completed', 'wallet', 'Earnings from Order #ORD-2024-000001 (after 15% fee)', '2024-01-20 10:05:00', '2024-01-20 10:00:00'),
+('TXN-2024-000003', 2, 14, 'payment', 690.00, 'USD', 'completed', 'paypal', 'Payment for Order #ORD-2024-000002', '2024-01-10 10:05:00', '2024-01-10 10:00:00'),
+('TXN-2024-000004', 2, 4, 'payment', 510.00, 'USD', 'completed', 'wallet', 'Earnings from Order #ORD-2024-000002 (after 15% fee)', '2024-01-18 09:05:00', '2024-01-18 09:00:00'),
+('TXN-2024-000005', 3, 15, 'payment', 575.00, 'USD', 'completed', 'stripe', 'Payment for Order #ORD-2024-000003', '2024-01-12 13:05:00', '2024-01-12 13:00:00'),
+('TXN-2024-000006', 3, 5, 'payment', 425.00, 'USD', 'completed', 'wallet', 'Earnings from Order #ORD-2024-000003 (after 15% fee)', '2024-01-23 10:05:00', '2024-01-23 10:00:00'),
+('TXN-2024-000007', 4, 16, 'payment', 2300.00, 'USD', 'completed', 'credit_card', 'Payment for Order #ORD-2024-000004', '2024-01-15 08:05:00', '2024-01-15 08:00:00'),
+('TXN-2024-000008', 4, 6, 'payment', 1700.00, 'USD', 'completed', 'wallet', 'Earnings from Order #ORD-2024-000004 (after 15% fee)', '2024-02-07 10:05:00', '2024-02-07 10:00:00'),
+
+-- Payments for in-progress orders
+('TXN-2024-000009', 9, 13, 'payment', 920.00, 'USD', 'completed', 'credit_card', 'Payment for Order #ORD-2024-000009', '2024-05-20 09:05:00', '2024-05-20 09:00:00'),
+('TXN-2024-000010', 10, 14, 'payment', 690.00, 'USD', 'completed', 'paypal', 'Payment for Order #ORD-2024-000010', '2024-05-22 10:05:00', '2024-05-22 10:00:00'),
+
+-- Withdrawal transactions
+('TXN-2024-000011', NULL, 3, 'withdrawal', 5000.00, 'USD', 'completed', 'bank_transfer', 'Withdrawal to bank account', '2024-02-01 10:00:00', '2024-02-01 09:00:00'),
+('TXN-2024-000012', NULL, 4, 'withdrawal', 3000.00, 'USD', 'completed', 'paypal', 'Withdrawal to PayPal', '2024-02-15 10:00:00', '2024-02-15 09:00:00'),
+('TXN-2024-000013', NULL, 5, 'withdrawal', 2500.00, 'USD', 'completed', 'bank_transfer', 'Withdrawal to bank account', '2024-03-01 10:00:00', '2024-03-01 09:00:00');
+
+-- ============================================================
+-- 14. INSERT REVIEWS
+-- ============================================================
+
+INSERT INTO reviews (order_id, client_id, freelancer_id, gig_id, rating, comment, communication_rating, service_quality_rating, delivery_time_rating, value_for_money_rating, would_recommend, status, created_at) VALUES
+(1, 13, 3, 1, 5, 'Outstanding work! Alex delivered exactly what I needed. The code is clean, well-documented, and the app works flawlessly. Communication was excellent throughout the project. Highly recommended!', 5, 5, 5, 5, 1, 'active', '2024-01-21 10:00:00'),
+(2, 14, 4, 3, 5, 'Maria is incredibly talented! She created a beautiful logo that perfectly represents our brand. The revision process was smooth and she was very patient with our feedback. Will definitely work with her again!', 5, 5, 5, 5, 1, 'active', '2024-01-19 10:00:00'),
+(3, 15, 5, 5, 5, 'James really knows his SEO! Our website traffic has increased by 40% in just two months. His reports are detailed and he explains everything clearly. Great value for money!', 5, 5, 5, 5, 1, 'active', '2024-01-24 10:00:00'),
+(4, 16, 6, 7, 5, 'Emily is a top-notch developer. The iOS app she built is smooth, bug-free, and users love it. She went above and beyond to ensure everything was perfect. Highly professional!', 5, 5, 5, 5, 1, 'active', '2024-02-08 10:00:00'),
+(5, 17, 7, 9, 5, 'Amazing video editing skills! David transformed our raw footage into a professional promotional video. Fast delivery and great communication. Will hire again!', 5, 5, 5, 5, 1, 'active', '2024-01-25 10:00:00'),
+(6, 18, 8, 11, 5, 'Sophie managed our Facebook ads campaign brilliantly. We saw a 3x return on ad spend! She knows exactly what she is doing and provides excellent reporting. Highly recommended!', 5, 5, 5, 5, 1, 'active', '2024-02-03 10:00:00'),
+(7, 19, 9, 13, 5, 'Michael built us a fantastic WordPress website. It is fast, secure, and looks great on all devices. He also provided excellent training on how to manage it. Very satisfied!', 5, 5, 5, 4, 1, 'active', '2024-02-10 10:00:00'),
+(8, 20, 12, 17, 5, 'Perfect translation! Lisa not only translated accurately but also adapted the content culturally. Very professional and delivered ahead of schedule!', 5, 5, 5, 5, 1, 'active', '2024-02-09 10:00:00'),
+(16, 20, 4, 3, 5, 'Second time working with Maria and again she exceeded expectations! The logo is modern, memorable, and exactly what we envisioned. True professional!', 5, 5, 5, 5, 1, 'active', '2024-02-17 10:00:00'),
+(17, 21, 5, 5, 4, 'Good SEO work. James provided a comprehensive audit and optimization. Results are coming slowly but steadily. Would have liked more frequent updates but overall satisfied.', 4, 5, 4, 4, 1, 'active', '2024-02-27 10:00:00'),
+(18, 22, 11, 16, 5, 'Carlos is a data science wizard! The machine learning model he built has improved our business decisions significantly. Professional, knowledgeable, and great communicator!', 5, 5, 5, 5, 1, 'active', '2024-03-17 10:00:00'),
+(19, 13, 12, 18, 5, 'Excellent copywriting! Lisa crafted compelling website copy that has increased our conversion rate. She understood our brand voice perfectly!', 5, 5, 5, 5, 1, 'active', '2024-03-15 10:00:00'),
+(20, 14, 3, 1, 5, 'Alex is simply the best! Our CRM system is working perfectly and has streamlined our entire sales process. Worth every penny!', 5, 5, 5, 5, 1, 'active', '2024-04-08 10:00:00');
+
+-- ============================================================
+-- 15. INSERT CONVERSATIONS & MESSAGES
+-- ============================================================
+
+INSERT INTO conversations (id, order_id, participant1_id, participant2_id, last_message_at, participant1_unread_count, participant2_unread_count, status, created_at) VALUES
+(1, 1, 13, 3, '2024-01-18 10:30:00', 0, 0, 'active', '2024-01-05 09:10:00'),
+(2, 2, 14, 4, '2024-01-16 11:00:00', 0, 0, 'active', '2024-01-10 10:10:00'),
+(3, 9, 13, 3, '2024-05-25 14:00:00', 0, 1, 'active', '2024-05-20 09:10:00'),
+(4, 10, 14, 4, '2024-05-24 16:00:00', 1, 0, 'active', '2024-05-22 10:10:00'),
+(5, NULL, 15, 5, '2024-05-20 10:00:00', 0, 0, 'active', '2024-05-20 09:00:00');
+
+INSERT INTO messages (conversation_id, sender_id, receiver_id, message, message_type, is_read, read_at, created_at) VALUES
+-- Conversation 1 (Completed Order)
+(1, 13, 3, 'Hi Alex! I am excited to work with you on this project. I have attached the project requirements document.', 'text', 1, '2024-01-05 09:15:00', '2024-01-05 09:10:00'),
+(1, 3, 13, 'Hello! Thank you for choosing me. I have reviewed your requirements and they look great. I will start working on this right away and keep you updated on the progress.', 'text', 1, '2024-01-05 09:20:00', '2024-01-05 09:18:00'),
+(1, 3, 13, 'Quick update: I have completed the database design and user authentication. The project is progressing well!', 'text', 1, '2024-01-10 14:00:00', '2024-01-10 13:55:00'),
+(1, 13, 3, 'Great to hear! Looking forward to seeing the progress.', 'text', 1, '2024-01-10 14:05:00', '2024-01-10 14:02:00'),
+(1, 3, 13, 'The project is complete! I have delivered all files. Please review and let me know if you need any changes.', 'text', 1, '2024-01-18 15:35:00', '2024-01-18 15:30:00'),
+
+-- Conversation 3 (Active Order)
+(3, 13, 3, 'Hi Alex! Starting another project with you. Need a React app this time.', 'text', 1, '2024-05-20 09:12:00', '2024-05-20 09:10:00'),
+(3, 3, 13, 'Perfect! I am ready to start. Can you provide more details about the API integration requirements?', 'text', 1, '2024-05-20 10:00:00', '2024-05-20 09:58:00'),
+(3, 13, 3, 'Sure! The API documentation is here: [link]. Let me know if you have any questions.', 'text', 1, '2024-05-20 11:00:00', '2024-05-20 10:55:00'),
+(3, 3, 13, 'I have started working on the project. The basic structure is ready and I am now integrating the API.', 'text', 0, NULL, '2024-05-25 14:00:00'),
+
+-- Conversation 4 (Active Order)
+(4, 14, 4, 'Hi Maria! Love your portfolio. Excited to work together on our mobile app design.', 'text', 1, '2024-05-22 10:12:00', '2024-05-22 10:10:00'),
+(4, 4, 14, 'Thank you! I am excited too. Let me create some initial concepts for you to review.', 'text', 1, '2024-05-22 11:00:00', '2024-05-22 10:58:00'),
+(4, 4, 14, 'I have created 3 design concepts. Here are the mockups. Which direction do you prefer?', 'file', 0, NULL, '2024-05-24 16:00:00'),
+
+-- Conversation 5 (Pre-order inquiry)
+(5, 15, 5, 'Hi James! I am interested in your SEO services. Do you work with e-commerce websites?', 'text', 1, '2024-05-20 09:02:00', '2024-05-20 09:00:00'),
+(5, 5, 15, 'Yes, absolutely! E-commerce SEO is one of my specialties. I can help optimize your product pages, category structure, and overall site architecture for better rankings.', 'text', 1, '2024-05-20 09:15:00', '2024-05-20 09:12:00'),
+(5, 15, 5, 'That sounds great! Can you send me a custom offer for a 6-month SEO campaign?', 'text', 1, '2024-05-20 09:45:00', '2024-05-20 09:42:00'),
+(5, 5, 15, 'I will send you a custom offer with detailed strategy and pricing. Give me a few hours to prepare a comprehensive proposal.', 'text', 1, '2024-05-20 10:05:00', '2024-05-20 10:00:00');
+
+-- ============================================================
+-- 16. INSERT NOTIFICATIONS
+-- ============================================================
+
+INSERT INTO notifications (user_id, type, title, message, link, entity_type, entity_id, priority, is_read, read_at, created_at) VALUES
+-- Freelancer notifications
+(3, 'order_received', 'New Order Received!', 'You have received a new order #ORD-2024-000009 from client1', '/orders/9', 'order', 9, 'high', 1, '2024-05-20 09:05:00', '2024-05-20 09:00:00'),
+(3, 'message_received', 'New Message', 'You have a new message from client1', '/messages/3', 'message', NULL, 'medium', 0, NULL, '2024-05-25 14:00:00'),
+(4, 'order_received', 'New Order Received!', 'You have received a new order #ORD-2024-000010 from client2', '/orders/10', 'order', 10, 'high', 1, '2024-05-22 10:05:00', '2024-05-22 10:00:00'),
+(4, 'message_received', 'New Message', 'You have a new message from client2', '/messages/4', 'message', NULL, 'medium', 1, '2024-05-24 16:05:00', '2024-05-24 16:00:00'),
+
+-- Client notifications
+(13, 'order_update', 'Order Delivered', 'Your order #ORD-2024-000001 has been delivered', '/orders/1', 'order', 1, 'high', 1, '2024-01-18 15:35:00', '2024-01-18 15:30:00'),
+(14, 'order_update', 'Order Completed', 'Your order #ORD-2024-000002 has been completed', '/orders/2', 'order', 2, 'high', 1, '2024-01-18 09:05:00', '2024-01-18 09:00:00'),
+(13, 'reminder', 'Review Reminder', 'Please leave a review for order #ORD-2024-000001', '/orders/1/review', 'order', 1, 'low', 0, NULL, '2024-01-23 10:00:00'),
+
+-- System notifications
+(3, 'achievement', 'New Badge Earned!', 'Congratulations! You have earned the "Top Rated Seller" badge', '/profile', 'badge', NULL, 'medium', 1, '2024-03-01 10:00:00', '2024-03-01 09:00:00'),
+(4, 'achievement', 'Milestone Reached!', 'You have completed 100 orders! Keep up the great work!', '/profile', 'milestone', NULL, 'medium', 1, '2024-04-15 10:00:00', '2024-04-15 09:00:00');
+
+-- ============================================================
+-- 17. INSERT FAVORITES
+-- ============================================================
+
+INSERT INTO favorites (user_id, gig_id, notes, created_at) VALUES
+(13, 2, 'Great for future React projects', '2024-03-15 10:00:00'),
+(13, 4, 'Need UI/UX design next month', '2024-04-10 10:00:00'),
+(14, 1, 'For upcoming web app project', '2024-03-20 10:00:00'),
+(14, 7, 'Considering mobile app development', '2024-04-15 10:00:00'),
+(15, 5, 'Good SEO service for future', '2024-03-25 10:00:00'),
+(16, 6, 'Content writing services', '2024-04-01 10:00:00'),
+(17, 9, 'Video editing for marketing', '2024-04-05 10:00:00'),
+(18, 11, 'Facebook ads service', '2024-04-10 10:00:00'),
+(19, 13, 'WordPress development', '2024-04-15 10:00:00'),
+(20, 17, 'Translation services needed', '2024-04-20 10:00:00');
+
+-- ============================================================
+-- 18. INSERT PORTFOLIO
+-- ============================================================
+
+INSERT INTO portfolio (freelancer_id, title, description, image, category_id, completion_date, display_order, views_count, likes_count, status, created_at) VALUES
+(3, 'E-Commerce Platform for Fashion Brand', 'Developed a complete e-commerce solution with custom shopping cart, payment integration, and inventory management system. Built with React, Node.js, and MongoDB.', 'portfolio-ecommerce.jpg', 1, '2023-12-15', 1, 234, 45, 'published', '2023-12-20 10:00:00'),
+(3, 'Task Management SaaS Application', 'Created a collaborative task management platform with real-time updates, team collaboration features, and advanced reporting.', 'portfolio-saas.jpg', 1, '2023-10-20', 2, 189, 38, 'published', '2023-10-25 10:00:00'),
+
+(4, 'Tech Startup Brand Identity', 'Complete brand identity design including logo, color palette, typography, and brand guidelines for a fintech startup.', 'portfolio-brand.jpg', 3, '2024-01-10', 1, 312, 67, 'published', '2024-01-15 10:00:00'),
+(4, 'Mobile Banking App UI/UX', 'Designed user interface and experience for a mobile banking application with focus on security and ease of use.', 'portfolio-banking-app.jpg', 3, '2023-11-05', 2, 267, 54, 'published', '2023-11-10 10:00:00'),
+
+(5, 'Local Business SEO Success', 'Helped a local restaurant rank #1 for competitive keywords, resulting in 200% increase in online reservations.', 'portfolio-seo.jpg', 4, '2023-09-15', 1, 178, 32, 'published', '2023-09-20 10:00:00'),
+
+(6, 'Fitness Tracking iOS App', 'Native iOS fitness application with workout tracking, nutrition logging, and social features.', 'portfolio-fitness.jpg', 2, '2023-12-01', 1, 245, 51, 'published', '2023-12-05 10:00:00'),
+
+(7, 'Corporate Promotional Video', 'Created a 2-minute corporate video with motion graphics, voice-over, and professional editing.', 'portfolio-corporate.jpg', 5, '2024-02-10', 1, 198, 42, 'published', '2024-02-15 10:00:00');
+
+-- ============================================================
+-- 19. INSERT SUPPORT TICKETS
+-- ============================================================
+
+INSERT INTO support_tickets (ticket_number, user_id, order_id, category, priority, subject, description, status, assigned_to, first_response_at, created_at) VALUES
+('TICKET-2024-0001', 13, 1, 'technical', 'low', 'Question about order delivery', 'I received the files but I am not sure how to deploy the application. Can you provide guidance?', 'resolved', 1, '2024-01-19 10:00:00', '2024-01-19 09:00:00'),
+('TICKET-2024-0002', 14, NULL, 'account', 'medium', 'Cannot update payment method', 'I am trying to update my payment method but getting an error message.', 'resolved', 1, '2024-02-05 11:00:00', '2024-02-05 10:00:00'),
+('TICKET-2024-0003', 3, NULL, 'billing', 'high', 'Withdrawal pending for too long', 'I requested a withdrawal 5 days ago but it is still pending. Please check.', 'resolved', 2, '2024-03-10 09:30:00', '2024-03-10 09:00:00'),
+('TICKET-2024-0004', 19, 14, 'other', 'medium', 'Need help with order requirements', 'I am not sure what information to provide for the WooCommerce project. Can someone help?', 'open', 1, '2024-05-25 14:30:00', '2024-05-25 14:00:00');
+
+INSERT INTO support_responses (ticket_id, user_id, message, is_staff_response, created_at) VALUES
+(1, 1, 'Hello! I would be happy to help. Deployment instructions are included in the documentation. You can also schedule a call with the developer for hands-on assistance. Let me know if you need help scheduling that.', 1, '2024-01-19 10:00:00'),
+(1, 13, 'Thank you! The documentation was helpful. I managed to deploy successfully.', 0, '2024-01-19 14:00:00'),
+
+(2, 1, 'Thank you for reporting this. Our technical team is investigating the issue. We will update you within 24 hours.', 1, '2024-02-05 11:00:00'),
+(2, 1, 'The issue has been resolved. You should now be able to update your payment method. Please try again and let us know if you encounter any problems.', 1, '2024-02-06 10:00:00'),
+
+(3, 2, 'I apologize for the delay. I have expedited your withdrawal request. You should receive the funds within 24-48 hours.', 1, '2024-03-10 09:30:00'),
+(3, 3, 'Thank you for the quick response! Received the funds today.', 0, '2024-03-11 15:00:00'),
+
+(4, 1, 'Hello! The freelancer will provide a requirements questionnaire when they accept the order. You can also message them directly to discuss project details before they start working.', 1, '2024-05-25 14:30:00');
+
+-- ============================================================
+-- 20. INSERT PROMO CODES
+-- ============================================================
+
+INSERT INTO promo_codes (code, description, discount_type, discount_value, minimum_order_amount, usage_limit, usage_per_user, user_type, valid_from, valid_until, status, created_by, created_at) VALUES
+('WELCOME10', 'Welcome discount for new clients', 'percentage', 10.00, 50.00, 100, 1, 'new', '2024-01-01 00:00:00', '2024-12-31 23:59:59', 'active', 1, '2024-01-01 10:00:00'),
+('SAVE20', '20% off for returning customers', 'percentage', 20.00, 100.00, 50, 1, 'existing', '2024-05-01 00:00:00', '2024-06-30 23:59:59', 'active', 1, '2024-05-01 10:00:00'),
+('SUMMER50', '$50 off on orders above $500', 'fixed_amount', 50.00, 500.00, 200, 2, 'all', '2024-06-01 00:00:00', '2024-08-31 23:59:59', 'active', 1, '2024-05-15 10:00:00');
+
+-- ============================================================
+-- 21. INSERT ACTIVITY LOGS
+-- ============================================================
+
+INSERT INTO activity_log (user_id, activity_type, entity_type, entity_id, description, ip_address, created_at) VALUES
+(13, 'order_created', 'order', 1, 'Created order #ORD-2024-000001', '192.168.1.100', '2024-01-05 09:00:00'),
+(3, 'order_delivered', 'order', 1, 'Delivered order #ORD-2024-000001', '192.168.1.101', '2024-01-18 15:30:00'),
+(13, 'review_submitted', 'review', 1, 'Submitted review for order #ORD-2024-000001', '192.168.1.100', '2024-01-21 10:00:00'),
+(3, 'gig_created', 'gig', 1, 'Created new gig "Full-stack web application"', '192.168.1.101', '2023-02-15 10:00:00'),
+(14, 'user_login', 'user', 14, 'User logged in', '192.168.1.102', '2024-05-25 09:00:00'),
+(4, 'gig_updated', 'gig', 3, 'Updated gig pricing', '192.168.1.103', '2024-03-15 14:00:00');
+
+-- ============================================================
+-- COMMIT AND RE-ENABLE FOREIGN KEY CHECKS
+-- ============================================================
+
+COMMIT;
+SET FOREIGN_KEY_CHECKS = 1;
+SET AUTOCOMMIT = 1;
+
+-- ============================================================
+-- UPDATE STATISTICS
+-- ============================================================
+
+-- Update gig statistics
+CALL sp_update_gig_stats(1);
+CALL sp_update_gig_stats(2);
+CALL sp_update_gig_stats(3);
+CALL sp_update_gig_stats(4);
+CALL sp_update_gig_stats(5);
+CALL sp_update_gig_stats(6);
+CALL sp_update_gig_stats(7);
+CALL sp_update_gig_stats(8);
+CALL sp_update_gig_stats(9);
+CALL sp_update_gig_stats(10);
+CALL sp_update_gig_stats(11);
+CALL sp_update_gig_stats(12);
+CALL sp_update_gig_stats(13);
+CALL sp_update_gig_stats(14);
+CALL sp_update_gig_stats(15);
+CALL sp_update_gig_stats(16);
+CALL sp_update_gig_stats(17);
+CALL sp_update_gig_stats(18);
+
+-- Update category counts
+UPDATE categories SET gigs_count = (SELECT COUNT(*) FROM gigs WHERE category_id = categories.id AND status = 'active');
+
+-- Update skill usage counts
+UPDATE skills s SET usage_count = (SELECT COUNT(*) FROM freelancer_skills fs WHERE fs.skill_id = s.id);
+
+-- ============================================================
+-- DATA INSERT COMPLETE
+-- ============================================================
+
+SELECT 'Sample data insertion complete!' AS Status,
+       (SELECT COUNT(*) FROM users) AS Total_Users,
+       (SELECT COUNT(*) FROM gigs WHERE status = 'active') AS Active_Gigs,
+       (SELECT COUNT(*) FROM orders) AS Total_Orders,
+       (SELECT COUNT(*) FROM reviews) AS Total_Reviews,
+       (SELECT COUNT(*) FROM messages) AS Total_Messages,
+       (SELECT COUNT(*) FROM transactions) AS Total_Transactions;
+
+-- ============================================================
+-- VERIFICATION QUERIES (Optional - for testing)
+-- ============================================================
+
+-- Check freelancer dashboard
+-- SELECT * FROM v_freelancer_dashboard WHERE freelancer_id = 3;
+
+-- Check popular gigs
+-- SELECT * FROM v_popular_gigs LIMIT 5;
+
+-- Check active orders
+-- SELECT order_number, client_id, freelancer_id, status, total_amount FROM orders WHERE status IN ('pending', 'in_progress', 'delivered');
+
+-- Check wallet balances
+-- SELECT u.username, w.balance, w.pending_clearance, w.total_earned FROM wallets w JOIN users u ON w.user_id = u.id WHERE u.role = 'freelancer';

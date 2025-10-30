@@ -1,5 +1,5 @@
 <?php
-include '../config/db.php'; // Include database connection
+include '../config/db.con.php'; // Include database connection
 // include '../includes/session.php'; // Include session management
 // Ensure only admins can access this page
 // if ($_SESSION['role'] !== 'admin') {

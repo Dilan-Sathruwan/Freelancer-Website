@@ -1,6 +1,6 @@
 <?php
 session_start();
-include_once "./config/db.php";
+include_once "./config/db.con.php";
 
 ?>
 
@@ -26,8 +26,8 @@ include_once "./config/db.php";
 
     <?php
     $logoutPage = "./config/logout.php";
-    $loginPage = "./public/login.php";
-    $regPage = "./public/sign_up.php";
+    $loginPage = "./auth/login.php";
+    $regPage = "./auth/signup.php";
     $profilePage = "./public/profile.php";
     $homePage = "index.php";
     $logo = "./assets/img/Logo.png";
@@ -128,7 +128,7 @@ include_once "./config/db.php";
         <div class="container">
             <h2 data-aos="fade-up">Start Your Journey Today</h2>
             <p data-aos="fade-up" data-aos-delay="100">Sign up now and join the thousands of users already enjoying our services!</p>
-            <a href="./public/sign_up.php" class="btn btn-light" data-aos="zoom-in" data-aos-delay="200">Sign Up Now</a>
+            <a href="./auth/signup.php" class="btn btn-light" data-aos="zoom-in" data-aos-delay="200">Sign Up Now</a>
         </div>
     </section>
 

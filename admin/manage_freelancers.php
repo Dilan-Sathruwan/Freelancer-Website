@@ -1,5 +1,5 @@
 <?php
-include '../config/db.php'; // Include database connection
+include '../config/db.con.php'; // Include database connection
 
 // Handle form submission for adding/editing freelancers
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {

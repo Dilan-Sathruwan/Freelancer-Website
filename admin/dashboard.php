@@ -1,41 +1,61 @@
 <?php
-include '../config/db.php';
-
-if (isset($_GET["search"])) {
-    $sql = "SELECT id, username, first_name, last_name, email, role, status FROM users WHERE username LIKE :search OR first_name LIKE :search OR last_name LIKE :search OR email LIKE :search";
-    $stmt = $conn->prepare($sql);
-    $stmt->bindValue(':search', '%' . $_GET["search"] . '%', PDO::PARAM_STR);
-    $result = $stmt->execute();
-    echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
-    exit;
-} else {
-    $sql = "SELECT id, username, first_name, last_name, email, role, status FROM users";
-    $stmt = $conn->query($sql);
-}
-
-// include '../includes/header.php';
-// include '../includes/session.php';
+session_start();
+include '../config/db.con.php';
 
 // Ensure only admins can access this page
-// if ($_SESSION['role'] !== 'admin') {
-//     header("Location: ../public/index.php");
-//     exit;
-// }
+if (!isset($_SESSION['user_id']) || !isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
+    header("Location: ../auth/login.php");
+    exit;
+}
 
-$freelancerCount = $conn->query("SELECT COUNT(*) FROM users WHERE role = 'freelancer'")->fetchColumn();
-$clientCount = $conn->query("SELECT COUNT(*) FROM users WHERE role = 'client'")->fetchColumn();
-$adminCount = $conn->query("SELECT COUNT(*) FROM users WHERE role = 'admin'")->fetchColumn();
+// Handle search requests
+if (isset($_GET["search"])) {
+    // Sanitize search input
+    $searchTerm = sanitizeInput($_GET["search"]);
+    
+    try {
+        $sql = "SELECT id, username, first_name, last_name, email, role, status FROM users WHERE username LIKE ? OR first_name LIKE ? OR last_name LIKE ? OR email LIKE ?";
+        $stmt = $conn->prepare($sql);
+        $searchParam = '%' . $searchTerm . '%';
+        $stmt->execute([$searchParam, $searchParam, $searchParam, $searchParam]);
+        echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
+        exit;
+    } catch (PDOException $e) {
+        error_log("Search error: " . $e->getMessage());
+        echo json_encode([]);
+        exit;
+    }
+}
 
-$stmt = $conn->query("SELECT id, username, first_name, last_name, email, role, status FROM users");
-$users = $stmt->fetchAll();
+try {
+    // Get user counts
+    $freelancerCount = $conn->query("SELECT COUNT(*) FROM users WHERE role = 'freelancer'")->fetchColumn();
+    $clientCount = $conn->query("SELECT COUNT(*) FROM users WHERE role = 'client'")->fetchColumn();
+    $adminCount = $conn->query("SELECT COUNT(*) FROM users WHERE role = 'admin'")->fetchColumn();
 
+    // Get all users
+    $stmt = $conn->query("SELECT id, username, first_name, last_name, email, role, status FROM users");
+    $users = $stmt->fetchAll();
+} catch (PDOException $e) {
+    error_log("Dashboard data fetch error: " . $e->getMessage());
+    $error = "Error fetching dashboard data.";
+}
 
 if (isset($_GET['delete'])) {
-    $id = $_GET['delete'];
-    $stmt = $conn->prepare("DELETE FROM users WHERE id = ?");
-    $stmt->execute([$id]);
-    header("Location: dashboard.php");
-    exit;
+    // Validate input
+    $id = validateInteger($_GET['delete']);
+    
+    if ($id) {
+        try {
+            $stmt = $conn->prepare("DELETE FROM users WHERE id = ?");
+            $stmt->execute([$id]);
+            header("Location: dashboard.php");
+            exit;
+        } catch (PDOException $e) {
+            error_log("Delete user error: " . $e->getMessage());
+            $error = "Error deleting user.";
+        }
+    }
 }
 ?>
 
@@ -186,6 +206,13 @@ if (isset($_GET['delete'])) {
     </div>
     
     <div class="dashboard-container">
+        <!-- Display error message if any -->
+        <?php if (isset($error)): ?>
+            <div class="alert alert-danger">
+                <?php echo htmlspecialchars($error); ?>
+            </div>
+        <?php endif; ?>
+        
         <div class="dashboard-header">
             <h1>Welcome, Admin!</h1>
             <p>Here is your overview of the system</p>

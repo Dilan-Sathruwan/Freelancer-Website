@@ -1,6 +1,6 @@
 <?php
 // Include database connection
-include('../config/db.php');
+include('../config/db.con.php');
 session_start();
 
 
@@ -116,7 +116,7 @@ $gigs = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <body>
     <!-- Include the header -->
     <?php
-      $regPage = "../public/sign_up.php";
+      $regPage = "../auth/signup.php";
     $logoutPage = "../config/logout.php";
     include('../includes/index_header.php');
     ?>
