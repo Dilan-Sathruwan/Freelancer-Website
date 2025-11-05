@@ -1,190 +1,161 @@
 <?php
-include '../config/db.con.php'; // Include database connection
+session_start();
+include '../config/db.con.php';
 
-// Handle form submission for adding/editing freelancers
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $id = $_POST['id'] ?? null;
-    $username = $_POST['username'];
-    $first_name = $_POST['first_name'];
-    $last_name = $_POST['last_name'];
-    $email = $_POST['email'];
-    $password = $_POST['password'];
-    $status = $_POST['status'];
+// Set page variables
+$page_title = 'Manage Freelancers';
+$active_page = 'freelancers';
 
-    if ($id) {
-        // Update existing freelancer, include password only if provided
-        if (!empty($password)) {
-            $stmt = $conn->prepare("UPDATE users SET username = ?, first_name = ?, last_name = ?, email = ?, password = ?, status = ? WHERE id = ?");
-            $stmt->execute([$username, $first_name, $last_name, $email, $password, $status, $id]);
-        } else {
-            $stmt = $conn->prepare("UPDATE users SET username = ?, first_name = ?, last_name = ?, email = ?, status = ? WHERE id = ?");
-            $stmt->execute([$username, $first_name, $last_name, $email, $status, $id]);
-        }
-    } else {
-        // Add new freelancer
-        $stmt = $conn->prepare("INSERT INTO users (username, first_name, last_name, email, password, role, status) VALUES (?, ?, ?, ?, ?, 'freelancer', ?)");
-        $stmt->execute([$username, $first_name, $last_name, $email, $password, $status]);
-    }
-    header("Location: manage_freelancers.php");
+// Ensure only admins can access this page
+if (!isset($_SESSION['user_id']) || !isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
+    header("Location: ../auth/login.php");
     exit;
 }
 
-// Handle delete freelancer
+// Handle freelancer deletion
 if (isset($_GET['delete'])) {
-    $id = $_GET['delete'];
-    $stmt = $conn->prepare("DELETE FROM users WHERE id = ?");
-    $stmt->execute([$id]);
-    header("Location: manage_freelancers.php");
-    exit;
+    $id = validateInteger($_GET['delete']);
+    
+    if ($id) {
+        try {
+            $stmt = $conn->prepare("DELETE FROM users WHERE id = ? AND role = 'freelancer'");
+            $stmt->execute([$id]);
+            $success = "Freelancer deleted successfully.";
+        } catch (PDOException $e) {
+            error_log("Delete freelancer error: " . $e->getMessage());
+            $error = "Error deleting freelancer.";
+        }
+    }
 }
 
-// Fetch all freelancers
-$stmt = $conn->query("SELECT id, username, first_name, last_name, email, status FROM users WHERE role = 'freelancer'");
-$freelancers = $stmt->fetchAll();
+// Handle freelancer status update
+if (isset($_GET['toggle_status'])) {
+    $id = validateInteger($_GET['toggle_status']);
+    
+    if ($id) {
+        try {
+            // Get current status
+            $stmt = $conn->prepare("SELECT status FROM users WHERE id = ? AND role = 'freelancer'");
+            $stmt->execute([$id]);
+            $freelancer = $stmt->fetch();
+            
+            if ($freelancer) {
+                $newStatus = ($freelancer['status'] === 'active') ? 'inactive' : 'active';
+                $stmt = $conn->prepare("UPDATE users SET status = ? WHERE id = ? AND role = 'freelancer'");
+                $stmt->execute([$newStatus, $id]);
+                $success = "Freelancer status updated successfully.";
+            }
+        } catch (PDOException $e) {
+            error_log("Update freelancer status error: " . $e->getMessage());
+            $error = "Error updating freelancer status.";
+        }
+    }
+}
+
+try {
+    // Get all freelancers with profile info
+    $stmt = $conn->query("
+        SELECT u.id, u.username, u.first_name, u.last_name, u.email, u.status, u.created_at,
+               fp.title, fp.hourly_rate, fp.completed_jobs, fp.success_rate
+        FROM users u
+        LEFT JOIN freelancer_profiles fp ON u.id = fp.user_id
+        WHERE u.role = 'freelancer'
+        ORDER BY u.created_at DESC
+    ");
+    $freelancers = $stmt->fetchAll();
+} catch (PDOException $e) {
+    error_log("Fetch freelancers error: " . $e->getMessage());
+    $error = "Error fetching freelancers.";
+}
+
+include '../includes/admin_header.php';
 ?>
 
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manage Freelancers</title>
-    <link rel="stylesheet" href="../assets/css/style.css"> <!-- Your custom CSS -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"> <!-- Font Awesome -->
-    <style>
-        .form-container, .table-container {
-            margin: 20px auto;
-            padding: 20px;
-            background-color: #f8f9fa;
-            border-radius: 8px;
-            max-width: 800px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-        form {
-            display: grid;
-            gap: 15px;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        table, th, td {
-            border: 1px solid #ddd;
-        }
-        th, td {
-            padding: 10px;
-            text-align: left;
-        }
-        th {
-            background-color: #007bff;
-            color: white;
-        }
-        .btn {
-            padding: 5px 10px;
-            text-decoration: none;
-            border-radius: 5px;
-        }
-        .btn-edit {
-            background-color: #ffc107;
-            color: white;
-        }
-        .btn-edit:hover {
-            background-color: #e0a800;
-        }
-        .btn-delete {
-            background-color: #dc3545;
-            color: white;
-        }
-        .btn-delete:hover {
-            background-color: #c82333;
-        }
-        .btn-submit {
-            padding: 10px 20px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        .btn-submit:hover {
-            background-color: #0056b3;
-        }
-    </style>
-</head>
-
-<body>
-    <div class="form-container">
-        <h2><?php echo isset($_GET['edit']) ? 'Edit Freelancer' : 'Add Freelancer'; ?></h2>
-        <form method="POST" action="manage_freelancers.php">
-            <?php
-            // Populate form fields for editing
-            $editFreelancer = null;
-            if (isset($_GET['edit'])) {
-                $id = $_GET['edit'];
-                $stmt = $conn->prepare("SELECT * FROM users WHERE id = ? AND role = 'freelancer'");
-                $stmt->execute([$id]);
-                $editFreelancer = $stmt->fetch();
-            }
-            ?>
-            <input type="hidden" name="id" value="<?php echo $editFreelancer['id'] ?? ''; ?>">
-            <label>Username:</label>
-            <input type="text" name="username" value="<?php echo $editFreelancer['username'] ?? ''; ?>" required>
-            <label>First Name:</label>
-            <input type="text" name="first_name" value="<?php echo $editFreelancer['first_name'] ?? ''; ?>" required>
-            <label>Last Name:</label>
-            <input type="text" name="last_name" value="<?php echo $editFreelancer['last_name'] ?? ''; ?>" required>
-            <label>Email:</label>
-            <input type="email" name="email" value="<?php echo $editFreelancer['email'] ?? ''; ?>" required>
-            <label>Password: <small>(Leave blank to retain current password)</small></label>
-            <input type="password" name="password">
-            <label>Status:</label>
-            <select name="status" required>
-                <option value="active" <?php echo (isset($editFreelancer['status']) && $editFreelancer['status'] === 'active') ? 'selected' : ''; ?>>Active</option>
-                <option value="inactive" <?php echo (isset($editFreelancer['status']) && $editFreelancer['status'] === 'inactive') ? 'selected' : ''; ?>>Inactive</option>
-            </select>
-            <button type="submit" class="btn-submit"><?php echo isset($_GET['edit']) ? 'Update Freelancer' : 'Add Freelancer'; ?></button>
-        </form>
-    </div>
-
-    <div class="table-container">
-        <h2>Freelancer List</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Username</th>
-                    <th>First Name</th>
-                    <th>Last Name</th>
-                    <th>Email</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php if ($freelancers): ?>
-                    <?php foreach ($freelancers as $freelancer): ?>
+        <!-- Alerts -->
+        <?php if (isset($success)): ?>
+        <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded mb-6">
+            <div class="flex items-center">
+                <i class="ri-checkbox-circle-line text-lg mr-2"></i>
+                <span><?php echo htmlspecialchars($success); ?></span>
+            </div>
+        </div>
+        <?php endif; ?>
+        
+        <?php if (isset($error)): ?>
+        <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-6">
+            <div class="flex items-center">
+                <i class="ri-error-warning-line text-lg mr-2"></i>
+                <span><?php echo htmlspecialchars($error); ?></span>
+            </div>
+        </div>
+        <?php endif; ?>
+        
+        <!-- Freelancers Table -->
+        <div class="bg-white rounded-xl shadow overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-800">All Freelancers</h3>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
                         <tr>
-                            <td><?php echo htmlspecialchars($freelancer['id']); ?></td>
-                            <td><?php echo htmlspecialchars($freelancer['username']); ?></td>
-                            <td><?php echo htmlspecialchars($freelancer['first_name']); ?></td>
-                            <td><?php echo htmlspecialchars($freelancer['last_name']); ?></td>
-                            <td><?php echo htmlspecialchars($freelancer['email']); ?></td>
-                            <td><?php echo htmlspecialchars($freelancer['status']); ?></td>
-                            <td>
-                                <a href="manage_freelancers.php?edit=<?php echo $freelancer['id']; ?>" class="btn btn-edit">Edit</a>
-                                <a href="manage_freelancers.php?delete=<?php echo $freelancer['id']; ?>" class="btn btn-delete" onclick="return confirm('Are you sure you want to delete this freelancer?');">Delete</a>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Username</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hourly Rate</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jobs Completed</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Success Rate</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        <?php foreach ($freelancers as $freelancer): ?>
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><?php echo htmlspecialchars($freelancer['id']); ?></td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"><?php echo htmlspecialchars($freelancer['username']); ?></td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><?php echo htmlspecialchars($freelancer['first_name'] . ' ' . $freelancer['last_name']); ?></td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><?php echo htmlspecialchars($freelancer['email']); ?></td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <?php echo $freelancer['title'] ? htmlspecialchars($freelancer['title']) : '-'; ?>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <?php echo $freelancer['hourly_rate'] ? '$' . number_format($freelancer['hourly_rate'], 2) : '-'; ?>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><?php echo htmlspecialchars($freelancer['completed_jobs'] ?? 0); ?></td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <?php echo $freelancer['success_rate'] ? number_format($freelancer['success_rate'], 1) . '%' : '-'; ?>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                    <?php echo $freelancer['status'] === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'; ?>">
+                                    <?php echo htmlspecialchars($freelancer['status']); ?>
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <div class="flex space-x-2">
+                                    <a href="?toggle_status=<?php echo $freelancer['id']; ?>" 
+                                       class="text-indigo-600 hover:text-indigo-900"
+                                       onclick="return confirm('Are you sure you want to <?php echo $freelancer['status'] === 'active' ? 'deactivate' : 'activate'; ?> this freelancer?');">
+                                        <?php echo $freelancer['status'] === 'active' ? 'Deactivate' : 'Activate'; ?>
+                                    </a>
+                                    <a href="?delete=<?php echo $freelancer['id']; ?>" 
+                                       class="text-red-600 hover:text-red-900"
+                                       onclick="return confirm('Are you sure you want to delete this freelancer? This action cannot be undone.');">
+                                        Delete
+                                    </a>
+                                </div>
                             </td>
                         </tr>
-                    <?php endforeach; ?>
-                <?php else: ?>
-                    <tr>
-                        <td colspan="7">No freelancers found.</td>
-                    </tr>
-                <?php endif; ?>
-            </tbody>
-        </table>
-    </div>
-</body>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
 
-</html>
+<?php
+include '../includes/admin_footer.php';
+?>

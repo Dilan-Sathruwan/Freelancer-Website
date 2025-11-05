@@ -107,64 +107,86 @@
 
 
 <!-- footer.php -->
-<footer class="bg-footer">
-    <div class="container">
-        <div class="row">
-            <!-- Information Column -->
-            <div class="col-md-3">
-                <h6 class="footer-heading text-uppercase">Information</h6>
-                <ul class="list-unstyled footer-link mt-4">
-                    <li><a href="#">Pages</a></li>
-                    <li><a href="#">Our Team</a></li>
-                    <li><a href="#">Features</a></li>
-                    <li><a href="#">Pricing</a></li>
-                </ul>
-            </div>
-
-            <!-- Resources Column -->
-            <div class="col-md-3">
-                <h6 class="footer-heading text-uppercase">Resources</h6>
-                <ul class="list-unstyled footer-link mt-4">
-                    <li><a href="#">Monitoring Grader</a></li>
-                    <li><a href="#">Video Tutorials</a></li>
-                    <li><a href="#">Terms & Services</a></li>
-                    <li><a href="#">Zeeko API</a></li>
-                </ul>
-            </div>
-
-            <!-- Help Column -->
-            <div class="col-md-3">
-                <h6 class="footer-heading text-uppercase">Help</h6>
-                <ul class="list-unstyled footer-link mt-4">
-                    <li><a href="#">Sign Up</a></li>
-                    <li><a href="#">Login</a></li>
-                    <li><a href="#">Terms of Services</a></li>
-                    <li><a href="#">Privacy Policy</a></li>
-                </ul>
-            </div>
-
-            <!-- Contact Us Column -->
-            <div class="col-md-3">
-                <h6 class="footer-heading text-uppercase">Contact Us</h6>
-                <p class="contact-info mt-4">Reach out for any inquiries or help!</p>
-                <p class="contact-info">+01 123-456-7890</p>
-                <div class="mt-4">
-                    <a href="#" class="footer-social-icon facebook"><i class="fab fa-facebook-f"></i></a>
-                    <a href="#" class="footer-social-icon twitter"><i class="fab fa-twitter"></i></a>
-                    <a href="#" class="footer-social-icon google"><i class="fab fa-google"></i></a>
-                    <a href="#" class="footer-social-icon apple"><i class="fab fa-apple"></i></a>
+<footer class="bg-gray-900 text-gray-300 py-16">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
+            <!-- Brand -->
+            <div>
+                <div class="flex items-center space-x-3 mb-6">
+                    <div class="w-12 h-12 bg-gradient-to-br from-purple-600 to-blue-600 rounded-xl flex items-center justify-center">
+                        <i class="ri-lightbulb-flash-line text-2xl text-white"></i>
+                    </div>
+                    <span class="text-2xl font-bold text-white">FreelanceHub</span>
                 </div>
+                <p class="text-gray-400 mb-6 leading-relaxed">
+                    Connect with top talent worldwide and build your dream career in the freelance economy.
+                </p>
+                <div class="flex items-center gap-4">
+                    <a href="#" class="w-10 h-10 bg-gray-800 hover:bg-purple-600 rounded-lg flex items-center justify-center transition duration-300">
+                        <i class="ri-facebook-fill text-xl"></i>
+                    </a>
+                    <a href="#" class="w-10 h-10 bg-gray-800 hover:bg-purple-600 rounded-lg flex items-center justify-center transition duration-300">
+                        <i class="ri-twitter-fill text-xl"></i>
+                    </a>
+                    <a href="#" class="w-10 h-10 bg-gray-800 hover:bg-purple-600 rounded-lg flex items-center justify-center transition duration-300">
+                        <i class="ri-instagram-fill text-xl"></i>
+                    </a>
+                    <a href="#" class="w-10 h-10 bg-gray-800 hover:bg-purple-600 rounded-lg flex items-center justify-center transition duration-300">
+                        <i class="ri-linkedin-fill text-xl"></i>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Quick Links -->
+            <div>
+                <h3 class="text-white font-bold text-lg mb-6">Quick Links</h3>
+                <ul class="space-y-3">
+                    <li><a href="#" class="hover:text-purple-400 transition duration-300">About Us</a></li>
+                    <li><a href="#" class="hover:text-purple-400 transition duration-300">How It Works</a></li>
+                    <li><a href="#" class="hover:text-purple-400 transition duration-300">Careers</a></li>
+                    <li><a href="#" class="hover:text-purple-400 transition duration-300">Blog</a></li>
+                    <li><a href="#" class="hover:text-purple-400 transition duration-300">Contact</a></li>
+                </ul>
+            </div>
+
+            <!-- Categories -->
+            <div>
+                <h3 class="text-white font-bold text-lg mb-6">Categories</h3>
+                <ul class="space-y-3">
+                    <li><a href="#" class="hover:text-purple-400 transition duration-300">Development</a></li>
+                    <li><a href="#" class="hover:text-purple-400 transition duration-300">Design</a></li>
+                    <li><a href="#" class="hover:text-purple-400 transition duration-300">Writing</a></li>
+                    <li><a href="#" class="hover:text-purple-400 transition duration-300">Marketing</a></li>
+                    <li><a href="#" class="hover:text-purple-400 transition duration-300">Video & Audio</a></li>
+                </ul>
+            </div>
+
+            <!-- Support -->
+            <div>
+                <h3 class="text-white font-bold text-lg mb-6">Support</h3>
+                <ul class="space-y-3">
+                    <li><a href="#" class="hover:text-purple-400 transition duration-300">Help Center</a></li>
+                    <li><a href="#" class="hover:text-purple-400 transition duration-300">Terms of Service</a></li>
+                    <li><a href="#" class="hover:text-purple-400 transition duration-300">Privacy Policy</a></li>
+                    <li><a href="#" class="hover:text-purple-400 transition duration-300">Trust & Safety</a></li>
+                    <li><a href="#" class="hover:text-purple-400 transition duration-300">Sitemap</a></li>
+                </ul>
             </div>
         </div>
 
-        <!-- Footer Bottom Text -->
-        <div class="footer-alt">
-            <p>2024 Group project , All Rights Reserved.</p>
+        <!-- Bottom Bar -->
+        <div class="pt-8 border-t border-gray-800 flex flex-col md:flex-row justify-between items-center gap-4">
+            <p class="text-gray-400 text-center md:text-left">
+                © 2024 FreelanceHub. All rights reserved.
+            </p>
+            <div class="flex items-center gap-6">
+                <a href="#" class="text-gray-400 hover:text-purple-400 transition duration-300">Terms</a>
+                <a href="#" class="text-gray-400 hover:text-purple-400 transition duration-300">Privacy</a>
+                <a href="#" class="text-gray-400 hover:text-purple-400 transition duration-300">Cookies</a>
+            </div>
         </div>
     </div>
 </footer>
 
-<!-- Include Font Awesome for icons -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/js/all.min.js"></script>
 <!-- Include Font Awesome for icons -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/js/all.min.js"></script>

@@ -180,7 +180,7 @@ if (isset($_POST['addGig'])) {
 <body>
 
     <?php
-    $logoutPage = "../config/logout.php";
+    $logoutPage = "../auth/logout.php";
     $myGigsPage = "../freelancer/dashboard.php";
 
     include('../includes/index_header.php'); ?>

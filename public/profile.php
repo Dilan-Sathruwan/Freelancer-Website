@@ -156,7 +156,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 </style>
 
 <?php
-$logoutPage = "../config/logout.php";
+$logoutPage = "../auth/logout.php";
 include('../includes/index_header.php');
 ?>
 

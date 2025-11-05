@@ -1,0 +1,117 @@
+/* Mobile Navigation Styles */
+
+/* Mobile menu overlay */
+#mobile-menu-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease-in-out;
+  z-index: 9998;
+}
+
+/* Mobile menu */
+#mobile-menu {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100vh;
+  width: 80%;
+  max-width: 320px;
+  background-color: #ffffff;
+  box-shadow: -10px 0 20px rgba(0, 0, 0, 0.1);
+  transform: translateX(100%);
+  transition: transform 0.3s ease-in-out;
+  z-index: 9999;
+  overflow-y: auto;
+}
+
+/* Mobile menu open state */
+body.mobile-menu-open #mobile-menu-overlay {
+  display: block;
+  opacity: 1;
+  visibility: visible;
+}
+
+body.mobile-menu-open #mobile-menu {
+  transform: translateX(0);
+}
+
+/* Mobile menu header */
+#mobile-menu .sticky {
+  position: sticky;
+  top: 0;
+}
+
+/* Mobile menu content */
+#mobile-menu .p-4 {
+  padding: 1rem;
+}
+
+#mobile-menu .p-6 {
+  padding: 1.5rem;
+}
+
+/* Mobile menu links */
+#mobile-menu a {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  transition: all 0.3s ease;
+  text-decoration: none;
+}
+
+#mobile-menu a:hover {
+  background-color: #f5f3ff;
+  color: #7c3aed;
+}
+
+/* Mobile menu user info */
+#mobile-menu .flex.items-center.space-x-3.p-3.bg-white\/10 {
+  background-color: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 0.75rem;
+  padding: 0.75rem;
+}
+
+/* Hamburger menu animation */
+.hamburger-line {
+  transition: all 0.3s ease-in-out;
+}
+
+body.mobile-menu-open .hamburger-line:nth-child(1) {
+  transform: rotate(45deg) translate(5px, 5px);
+}
+
+body.mobile-menu-open .hamburger-line:nth-child(2) {
+  opacity: 0;
+}
+
+body.mobile-menu-open .hamburger-line:nth-child(3) {
+  transform: rotate(-45deg) translate(5px, -5px);
+}
+
+/* Prevent body scroll when mobile menu is open */
+body.mobile-menu-open {
+  overflow: hidden;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  #mobile-menu {
+    width: 90%;
+    max-width: none;
+  }
+  
+  #mobile-menu .p-4 {
+    padding: 0.75rem;
+  }
+  
+  #mobile-menu .p-6 {
+    padding: 1rem;
+  }
+}

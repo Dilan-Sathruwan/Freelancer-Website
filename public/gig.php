@@ -117,7 +117,7 @@ $gigs = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <!-- Include the header -->
     <?php
       $regPage = "../auth/signup.php";
-    $logoutPage = "../config/logout.php";
+    $logoutPage = "../auth/logout.php";
     include('../includes/index_header.php');
     ?>
 
