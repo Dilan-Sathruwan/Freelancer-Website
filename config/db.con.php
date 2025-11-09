@@ -22,7 +22,7 @@ $options = [
     PDO::ATTR_PERSISTENT         => false, // Disabled for better security
     PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES " . DB_CHARSET . " COLLATE utf8mb4_unicode_ci",
     PDO::ATTR_TIMEOUT            => 5,
-    PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => false, // For better memory management
+    PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => true, // Changed to true for better compatibility
 ];
 
 try {

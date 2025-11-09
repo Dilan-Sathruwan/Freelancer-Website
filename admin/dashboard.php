@@ -1,10 +1,16 @@
 <?php
 session_start();
 include '../config/db.con.php';
+include '../includes/logging_functions.php';
 
 // Set page variables
 $page_title = 'Admin Dashboard';
 $active_page = 'dashboard';
+
+// Log admin dashboard access
+if (isset($_SESSION['user_id'])) {
+    logAdminActivity($_SESSION['user_id'], 'dashboard_access', 'admin', $_SESSION['user_id'], null, null, 'Admin accessed dashboard');
+}
 
 try {
     // Get user counts

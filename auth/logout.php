@@ -1,6 +1,23 @@
 <?php
 session_start();
 
+// Log the logout activity before destroying the session
+if (isset($_SESSION['user_id']) && isset($_SESSION['role'])) {
+    // Include the logging functions
+    include_once "../config/db.con.php";
+    include_once "../includes/logging_functions.php";
+    
+    $userId = $_SESSION['user_id'];
+    $role = $_SESSION['role'];
+    
+    // Log the logout activity
+    if ($role === 'admin') {
+        logAdminLogout($userId);
+    } else {
+        logUserLogout($userId);
+    }
+}
+
 // Unset all session variables
 $_SESSION = array();
 

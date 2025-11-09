@@ -65,6 +65,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         error_log("Failed to update last login: " . $e->getMessage());
                     }
                     
+                    // Log the login activity
+                    include_once "../includes/logging_functions.php";
+                    if ($user['role'] === 'admin') {
+                        logAdminLogin($user['id']);
+                    } else {
+                        logUserLogin($user['id']);
+                    }
+                    
                     // Redirect based on role
                     switch ($user['role']) {
                         case 'admin':
