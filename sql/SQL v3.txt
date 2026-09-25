@@ -1,0 +1,1066 @@
+-- ============================================================
+-- FREELANCEHUB MARKETPLACE DATABASE - CLEAN DATA TABLES SCHEMA
+-- Version: 3.0 (Optimized, Enhanced & Fixed)
+-- ============================================================
+
+SET FOREIGN_KEY_CHECKS = 0;
+
+DROP DATABASE IF EXISTS freelancerwebsite;
+CREATE DATABASE freelancerwebsite CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE freelancerwebsite;
+
+-- ============================================================
+-- 1. USERS & PROFILES
+-- ============================================================
+
+-- Users Table (Enhanced with soft delete, security tokens and performance indexes)
+CREATE TABLE users (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    role ENUM('admin', 'freelancer', 'client') NOT NULL DEFAULT 'client',
+    first_name VARCHAR(50) NOT NULL DEFAULT '',
+    last_name VARCHAR(50) NOT NULL DEFAULT '',
+    email VARCHAR(100) NOT NULL UNIQUE,
+    phone VARCHAR(20) DEFAULT NULL,
+    profile_picture VARCHAR(255) DEFAULT 'default.png',
+    bio TEXT DEFAULT NULL,
+    country VARCHAR(50) DEFAULT NULL,
+    city VARCHAR(50) DEFAULT NULL,
+    address TEXT DEFAULT NULL,
+    postal_code VARCHAR(20) DEFAULT NULL,
+    status ENUM('active', 'inactive', 'suspended', 'deleted') DEFAULT 'active',
+    email_verified BOOLEAN DEFAULT FALSE,
+    verification_token VARCHAR(255) DEFAULT NULL,
+    verification_token_expires DATETIME DEFAULT NULL,
+    reset_token VARCHAR(255) DEFAULT NULL,
+    reset_token_expires DATETIME DEFAULT NULL,
+    last_login DATETIME DEFAULT NULL,
+    last_activity DATETIME DEFAULT NULL,
+    failed_login_attempts TINYINT UNSIGNED DEFAULT 0,
+    account_locked_until DATETIME DEFAULT NULL,
+    deleted_at DATETIME DEFAULT NULL,
+    deleted_by INT UNSIGNED DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    INDEX idx_user_role_status (role, status),
+    INDEX idx_user_email_verified (email, email_verified),
+    INDEX idx_user_created (created_at DESC),
+    INDEX idx_user_last_activity (last_activity DESC),
+    INDEX idx_user_deleted (deleted_at),
+    INDEX idx_username_status (username, status),
+    INDEX idx_verification_token (verification_token),
+    INDEX idx_reset_token (reset_token)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Freelancer Profiles Table
+CREATE TABLE freelancer_profiles (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id INT UNSIGNED NOT NULL UNIQUE,
+    title VARCHAR(100) DEFAULT NULL,
+    tagline VARCHAR(200) DEFAULT NULL,
+    hourly_rate DECIMAL(10,2) DEFAULT 0.00,
+    availability_status ENUM('available', 'busy', 'unavailable') DEFAULT 'available',
+    experience_level ENUM('beginner', 'intermediate', 'expert') DEFAULT 'beginner',
+    total_earnings DECIMAL(15,2) DEFAULT 0.00,
+    completed_jobs INT UNSIGNED DEFAULT 0,
+    cancelled_jobs INT UNSIGNED DEFAULT 0,
+    success_rate DECIMAL(5,2) DEFAULT 0.00,
+    response_time INT UNSIGNED DEFAULT 60 COMMENT 'Average response time in minutes',
+    response_rate DECIMAL(5,2) DEFAULT 100.00,
+    on_time_delivery_rate DECIMAL(5,2) DEFAULT 100.00,
+    languages JSON DEFAULT NULL COMMENT 'Array of {language, proficiency}',
+    portfolio_url VARCHAR(255) DEFAULT NULL,
+    video_intro_url VARCHAR(255) DEFAULT NULL,
+    timezone VARCHAR(50) DEFAULT 'UTC',
+    working_hours JSON DEFAULT NULL COMMENT 'Working schedule',
+    badges JSON DEFAULT NULL COMMENT 'Achievement badges',
+    profile_views INT UNSIGNED DEFAULT 0,
+    profile_completeness TINYINT UNSIGNED DEFAULT 0,
+    featured BOOLEAN DEFAULT FALSE,
+    featured_until DATETIME DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_availability_rate (availability_status, hourly_rate),
+    INDEX idx_success_rate (success_rate DESC),
+    INDEX idx_response_time (response_time),
+    INDEX idx_featured (featured, featured_until),
+    INDEX idx_profile_completeness (profile_completeness DESC)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Client Profiles Table
+CREATE TABLE client_profiles (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id INT UNSIGNED NOT NULL UNIQUE,
+    company_name VARCHAR(100) DEFAULT NULL,
+    company_website VARCHAR(255) DEFAULT NULL,
+    company_size ENUM('1-10', '11-50', '51-200', '201-500', '500+') DEFAULT '1-10',
+    industry VARCHAR(100) DEFAULT NULL,
+    total_spent DECIMAL(15,2) DEFAULT 0.00,
+    jobs_posted INT UNSIGNED DEFAULT 0,
+    jobs_completed INT UNSIGNED DEFAULT 0,
+    avg_budget DECIMAL(10,2) DEFAULT 0.00,
+    payment_verified BOOLEAN DEFAULT FALSE,
+    preferred_payment_method VARCHAR(50) DEFAULT NULL,
+    verification_documents JSON DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_payment_verified (payment_verified),
+    INDEX idx_total_spent (total_spent DESC)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Freelancers Table (Compatibility table for legacy queries)
+CREATE TABLE freelancers (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id INT UNSIGNED DEFAULT NULL,
+    username VARCHAR(50) NOT NULL,
+    profile_picture VARCHAR(255) DEFAULT 'default.png',
+    skills VARCHAR(255) DEFAULT NULL,
+    hourly_rate DECIMAL(10,2) DEFAULT 0.00,
+    location VARCHAR(100) DEFAULT NULL,
+    rating DECIMAL(3,2) DEFAULT 5.00,
+    bio TEXT DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_freelancers_user (user_id),
+    INDEX idx_freelancers_rating (rating DESC)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================================
+-- 2. CATEGORIES & SKILLS
+-- ============================================================
+
+-- Categories Table (With hierarchical support)
+CREATE TABLE categories (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    slug VARCHAR(100) NOT NULL UNIQUE,
+    description TEXT DEFAULT NULL,
+    parent_id INT UNSIGNED DEFAULT NULL,
+    level TINYINT UNSIGNED DEFAULT 0,
+    path VARCHAR(255) DEFAULT NULL,
+    icon VARCHAR(255) DEFAULT NULL,
+    banner_image VARCHAR(255) DEFAULT NULL,
+    display_order INT UNSIGNED DEFAULT 0,
+    status ENUM('active', 'inactive') DEFAULT 'active',
+    gigs_count INT UNSIGNED DEFAULT 0,
+    meta_title VARCHAR(150) DEFAULT NULL,
+    meta_description VARCHAR(255) DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (parent_id) REFERENCES categories(id) ON DELETE SET NULL,
+    INDEX idx_category_slug_status (slug, status),
+    INDEX idx_parent_level (parent_id, level),
+    INDEX idx_status_order (status, display_order),
+    INDEX idx_path (path)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Skills Table
+CREATE TABLE skills (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(50) NOT NULL UNIQUE,
+    slug VARCHAR(50) NOT NULL UNIQUE,
+    category_id INT UNSIGNED DEFAULT NULL,
+    description TEXT DEFAULT NULL,
+    usage_count INT UNSIGNED DEFAULT 0,
+    status ENUM('active', 'inactive') DEFAULT 'active',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL,
+    INDEX idx_skill_slug_status (slug, status),
+    INDEX idx_skill_category (category_id),
+    INDEX idx_usage_count (usage_count DESC),
+    FULLTEXT idx_skill_name (name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Freelancer Skills Relation Table
+CREATE TABLE freelancer_skills (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    freelancer_id INT UNSIGNED NOT NULL,
+    skill_id INT UNSIGNED NOT NULL,
+    proficiency_level ENUM('beginner', 'intermediate', 'advanced', 'expert') DEFAULT 'intermediate',
+    years_experience DECIMAL(3,1) DEFAULT 1.0,
+    verified BOOLEAN DEFAULT FALSE,
+    verified_by INT UNSIGNED DEFAULT NULL,
+    verified_at DATETIME DEFAULT NULL,
+    endorsements_count INT UNSIGNED DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (freelancer_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (skill_id) REFERENCES skills(id) ON DELETE CASCADE,
+    FOREIGN KEY (verified_by) REFERENCES users(id) ON DELETE SET NULL,
+    UNIQUE KEY unique_freelancer_skill (freelancer_id, skill_id),
+    INDEX idx_freelancer_proficiency (freelancer_id, proficiency_level),
+    INDEX idx_skill_proficiency (skill_id, proficiency_level),
+    INDEX idx_verified (verified)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Skill Endorsements Table
+CREATE TABLE skill_endorsements (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    freelancer_skill_id INT UNSIGNED NOT NULL,
+    endorsed_by INT UNSIGNED NOT NULL,
+    comment VARCHAR(255) DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (freelancer_skill_id) REFERENCES freelancer_skills(id) ON DELETE CASCADE,
+    FOREIGN KEY (endorsed_by) REFERENCES users(id) ON DELETE CASCADE,
+    UNIQUE KEY unique_endorsement (freelancer_skill_id, endorsed_by),
+    INDEX idx_freelancer_skill (freelancer_skill_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================================
+-- 3. GIGS & SERVICES
+-- ============================================================
+
+-- Gigs Table
+CREATE TABLE gigs (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    freelancer_id INT UNSIGNED NOT NULL,
+    title VARCHAR(150) NOT NULL,
+    slug VARCHAR(150) DEFAULT NULL,
+    description TEXT NOT NULL,
+    category_id INT UNSIGNED NOT NULL,
+    subcategory_id INT UNSIGNED DEFAULT NULL,
+    price DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    pricing_type ENUM('fixed', 'hourly', 'package') DEFAULT 'fixed',
+    delivery_time INT UNSIGNED NOT NULL DEFAULT 3 COMMENT 'Delivery time in days',
+    revisions_included INT UNSIGNED DEFAULT 0,
+    image VARCHAR(255) DEFAULT NULL,
+    gallery JSON DEFAULT NULL COMMENT 'Array of image URLs',
+    video_url VARCHAR(255) DEFAULT NULL,
+    status ENUM('active', 'inactive', 'paused', 'deleted', 'pending_approval') DEFAULT 'active',
+    featured BOOLEAN DEFAULT FALSE,
+    featured_until DATETIME DEFAULT NULL,
+    views_count INT UNSIGNED DEFAULT 0,
+    clicks_count INT UNSIGNED DEFAULT 0,
+    orders_count INT UNSIGNED DEFAULT 0,
+    orders_in_queue INT UNSIGNED DEFAULT 0,
+    avg_rating DECIMAL(3,2) DEFAULT 0.00,
+    reviews_count INT UNSIGNED DEFAULT 0,
+    tags JSON DEFAULT NULL COMMENT 'Array of tags',
+    requirements TEXT DEFAULT NULL COMMENT 'What the freelancer needs from client',
+    extra_fast_delivery BOOLEAN DEFAULT FALSE,
+    extra_fast_delivery_time INT UNSIGNED DEFAULT NULL,
+    extra_fast_delivery_fee DECIMAL(10,2) DEFAULT NULL,
+    commercial_use BOOLEAN DEFAULT FALSE,
+    source_files BOOLEAN DEFAULT FALSE,
+    seo_score TINYINT UNSIGNED DEFAULT 0,
+    last_modified_at TIMESTAMP NULL DEFAULT NULL,
+    approved_at DATETIME DEFAULT NULL,
+    approved_by INT UNSIGNED DEFAULT NULL,
+    deleted_at DATETIME DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (freelancer_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE CASCADE,
+    FOREIGN KEY (subcategory_id) REFERENCES categories(id) ON DELETE SET NULL,
+    FOREIGN KEY (approved_by) REFERENCES users(id) ON DELETE SET NULL,
+    
+    INDEX idx_gig_status_featured (status, featured, avg_rating DESC),
+    INDEX idx_gig_category_status (category_id, status),
+    INDEX idx_gig_freelancer_status (freelancer_id, status),
+    INDEX idx_gig_price_range (status, price),
+    INDEX idx_gig_rating_reviews (avg_rating DESC, reviews_count DESC),
+    INDEX idx_gig_created (created_at DESC),
+    INDEX idx_gig_featured_until (featured, featured_until),
+    INDEX idx_deleted (deleted_at),
+    INDEX idx_slug_status (slug, status),
+    FULLTEXT idx_gig_search (title, description)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Gig Packages Table
+CREATE TABLE gig_packages (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    gig_id INT UNSIGNED NOT NULL,
+    package_type ENUM('basic', 'standard', 'premium') NOT NULL,
+    name VARCHAR(50) NOT NULL,
+    description TEXT DEFAULT NULL,
+    price DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    delivery_time INT UNSIGNED NOT NULL DEFAULT 3,
+    revisions INT UNSIGNED DEFAULT 0,
+    features JSON DEFAULT NULL COMMENT 'Array of feature objects',
+    pages_included INT UNSIGNED DEFAULT NULL,
+    design_concepts INT UNSIGNED DEFAULT NULL,
+    source_files BOOLEAN DEFAULT FALSE,
+    commercial_use BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (gig_id) REFERENCES gigs(id) ON DELETE CASCADE,
+    UNIQUE KEY unique_gig_package (gig_id, package_type),
+    INDEX idx_gig_price (gig_id, price)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Gig FAQs Table
+CREATE TABLE gig_faqs (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    gig_id INT UNSIGNED NOT NULL,
+    question VARCHAR(255) NOT NULL,
+    answer TEXT NOT NULL,
+    display_order INT UNSIGNED DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (gig_id) REFERENCES gigs(id) ON DELETE CASCADE,
+    INDEX idx_gig_order (gig_id, display_order)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Gig Requirements Table
+CREATE TABLE gig_requirements (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    gig_id INT UNSIGNED NOT NULL,
+    question VARCHAR(255) NOT NULL,
+    answer_type ENUM('text', 'file', 'multiple_choice', 'checkbox') NOT NULL DEFAULT 'text',
+    options JSON DEFAULT NULL COMMENT 'For multiple choice/checkbox',
+    required BOOLEAN DEFAULT TRUE,
+    display_order INT UNSIGNED DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (gig_id) REFERENCES gigs(id) ON DELETE CASCADE,
+    INDEX idx_gig_order (gig_id, display_order)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================================
+-- 4. ORDERS, JOB REQUESTS & PROJECTS
+-- ============================================================
+
+-- Orders Table
+CREATE TABLE orders (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    order_number VARCHAR(50) NOT NULL UNIQUE,
+    client_id INT UNSIGNED NOT NULL,
+    freelancer_id INT UNSIGNED NOT NULL,
+    gig_id INT UNSIGNED NOT NULL,
+    package_type ENUM('basic', 'standard', 'premium', 'custom') DEFAULT 'basic',
+    status ENUM('pending', 'requirements_pending', 'in_progress', 'delivered', 'revision', 'completed', 'cancelled', 'disputed', 'late') DEFAULT 'pending',
+    amount DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    service_fee DECIMAL(10,2) DEFAULT 0.00,
+    total_amount DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    delivery_time INT UNSIGNED NOT NULL DEFAULT 3,
+    extra_services JSON DEFAULT NULL COMMENT 'Additional services purchased',
+    requirements JSON DEFAULT NULL COMMENT 'Client answers to requirements',
+    special_instructions TEXT DEFAULT NULL,
+    priority ENUM('normal', 'high') DEFAULT 'normal',
+    auto_complete_at DATETIME DEFAULT NULL,
+    started_at DATETIME DEFAULT NULL,
+    delivered_at DATETIME DEFAULT NULL,
+    completed_at DATETIME DEFAULT NULL,
+    cancelled_at DATETIME DEFAULT NULL,
+    cancellation_reason TEXT DEFAULT NULL,
+    cancelled_by INT UNSIGNED DEFAULT NULL,
+    dispute_reason TEXT DEFAULT NULL,
+    dispute_opened_at DATETIME DEFAULT NULL,
+    late_delivery BOOLEAN DEFAULT FALSE,
+    revision_count INT UNSIGNED DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (client_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (freelancer_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (gig_id) REFERENCES gigs(id) ON DELETE CASCADE,
+    FOREIGN KEY (cancelled_by) REFERENCES users(id) ON DELETE SET NULL,
+    
+    INDEX idx_order_status_created (status, created_at DESC),
+    INDEX idx_order_client_status (client_id, status),
+    INDEX idx_order_freelancer_status (freelancer_id, status),
+    INDEX idx_order_gig (gig_id),
+    INDEX idx_order_dates (created_at, completed_at),
+    INDEX idx_auto_complete (auto_complete_at),
+    INDEX idx_order_number (order_number)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Job Requests Table (Directly used in Client & Freelancer dashboards)
+CREATE TABLE job_requests (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    client_id INT UNSIGNED NOT NULL,
+    freelancer_id INT UNSIGNED NOT NULL,
+    gig_id INT UNSIGNED NOT NULL,
+    status ENUM('pending', 'accepted', 'completed', 'cancelled') DEFAULT 'pending',
+    request_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+    completion_date DATETIME DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (client_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (freelancer_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (gig_id) REFERENCES gigs(id) ON DELETE CASCADE,
+    INDEX idx_job_req_client (client_id, status),
+    INDEX idx_job_req_freelancer (freelancer_id, status),
+    INDEX idx_job_req_gig (gig_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Projects Table (Used in Hire Freelancer direct project workflow)
+CREATE TABLE projects (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    client_id INT UNSIGNED NOT NULL,
+    freelancer_id INT UNSIGNED NOT NULL,
+    title VARCHAR(200) NOT NULL,
+    description TEXT NOT NULL,
+    budget DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    deadline DATE DEFAULT NULL,
+    status ENUM('pending', 'in_progress', 'completed', 'cancelled') DEFAULT 'pending',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (client_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (freelancer_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_project_client (client_id, status),
+    INDEX idx_project_freelancer (freelancer_id, status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Order Status History Table (Audit trail)
+CREATE TABLE order_status_history (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    order_id INT UNSIGNED NOT NULL,
+    from_status VARCHAR(50) DEFAULT NULL,
+    to_status VARCHAR(50) NOT NULL,
+    changed_by INT UNSIGNED NOT NULL,
+    reason TEXT DEFAULT NULL,
+    metadata JSON DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
+    FOREIGN KEY (changed_by) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_order_status (order_id, created_at DESC)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Order Deliverables Table
+CREATE TABLE order_deliverables (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    order_id INT UNSIGNED NOT NULL,
+    file_path VARCHAR(255) NOT NULL,
+    file_name VARCHAR(255) NOT NULL,
+    file_size INT UNSIGNED DEFAULT 0 COMMENT 'File size in bytes',
+    file_type VARCHAR(50) DEFAULT NULL,
+    mime_type VARCHAR(100) DEFAULT NULL,
+    description TEXT DEFAULT NULL,
+    uploaded_by ENUM('freelancer', 'client') NOT NULL,
+    is_final_delivery BOOLEAN DEFAULT FALSE,
+    download_count INT UNSIGNED DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
+    INDEX idx_order_type (order_id, uploaded_by),
+    INDEX idx_final_delivery (order_id, is_final_delivery)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Order Milestones Table
+CREATE TABLE order_milestones (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    order_id INT UNSIGNED NOT NULL,
+    title VARCHAR(150) NOT NULL,
+    description TEXT DEFAULT NULL,
+    amount DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    status ENUM('pending', 'in_progress', 'completed', 'paid') DEFAULT 'pending',
+    due_date DATE DEFAULT NULL,
+    completed_at DATETIME DEFAULT NULL,
+    paid_at DATETIME DEFAULT NULL,
+    display_order INT UNSIGNED DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
+    INDEX idx_order_milestone_status (order_id, status),
+    INDEX idx_due_date (due_date)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================================
+-- 5. PAYMENTS & WALLETS
+-- ============================================================
+
+-- Transactions Table
+CREATE TABLE transactions (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    transaction_id VARCHAR(100) NOT NULL UNIQUE,
+    order_id INT UNSIGNED DEFAULT NULL,
+    user_id INT UNSIGNED NOT NULL,
+    transaction_type ENUM('payment', 'refund', 'withdrawal', 'deposit', 'service_fee', 'bonus', 'penalty') NOT NULL,
+    amount DECIMAL(10,2) NOT NULL,
+    currency VARCHAR(10) DEFAULT 'USD',
+    status ENUM('pending', 'processing', 'completed', 'failed', 'cancelled', 'refunded') DEFAULT 'pending',
+    payment_method ENUM('credit_card', 'paypal', 'stripe', 'bank_transfer', 'wallet', 'other') NOT NULL DEFAULT 'wallet',
+    payment_gateway VARCHAR(50) DEFAULT NULL,
+    gateway_transaction_id VARCHAR(255) DEFAULT NULL,
+    payment_gateway_response TEXT DEFAULT NULL,
+    description TEXT DEFAULT NULL,
+    metadata JSON DEFAULT NULL,
+    ip_address VARCHAR(45) DEFAULT NULL,
+    processed_at DATETIME DEFAULT NULL,
+    failed_reason TEXT DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE SET NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_transaction_user_type (user_id, transaction_type, status),
+    INDEX idx_transaction_order (order_id),
+    INDEX idx_transaction_status_created (status, created_at DESC),
+    INDEX idx_transaction_gateway (payment_gateway, gateway_transaction_id),
+    INDEX idx_trans_created_at (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- User Wallets Table
+CREATE TABLE wallets (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id INT UNSIGNED NOT NULL UNIQUE,
+    balance DECIMAL(15,2) DEFAULT 0.00,
+    pending_clearance DECIMAL(15,2) DEFAULT 0.00,
+    reserved_amount DECIMAL(15,2) DEFAULT 0.00,
+    total_earned DECIMAL(15,2) DEFAULT 0.00,
+    total_withdrawn DECIMAL(15,2) DEFAULT 0.00,
+    total_spent DECIMAL(15,2) DEFAULT 0.00,
+    currency VARCHAR(10) DEFAULT 'USD',
+    minimum_withdrawal DECIMAL(10,2) DEFAULT 50.00,
+    last_transaction_at DATETIME DEFAULT NULL,
+    version INT UNSIGNED DEFAULT 0 COMMENT 'For optimistic locking',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_balance (balance DESC),
+    INDEX idx_last_transaction (last_transaction_at DESC)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Wallet Transactions Table (Audit trail)
+CREATE TABLE wallet_transactions (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    wallet_id INT UNSIGNED NOT NULL,
+    transaction_id INT UNSIGNED DEFAULT NULL,
+    type ENUM('credit', 'debit', 'hold', 'release') NOT NULL,
+    amount DECIMAL(10,2) NOT NULL,
+    balance_before DECIMAL(15,2) NOT NULL DEFAULT 0.00,
+    balance_after DECIMAL(15,2) NOT NULL DEFAULT 0.00,
+    description VARCHAR(255) DEFAULT NULL,
+    reference_type VARCHAR(50) DEFAULT NULL,
+    reference_id INT UNSIGNED DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (wallet_id) REFERENCES wallets(id) ON DELETE CASCADE,
+    FOREIGN KEY (transaction_id) REFERENCES transactions(id) ON DELETE SET NULL,
+    INDEX idx_wallet_created (wallet_id, created_at DESC),
+    INDEX idx_reference (reference_type, reference_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Withdrawal Requests Table
+CREATE TABLE withdrawal_requests (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id INT UNSIGNED NOT NULL,
+    amount DECIMAL(10,2) NOT NULL,
+    withdrawal_method ENUM('bank_transfer', 'paypal', 'stripe', 'wise', 'other') NOT NULL DEFAULT 'bank_transfer',
+    account_details TEXT NOT NULL COMMENT 'Account details for payout',
+    status ENUM('pending', 'processing', 'completed', 'rejected', 'cancelled') DEFAULT 'pending',
+    admin_notes TEXT DEFAULT NULL,
+    rejection_reason TEXT DEFAULT NULL,
+    transaction_id INT UNSIGNED DEFAULT NULL,
+    processed_by INT UNSIGNED DEFAULT NULL,
+    processed_at DATETIME DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (processed_by) REFERENCES users(id) ON DELETE SET NULL,
+    FOREIGN KEY (transaction_id) REFERENCES transactions(id) ON DELETE SET NULL,
+    INDEX idx_withdrawal_user_status (user_id, status),
+    INDEX idx_withdrawal_status_created (status, created_at DESC)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================================
+-- 6. REVIEWS & RATINGS
+-- ============================================================
+
+-- Reviews Table
+CREATE TABLE reviews (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    order_id INT UNSIGNED DEFAULT NULL,
+    client_id INT UNSIGNED NOT NULL,
+    freelancer_id INT UNSIGNED NOT NULL,
+    gig_id INT UNSIGNED DEFAULT NULL,
+    project_id INT UNSIGNED DEFAULT NULL,
+    rating TINYINT UNSIGNED NOT NULL DEFAULT 5,
+    comment TEXT DEFAULT NULL,
+    communication_rating TINYINT UNSIGNED DEFAULT NULL,
+    service_quality_rating TINYINT UNSIGNED DEFAULT NULL,
+    delivery_time_rating TINYINT UNSIGNED DEFAULT NULL,
+    value_for_money_rating TINYINT UNSIGNED DEFAULT NULL,
+    would_recommend BOOLEAN DEFAULT TRUE,
+    response TEXT DEFAULT NULL COMMENT 'Freelancer response to review',
+    response_date DATETIME DEFAULT NULL,
+    status ENUM('active', 'hidden', 'flagged', 'pending_moderation') DEFAULT 'active',
+    helpful_count INT UNSIGNED DEFAULT 0,
+    not_helpful_count INT UNSIGNED DEFAULT 0,
+    verified_purchase BOOLEAN DEFAULT TRUE,
+    edited BOOLEAN DEFAULT FALSE,
+    edited_at DATETIME DEFAULT NULL,
+    moderated_by INT UNSIGNED DEFAULT NULL,
+    moderation_reason TEXT DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE SET NULL,
+    FOREIGN KEY (client_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (freelancer_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (gig_id) REFERENCES gigs(id) ON DELETE SET NULL,
+    FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE SET NULL,
+    FOREIGN KEY (moderated_by) REFERENCES users(id) ON DELETE SET NULL,
+    
+    INDEX idx_review_order (order_id),
+    INDEX idx_review_rating_status (rating DESC, status),
+    INDEX idx_review_freelancer_status (freelancer_id, status, created_at DESC),
+    INDEX idx_review_gig_status (gig_id, status, rating DESC),
+    INDEX idx_review_helpful (helpful_count DESC),
+    INDEX idx_review_created (created_at DESC)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Review Helpful Votes Table
+CREATE TABLE review_votes (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    review_id INT UNSIGNED NOT NULL,
+    user_id INT UNSIGNED NOT NULL,
+    vote_type ENUM('helpful', 'not_helpful') NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (review_id) REFERENCES reviews(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    UNIQUE KEY unique_review_vote (review_id, user_id),
+    INDEX idx_review_vote (review_id, vote_type)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================================
+-- 7. MESSAGING & NOTIFICATIONS
+-- ============================================================
+
+-- Conversations Table
+CREATE TABLE conversations (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    order_id INT UNSIGNED DEFAULT NULL,
+    participant1_id INT UNSIGNED NOT NULL,
+    participant2_id INT UNSIGNED NOT NULL,
+    last_message_id INT UNSIGNED DEFAULT NULL,
+    last_message_at DATETIME DEFAULT NULL,
+    participant1_unread_count INT UNSIGNED DEFAULT 0,
+    participant2_unread_count INT UNSIGNED DEFAULT 0,
+    status ENUM('active', 'archived', 'blocked') DEFAULT 'active',
+    archived_by_participant1 BOOLEAN DEFAULT FALSE,
+    archived_by_participant2 BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE SET NULL,
+    FOREIGN KEY (participant1_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (participant2_id) REFERENCES users(id) ON DELETE CASCADE,
+    
+    INDEX idx_participant1_status (participant1_id, status, last_message_at DESC),
+    INDEX idx_participant2_status (participant2_id, status, last_message_at DESC),
+    INDEX idx_conv_order (order_id),
+    INDEX idx_last_message (last_message_at DESC)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Messages Table
+CREATE TABLE messages (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    conversation_id INT UNSIGNED NOT NULL,
+    sender_id INT UNSIGNED NOT NULL,
+    receiver_id INT UNSIGNED NOT NULL,
+    message TEXT NOT NULL,
+    message_type ENUM('text', 'file', 'image', 'offer', 'system') DEFAULT 'text',
+    attachment VARCHAR(255) DEFAULT NULL,
+    attachment_size INT UNSIGNED DEFAULT NULL,
+    offer_amount DECIMAL(10,2) DEFAULT NULL,
+    offer_delivery_time INT UNSIGNED DEFAULT NULL,
+    is_read BOOLEAN DEFAULT FALSE,
+    read_at DATETIME DEFAULT NULL,
+    deleted_by_sender BOOLEAN DEFAULT FALSE,
+    deleted_by_receiver BOOLEAN DEFAULT FALSE,
+    edited BOOLEAN DEFAULT FALSE,
+    edited_at DATETIME DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (conversation_id) REFERENCES conversations(id) ON DELETE CASCADE,
+    FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (receiver_id) REFERENCES users(id) ON DELETE CASCADE,
+    
+    INDEX idx_conversation_created (conversation_id, created_at DESC),
+    INDEX idx_conversation_unread (conversation_id, is_read, receiver_id),
+    INDEX idx_sender (sender_id),
+    INDEX idx_receiver_unread (receiver_id, is_read)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Message Attachments Table
+CREATE TABLE message_attachments (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    message_id INT UNSIGNED NOT NULL,
+    file_path VARCHAR(255) NOT NULL,
+    file_name VARCHAR(255) NOT NULL,
+    file_size INT UNSIGNED DEFAULT 0,
+    file_type VARCHAR(50) DEFAULT NULL,
+    mime_type VARCHAR(100) DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (message_id) REFERENCES messages(id) ON DELETE CASCADE,
+    INDEX idx_message (message_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Notifications Table
+CREATE TABLE notifications (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id INT UNSIGNED NOT NULL,
+    type VARCHAR(50) NOT NULL,
+    title VARCHAR(150) NOT NULL,
+    message TEXT NOT NULL,
+    link VARCHAR(255) DEFAULT NULL,
+    entity_type VARCHAR(50) DEFAULT NULL,
+    entity_id INT UNSIGNED DEFAULT NULL,
+    priority ENUM('low', 'medium', 'high') DEFAULT 'medium',
+    is_read BOOLEAN DEFAULT FALSE,
+    read_at DATETIME DEFAULT NULL,
+    is_sent BOOLEAN DEFAULT FALSE,
+    sent_at DATETIME DEFAULT NULL,
+    action_taken BOOLEAN DEFAULT FALSE,
+    expires_at DATETIME DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_user_read_created (user_id, is_read, created_at DESC),
+    INDEX idx_user_type (user_id, type),
+    INDEX idx_entity (entity_type, entity_id),
+    INDEX idx_expires (expires_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Notification Preferences Table
+CREATE TABLE notification_preferences (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id INT UNSIGNED NOT NULL,
+    notification_type VARCHAR(50) NOT NULL,
+    email_enabled BOOLEAN DEFAULT TRUE,
+    push_enabled BOOLEAN DEFAULT TRUE,
+    sms_enabled BOOLEAN DEFAULT FALSE,
+    in_app_enabled BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    UNIQUE KEY unique_user_type (user_id, notification_type),
+    INDEX idx_notif_pref_user (user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Email Queue Table
+CREATE TABLE email_queue (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    recipient_email VARCHAR(100) NOT NULL,
+    recipient_name VARCHAR(100) DEFAULT NULL,
+    subject VARCHAR(255) NOT NULL,
+    body TEXT NOT NULL,
+    template VARCHAR(50) DEFAULT NULL,
+    template_data JSON DEFAULT NULL,
+    priority ENUM('low', 'normal', 'high') DEFAULT 'normal',
+    status ENUM('pending', 'sent', 'failed', 'cancelled') DEFAULT 'pending',
+    attempts INT UNSIGNED DEFAULT 0,
+    max_attempts INT UNSIGNED DEFAULT 3,
+    error_message TEXT DEFAULT NULL,
+    sent_at DATETIME DEFAULT NULL,
+    scheduled_for DATETIME DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    INDEX idx_status_priority (status, priority, scheduled_for),
+    INDEX idx_recipient (recipient_email),
+    INDEX idx_created (created_at DESC)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================================
+-- 8. ADMIN, MODERATION & SUPPORT
+-- ============================================================
+
+-- Admin Activity Logs Table (Used by admin_activity.php and logging_functions.php)
+CREATE TABLE admin_logs (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    admin_id INT UNSIGNED NOT NULL,
+    action VARCHAR(100) NOT NULL,
+    entity_type VARCHAR(50) DEFAULT NULL,
+    entity_id INT UNSIGNED DEFAULT NULL,
+    old_values JSON DEFAULT NULL,
+    new_values JSON DEFAULT NULL,
+    details TEXT DEFAULT NULL,
+    ip_address VARCHAR(45) DEFAULT NULL,
+    user_agent TEXT DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (admin_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_admin_created (admin_id, created_at DESC),
+    INDEX idx_entity (entity_type, entity_id),
+    INDEX idx_action (action),
+    INDEX idx_admin_created_at (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- User Activity Log Table (Used by logging_functions.php)
+CREATE TABLE activity_log (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id INT UNSIGNED DEFAULT NULL,
+    activity_type VARCHAR(50) NOT NULL,
+    entity_type VARCHAR(50) DEFAULT NULL,
+    entity_id INT UNSIGNED DEFAULT NULL,
+    description TEXT DEFAULT NULL,
+    metadata JSON DEFAULT NULL,
+    ip_address VARCHAR(45) DEFAULT NULL,
+    user_agent TEXT DEFAULT NULL,
+    session_id VARCHAR(100) DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
+    INDEX idx_user_type_created (user_id, activity_type, created_at DESC),
+    INDEX idx_entity (entity_type, entity_id),
+    INDEX idx_activity_created_at (created_at),
+    INDEX idx_session (session_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Content Reports Table
+CREATE TABLE reports (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    reporter_id INT UNSIGNED NOT NULL,
+    reported_user_id INT UNSIGNED DEFAULT NULL,
+    entity_type ENUM('user', 'gig', 'review', 'message', 'order') NOT NULL,
+    entity_id INT UNSIGNED NOT NULL,
+    reason ENUM('spam', 'inappropriate', 'copyright', 'fraud', 'harassment', 'other') NOT NULL,
+    description TEXT NOT NULL,
+    evidence JSON DEFAULT NULL COMMENT 'Screenshots, links, etc.',
+    status ENUM('pending', 'reviewing', 'resolved', 'dismissed') DEFAULT 'pending',
+    priority ENUM('low', 'medium', 'high', 'urgent') DEFAULT 'medium',
+    reviewed_by INT UNSIGNED DEFAULT NULL,
+    admin_notes TEXT DEFAULT NULL,
+    action_taken VARCHAR(255) DEFAULT NULL,
+    resolved_at DATETIME DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (reporter_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (reported_user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (reviewed_by) REFERENCES users(id) ON DELETE SET NULL,
+    INDEX idx_report_status_priority (status, priority),
+    INDEX idx_report_entity (entity_type, entity_id),
+    INDEX idx_reporter (reporter_id),
+    INDEX idx_reported_user (reported_user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- User Suspensions/Bans Table
+CREATE TABLE user_suspensions (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id INT UNSIGNED NOT NULL,
+    reason TEXT NOT NULL,
+    suspension_type ENUM('warning', 'temporary', 'permanent') NOT NULL,
+    suspended_by INT UNSIGNED NOT NULL,
+    suspended_until DATETIME DEFAULT NULL,
+    report_id INT UNSIGNED DEFAULT NULL,
+    is_active BOOLEAN DEFAULT TRUE,
+    lifted_by INT UNSIGNED DEFAULT NULL,
+    lifted_at DATETIME DEFAULT NULL,
+    notes TEXT DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (suspended_by) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (report_id) REFERENCES reports(id) ON DELETE SET NULL,
+    FOREIGN KEY (lifted_by) REFERENCES users(id) ON DELETE SET NULL,
+    INDEX idx_suspension_user_active (user_id, is_active),
+    INDEX idx_suspension_expires (suspended_until)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Support Tickets Table
+CREATE TABLE support_tickets (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    ticket_number VARCHAR(50) NOT NULL UNIQUE,
+    user_id INT UNSIGNED NOT NULL,
+    order_id INT UNSIGNED DEFAULT NULL,
+    category ENUM('technical', 'payment', 'account', 'dispute', 'billing', 'feature_request', 'other') NOT NULL,
+    priority ENUM('low', 'medium', 'high', 'urgent') DEFAULT 'medium',
+    subject VARCHAR(255) NOT NULL,
+    description TEXT NOT NULL,
+    status ENUM('open', 'in_progress', 'waiting_user', 'waiting_admin', 'resolved', 'closed') DEFAULT 'open',
+    assigned_to INT UNSIGNED DEFAULT NULL,
+    tags JSON DEFAULT NULL,
+    first_response_at DATETIME DEFAULT NULL,
+    resolved_at DATETIME DEFAULT NULL,
+    closed_at DATETIME DEFAULT NULL,
+    satisfaction_rating TINYINT UNSIGNED DEFAULT NULL,
+    satisfaction_comment TEXT DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE SET NULL,
+    FOREIGN KEY (assigned_to) REFERENCES users(id) ON DELETE SET NULL,
+    INDEX idx_support_user_status (user_id, status),
+    INDEX idx_support_status_priority (status, priority),
+    INDEX idx_support_assigned (assigned_to, status),
+    INDEX idx_support_created (created_at DESC)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Support Ticket Responses Table
+CREATE TABLE support_responses (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    ticket_id INT UNSIGNED NOT NULL,
+    user_id INT UNSIGNED NOT NULL,
+    message TEXT NOT NULL,
+    is_staff_response BOOLEAN DEFAULT FALSE,
+    is_internal_note BOOLEAN DEFAULT FALSE,
+    attachment VARCHAR(255) DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (ticket_id) REFERENCES support_tickets(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_response_ticket_created (ticket_id, created_at DESC),
+    INDEX idx_response_staff (ticket_id, is_staff_response)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================================
+-- 9. PORTFOLIO, FAVORITES & PROMOS
+-- ============================================================
+
+-- Favorites / Bookmarks Table
+CREATE TABLE favorites (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id INT UNSIGNED NOT NULL,
+    gig_id INT UNSIGNED NOT NULL,
+    notes TEXT DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (gig_id) REFERENCES gigs(id) ON DELETE CASCADE,
+    UNIQUE KEY unique_favorite (user_id, gig_id),
+    INDEX idx_fav_user_created (user_id, created_at DESC),
+    INDEX idx_fav_gig (gig_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Portfolio Items Table
+CREATE TABLE portfolio (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    freelancer_id INT UNSIGNED NOT NULL,
+    title VARCHAR(150) NOT NULL,
+    description TEXT DEFAULT NULL,
+    image VARCHAR(255) DEFAULT NULL,
+    gallery JSON DEFAULT NULL,
+    project_url VARCHAR(255) DEFAULT NULL,
+    category_id INT UNSIGNED DEFAULT NULL,
+    skills JSON DEFAULT NULL,
+    client_name VARCHAR(100) DEFAULT NULL,
+    completion_date DATE DEFAULT NULL,
+    display_order INT UNSIGNED DEFAULT 0,
+    views_count INT UNSIGNED DEFAULT 0,
+    likes_count INT UNSIGNED DEFAULT 0,
+    status ENUM('published', 'draft', 'hidden') DEFAULT 'published',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (freelancer_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL,
+    INDEX idx_portfolio_freelancer_status (freelancer_id, status, display_order),
+    INDEX idx_portfolio_likes (likes_count DESC)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Portfolio Likes Table
+CREATE TABLE portfolio_likes (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    portfolio_id INT UNSIGNED NOT NULL,
+    user_id INT UNSIGNED NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (portfolio_id) REFERENCES portfolio(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    UNIQUE KEY unique_portfolio_like (portfolio_id, user_id),
+    INDEX idx_portfolio_like_id (portfolio_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Promo Codes Table
+CREATE TABLE promo_codes (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    code VARCHAR(50) NOT NULL UNIQUE,
+    description TEXT DEFAULT NULL,
+    discount_type ENUM('percentage', 'fixed_amount') NOT NULL DEFAULT 'percentage',
+    discount_value DECIMAL(10,2) NOT NULL,
+    minimum_order_amount DECIMAL(10,2) DEFAULT NULL,
+    maximum_discount_amount DECIMAL(10,2) DEFAULT NULL,
+    usage_limit INT UNSIGNED DEFAULT NULL,
+    usage_count INT UNSIGNED DEFAULT 0,
+    usage_per_user INT UNSIGNED DEFAULT 1,
+    user_type ENUM('all', 'new', 'existing') DEFAULT 'all',
+    applicable_to ENUM('all', 'specific_categories', 'specific_gigs') DEFAULT 'all',
+    applicable_ids JSON DEFAULT NULL,
+    valid_from DATETIME NOT NULL,
+    valid_until DATETIME NOT NULL,
+    status ENUM('active', 'inactive', 'expired') DEFAULT 'active',
+    created_by INT UNSIGNED DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL,
+    INDEX idx_code_status (code, status),
+    INDEX idx_promo_validity (valid_from, valid_until, status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Promo Code Usage Table
+CREATE TABLE promo_code_usage (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    promo_code_id INT UNSIGNED NOT NULL,
+    user_id INT UNSIGNED NOT NULL,
+    order_id INT UNSIGNED NOT NULL,
+    discount_amount DECIMAL(10,2) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (promo_code_id) REFERENCES promo_codes(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
+    INDEX idx_promo_code (promo_code_id),
+    INDEX idx_promo_user (user_id),
+    UNIQUE KEY unique_order_promo (order_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- System Settings Table
+CREATE TABLE settings (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    setting_key VARCHAR(100) NOT NULL UNIQUE,
+    setting_value TEXT DEFAULT NULL,
+    setting_type ENUM('string', 'number', 'boolean', 'json') DEFAULT 'string',
+    category VARCHAR(50) DEFAULT 'general',
+    description TEXT DEFAULT NULL,
+    is_public BOOLEAN DEFAULT FALSE,
+    updated_by INT UNSIGNED DEFAULT NULL,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL,
+    INDEX idx_setting_key (setting_key),
+    INDEX idx_setting_category (category)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================================
+-- 10. DEFAULT SYSTEM CONFIGURATION
+-- ============================================================
+
+INSERT INTO settings (setting_key, setting_value, setting_type, category, description, is_public) VALUES
+('site_name', 'FreelanceHub', 'string', 'general', 'Website name', TRUE),
+('site_currency', 'USD', 'string', 'general', 'Default currency', TRUE),
+('commission_rate', '15', 'number', 'payment', 'Platform commission percentage', FALSE),
+('min_withdrawal_amount', '50', 'number', 'payment', 'Minimum withdrawal amount', TRUE),
+('order_auto_complete_days', '3', 'number', 'orders', 'Days before order auto-completes after delivery', TRUE),
+('review_period_days', '30', 'number', 'reviews', 'Days allowed to leave a review after completion', TRUE),
+('max_revisions_default', '3', 'number', 'orders', 'Default maximum revisions', TRUE),
+('featured_gig_price', '49.99', 'number', 'gigs', 'Price for featuring a gig (monthly)', TRUE),
+('max_gigs_per_freelancer', '20', 'number', 'gigs', 'Maximum active gigs per freelancer', TRUE),
+('enable_maintenance_mode', 'false', 'boolean', 'system', 'Enable maintenance mode', FALSE);
+
+SET FOREIGN_KEY_CHECKS = 1;
+
+-- ============================================================
+-- SCHEMA CREATION COMPLETE
+-- ============================================================
+
+SELECT 'FreelanceHub database schema created successfully!' AS Status,
+       (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'freelancerwebsite') AS Total_Tables;

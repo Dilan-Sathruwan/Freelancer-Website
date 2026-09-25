@@ -1,11 +1,10 @@
 <?php
 session_start();
 include '../config/db.con.php';
-include '../includes/logging_functions.php';
 
 // Set page variables
-$page_title = 'Manage Freelancers';
-$active_page = 'freelancers';
+$page_title = 'Manage Categories';
+$active_page = 'categories';
 
 // Ensure only admins can access this page
 if (!isset($_SESSION['user_id']) || !isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
@@ -14,9 +13,9 @@ if (!isset($_SESSION['user_id']) || !isset($_SESSION['role']) || $_SESSION['role
 }
 
 // Pagination variables
-$freelancersPerPage = 10;
+$categoriesPerPage = 10;
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-$offset = ($page - 1) * $freelancersPerPage;
+$offset = ($page - 1) * $categoriesPerPage;
 
 // Search and filter variables
 $search = isset($_GET['search']) ? sanitizeInput($_GET['search']) : '';
@@ -24,251 +23,183 @@ $statusFilter = isset($_GET['status']) ? sanitizeInput($_GET['status']) : '';
 
 // Handle form submissions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Handle Add Freelancer
+    // Handle Add Category
     if (isset($_POST['action']) && $_POST['action'] === 'add') {
-        $username = sanitizeInput($_POST['username']);
-        $first_name = sanitizeInput($_POST['first_name']);
-        $last_name = sanitizeInput($_POST['last_name']);
-        $email = validateEmailInput($_POST['email']);
-        $password = $_POST['password'];
-        $title = sanitizeInput($_POST['title']);
-        $hourly_rate = validateInteger($_POST['hourly_rate']);
+        $name = sanitizeInput($_POST['name']);
+        $slug = sanitizeInput($_POST['slug']);
+        $parent_id = !empty($_POST['parent_id']) ? validateInteger($_POST['parent_id']) : null;
+        $display_order = validateInteger($_POST['display_order']);
         $status = sanitizeInput($_POST['status']);
         
         // Validate required fields
-        if (empty($username) || empty($first_name) || empty($last_name) || empty($email) || empty($password)) {
-            $error = "All fields are required.";
+        if (empty($name) || empty($slug)) {
+            $error = "Name and slug are required.";
         } elseif (!in_array($status, ['active', 'inactive'])) {
             $error = "Invalid status selected.";
         } else {
             try {
-                // Check if username or email already exists
-                $stmt = $conn->prepare("SELECT id FROM users WHERE username = ? OR email = ?");
-                $stmt->execute([$username, $email]);
+                // Check if slug already exists
+                $stmt = $conn->prepare("SELECT id FROM categories WHERE slug = ?");
+                $stmt->execute([$slug]);
                 if ($stmt->fetch()) {
-                    $error = "Username or email already exists.";
+                    $error = "Slug already exists.";
                 } else {
-                    // Hash password
-                    $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-                    
-                    // Begin transaction
-                    $conn->beginTransaction();
-                    
-                    // Insert new user
-                    $stmt = $conn->prepare("INSERT INTO users (username, password, role, first_name, last_name, email, status) VALUES (?, ?, 'freelancer', ?, ?, ?, ?)");
-                    $stmt->execute([$username, $hashedPassword, $first_name, $last_name, $email, $status]);
-                    $userId = $conn->lastInsertId();
-                    
-                    // Insert freelancer profile
-                    $stmt = $conn->prepare("INSERT INTO freelancer_profiles (user_id, title, hourly_rate) VALUES (?, ?, ?)");
-                    $stmt->execute([$userId, $title, $hourly_rate]);
-                    
-                    $conn->commit();
-                    
-                    // Log admin add activity
-                    $newValues = [
-                        'username' => $username,
-                        'first_name' => $first_name,
-                        'last_name' => $last_name,
-                        'email' => $email,
-                        'title' => $title,
-                        'hourly_rate' => $hourly_rate,
-                        'status' => $status
-                    ];
-                    logAdminAdd($_SESSION['user_id'], 'freelancer', $newValues, 'Admin added new freelancer');
-                    
-                    $success = "Freelancer added successfully.";
+                    // Insert new category
+                    $stmt = $conn->prepare("INSERT INTO categories (name, slug, parent_id, display_order, status, gigs_count) VALUES (?, ?, ?, ?, ?, 0)");
+                    $stmt->execute([$name, $slug, $parent_id, $display_order ?: 0, $status]);
+                    $success = "Category added successfully.";
                 }
             } catch (PDOException $e) {
-                $conn->rollBack();
-                error_log("Add freelancer error: " . $e->getMessage());
-                $error = "Error adding freelancer.";
+                error_log("Add category error: " . $e->getMessage());
+                $error = "Error adding category.";
             }
         }
     }
     
-    // Handle Edit Freelancer
+    // Handle Edit Category
     if (isset($_POST['action']) && $_POST['action'] === 'edit') {
         $id = validateInteger($_POST['id']);
-        $username = sanitizeInput($_POST['username']);
-        $first_name = sanitizeInput($_POST['first_name']);
-        $last_name = sanitizeInput($_POST['last_name']);
-        $email = validateEmailInput($_POST['email']);
-        $title = sanitizeInput($_POST['title']);
-        $hourly_rate = validateInteger($_POST['hourly_rate']);
+        $name = sanitizeInput($_POST['name']);
+        $slug = sanitizeInput($_POST['slug']);
+        $parent_id = !empty($_POST['parent_id']) ? validateInteger($_POST['parent_id']) : null;
+        $display_order = validateInteger($_POST['display_order']);
         $status = sanitizeInput($_POST['status']);
         
         // Validate required fields
-        if (!$id || empty($username) || empty($first_name) || empty($last_name) || empty($email)) {
-            $error = "All fields are required.";
+        if (!$id || empty($name) || empty($slug)) {
+            $error = "All required fields must be filled.";
         } elseif (!in_array($status, ['active', 'inactive'])) {
             $error = "Invalid status selected.";
         } else {
             try {
-                // Check if username or email already exists for other users
-                $stmt = $conn->prepare("SELECT id FROM users WHERE (username = ? OR email = ?) AND id != ?");
-                $stmt->execute([$username, $email, $id]);
+                // Check if slug already exists for other categories
+                $stmt = $conn->prepare("SELECT id FROM categories WHERE slug = ? AND id != ?");
+                $stmt->execute([$slug, $id]);
                 if ($stmt->fetch()) {
-                    $error = "Username or email already exists for another user.";
+                    $error = "Slug already exists for another category.";
                 } else {
-                    // Begin transaction
-                    $conn->beginTransaction();
-                    
-                    // Update user
-                    $stmt = $conn->prepare("UPDATE users SET username = ?, first_name = ?, last_name = ?, email = ?, status = ? WHERE id = ? AND role = 'freelancer'");
-                    $stmt->execute([$username, $first_name, $last_name, $email, $status, $id]);
-                    
-                    // Update or insert freelancer profile
-                    $stmt = $conn->prepare("SELECT id FROM freelancer_profiles WHERE user_id = ?");
-                    $stmt->execute([$id]);
-                    if ($stmt->fetch()) {
-                        $stmt = $conn->prepare("UPDATE freelancer_profiles SET title = ?, hourly_rate = ? WHERE user_id = ?");
-                        $stmt->execute([$title, $hourly_rate, $id]);
-                    } else {
-                        $stmt = $conn->prepare("INSERT INTO freelancer_profiles (user_id, title, hourly_rate) VALUES (?, ?, ?)");
-                        $stmt->execute([$id, $title, $hourly_rate]);
-                    }
-                    
-                    $conn->commit();
-                    
-                    // Log admin edit activity
-                    $newValues = [
-                        'username' => $username,
-                        'first_name' => $first_name,
-                        'last_name' => $last_name,
-                        'email' => $email,
-                        'title' => $title,
-                        'hourly_rate' => $hourly_rate,
-                        'status' => $status
-                    ];
-                    logAdminEdit($_SESSION['user_id'], 'freelancer', $id, null, $newValues, 'Admin updated freelancer information');
-                    
-                    $success = "Freelancer updated successfully.";
+                    // Update category
+                    $stmt = $conn->prepare("UPDATE categories SET name = ?, slug = ?, parent_id = ?, display_order = ?, status = ? WHERE id = ?");
+                    $stmt->execute([$name, $slug, $parent_id, $display_order ?: 0, $status, $id]);
+                    $success = "Category updated successfully.";
                 }
             } catch (PDOException $e) {
-                $conn->rollBack();
-                error_log("Edit freelancer error: " . $e->getMessage());
-                $error = "Error updating freelancer.";
+                error_log("Edit category error: " . $e->getMessage());
+                $error = "Error updating category.";
             }
         }
     }
 }
 
-// Handle freelancer status update
+// Handle category status update
 if (isset($_GET['toggle_status'])) {
     $id = validateInteger($_GET['toggle_status']);
     
     if ($id) {
         try {
             // Get current status
-            $stmt = $conn->prepare("SELECT status FROM users WHERE id = ? AND role = 'freelancer'");
+            $stmt = $conn->prepare("SELECT status FROM categories WHERE id = ?");
             $stmt->execute([$id]);
-            $freelancer = $stmt->fetch();
+            $category = $stmt->fetch();
             
-            if ($freelancer) {
-                $newStatus = ($freelancer['status'] === 'active') ? 'inactive' : 'active';
-                
-                // Log admin edit activity for status change
-                $oldValues = ['status' => $freelancer['status']];
-                $newValues = ['status' => $newStatus];
-                logAdminEdit($_SESSION['user_id'], 'freelancer', $id, $oldValues, $newValues, 'Admin changed freelancer status');
-                
-                $stmt = $conn->prepare("UPDATE users SET status = ? WHERE id = ? AND role = 'freelancer'");
+            if ($category) {
+                $newStatus = ($category['status'] === 'active') ? 'inactive' : 'active';
+                $stmt = $conn->prepare("UPDATE categories SET status = ? WHERE id = ?");
                 $stmt->execute([$newStatus, $id]);
-                $success = "Freelancer status updated successfully.";
+                $success = "Category status updated successfully.";
             }
         } catch (PDOException $e) {
-            error_log("Update freelancer status error: " . $e->getMessage());
-            $error = "Error updating freelancer status.";
+            error_log("Update category status error: " . $e->getMessage());
+            $error = "Error updating category status.";
         }
     }
 }
 
-// Handle freelancer deletion
+// Handle category deletion
 if (isset($_GET['delete'])) {
     $id = validateInteger($_GET['delete']);
     
     if ($id) {
         try {
-            $stmt = $conn->prepare("SELECT username FROM users WHERE id = ? AND role = 'freelancer'");
+            // Get category info
+            $stmt = $conn->prepare("SELECT name FROM categories WHERE id = ?");
             $stmt->execute([$id]);
-            $freelancerToDelete = $stmt->fetch();
+            $categoryToDelete = $stmt->fetch();
             
-            if ($freelancerToDelete) {
-                // Get old values for logging
-                $oldStmt = $conn->prepare("SELECT u.username, u.first_name, u.last_name, u.email, u.status, fp.title, fp.hourly_rate FROM users u LEFT JOIN freelancer_profiles fp ON u.id = fp.user_id WHERE u.id = ?");
-                $oldStmt->execute([$id]);
-                $oldValues = $oldStmt->fetch();
-                
-                $stmt = $conn->prepare("DELETE FROM users WHERE id = ? AND role = 'freelancer'");
+            if ($categoryToDelete) {
+                // Delete the category
+                $stmt = $conn->prepare("DELETE FROM categories WHERE id = ?");
                 $stmt->execute([$id]);
-                
-                // Log admin delete activity
-                logAdminDelete($_SESSION['user_id'], 'freelancer', $id, $oldValues, 'Admin deleted freelancer');
-                
-                $success = "Freelancer '" . htmlspecialchars($freelancerToDelete['username']) . "' deleted successfully.";
+                $success = "Category '" . htmlspecialchars($categoryToDelete['name']) . "' deleted successfully.";
             } else {
-                $error = "Freelancer not found.";
+                $error = "Category not found.";
             }
         } catch (PDOException $e) {
-            error_log("Delete freelancer error: " . $e->getMessage());
-            $error = "Error deleting freelancer.";
+            error_log("Delete category error: " . $e->getMessage());
+            $error = "Error deleting category. The category may have associated data.";
         }
     }
 }
 
 // Build query with filters
-$freelancers = [];
-$totalFreelancers = 0;
+$categories = [];
+$totalCategories = 0;
 $totalPages = 1;
 
 try {
     // Base query
-    $query = "SELECT u.id, u.username, u.first_name, u.last_name, u.email, u.status, u.created_at,
-                     fp.title, fp.hourly_rate, fp.completed_jobs, fp.success_rate
-              FROM users u
-              LEFT JOIN freelancer_profiles fp ON u.id = fp.user_id
-              WHERE u.role = 'freelancer'";
-    $countQuery = "SELECT COUNT(*) FROM users u WHERE u.role = 'freelancer'";
+    $query = "SELECT c.id, c.name, c.slug, c.status, c.gigs_count, c.display_order, c.parent_id,
+                     p.name as parent_name
+              FROM categories c
+              LEFT JOIN categories p ON c.parent_id = p.id";
+    
+    $countQuery = "SELECT COUNT(*) FROM categories c";
     
     // Add filters
     $params = [];
     $whereClause = "";
     
     if (!empty($search)) {
-        $whereClause .= (!empty($whereClause) ? " AND " : "") . "(u.username LIKE ? OR u.first_name LIKE ? OR u.last_name LIKE ? OR u.email LIKE ?)";
+        $whereClause .= (!empty($whereClause) ? " AND " : "") . "(c.name LIKE ? OR c.slug LIKE ?)";
         $searchParam = "%$search%";
-        $params = array_merge($params, [$searchParam, $searchParam, $searchParam, $searchParam]);
+        $params = array_merge($params, [$searchParam, $searchParam]);
     }
     
     if (!empty($statusFilter)) {
-        $whereClause .= (!empty($whereClause) ? " AND " : "") . "u.status = ?";
+        $whereClause .= (!empty($whereClause) ? " AND " : "") . "c.status = ?";
         $params[] = $statusFilter;
     }
     
     if (!empty($whereClause)) {
-        $query .= " AND " . $whereClause;
-        $countQuery .= " AND " . $whereClause;
+        $query .= " WHERE " . $whereClause;
+        $countQuery .= " WHERE " . $whereClause;
     }
     
     // Add ordering
-    $query .= " ORDER BY u.created_at DESC LIMIT ? OFFSET ?";
-    $params[] = (int)$freelancersPerPage;
+    $query .= " ORDER BY c.display_order, c.name LIMIT ? OFFSET ?";
+    $params[] = (int)$categoriesPerPage;
     $params[] = (int)$offset;
     
     // Get total count for pagination
     $countStmt = $conn->prepare($countQuery);
-    $countStmt->execute(array_slice($params, 0, count($params) - 2));
-    $totalFreelancers = $countStmt->fetchColumn();
-    $totalPages = ceil($totalFreelancers / $freelancersPerPage);
+    $countStmt->execute(array_slice($params, 0, count($params) - 2)); // Remove LIMIT/OFFSET params
+    $totalCategories = $countStmt->fetchColumn();
+    $totalPages = ceil($totalCategories / $categoriesPerPage);
     
-    // Get freelancers
+    // Get categories
     $stmt = $conn->prepare($query);
     $stmt->execute($params);
-    $freelancers = $stmt->fetchAll();
+    $categories = $stmt->fetchAll();
+    
+    // Get all categories for parent dropdown
+    $allCategoriesStmt = $conn->query("SELECT id, name FROM categories ORDER BY name");
+    $allCategories = $allCategoriesStmt->fetchAll();
 } catch (PDOException $e) {
-    error_log("Fetch freelancers error: " . $e->getMessage());
-    $error = "Error fetching freelancers.";
+    error_log("Fetch categories error: " . $e->getMessage());
+    $error = "Error fetching categories.";
+    $categories = [];
+    $totalCategories = 0;
+    $allCategories = [];
 }
 
 include '../includes/admin_header.php';
@@ -318,12 +249,6 @@ include '../includes/admin_header.php';
     }
 }
 
-@keyframes spin {
-    to {
-        transform: rotate(360deg);
-    }
-}
-
 @keyframes shake {
     0%, 100% { transform: translateX(0); }
     10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
@@ -344,10 +269,6 @@ include '../includes/admin_header.php';
 
 .animate-scale-in {
     animation: scaleIn 0.3s ease-out;
-}
-
-.animate-spin {
-    animation: spin 1s linear infinite;
 }
 
 .animate-shake {
@@ -373,41 +294,6 @@ include '../includes/admin_header.php';
 
 ::-webkit-scrollbar-thumb:hover {
     background: #94a3b8;
-}
-
-/* Badge Dot Animation */
-.badge-dot {
-    position: relative;
-    padding-left: 1.25rem;
-}
-
-.badge-dot::before {
-    content: '';
-    position: absolute;
-    left: 0.5rem;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-    0%, 100% {
-        opacity: 1;
-    }
-    50% {
-        opacity: 0.5;
-    }
-}
-
-.badge-active::before {
-    background-color: #10b981;
-}
-
-.badge-inactive::before {
-    background-color: #ef4444;
 }
 
 /* Card Hover Effect */
@@ -444,12 +330,6 @@ include '../includes/admin_header.php';
     height: 300px;
 }
 
-/* Modal Backdrop Blur */
-.modal-backdrop {
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
-}
-
 /* Table Row Hover */
 .table-row-hover {
     transition: all 0.2s ease;
@@ -471,21 +351,21 @@ include '../includes/admin_header.php';
             <div class="flex items-center justify-between flex-wrap gap-4">
                 <div>
                     <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 flex items-center gap-3">
-                        <div class="p-3 bg-indigo-600 rounded-xl shadow-lg">
-                            <i class="ri-user-star-line text-white text-2xl"></i>
+                        <div class="p-3 bg-cyan-600 rounded-xl shadow-lg">
+                            <i class="ri-folder-line text-white text-2xl"></i>
                         </div>
-                        <span class="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                            Freelancer Management
+                        <span class="bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent">
+                            Category Management
                         </span>
                     </h1>
                     <p class="mt-2 text-gray-600 text-sm sm:text-base flex items-center gap-2">
                         <i class="ri-information-line"></i>
-                        Manage and monitor all freelancers in the system
+                        Manage and organize all service categories
                     </p>
                 </div>
                 <div class="flex items-center gap-3">
                     <span class="px-4 py-2 bg-white rounded-lg shadow-md border border-gray-200 text-sm font-semibold text-gray-700">
-                        <i class="ri-group-line text-indigo-600"></i> Total: <span class="text-indigo-600"><?php echo $totalFreelancers; ?></span>
+                        <i class="ri-folder-line text-cyan-600"></i> Total: <span class="text-cyan-600"><?php echo $totalCategories; ?></span>
                     </span>
                 </div>
             </div>
@@ -537,7 +417,7 @@ include '../includes/admin_header.php';
         <!-- Filter Section -->
         <div class="mb-6 animate-slide-up">
             <div class="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
-                <div class="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-4">
+                <div class="bg-gradient-to-r from-cyan-600 to-blue-600 px-6 py-4">
                     <h3 class="text-white font-semibold flex items-center gap-2 text-lg">
                         <i class="ri-filter-3-line text-xl"></i>
                         Advanced Filters
@@ -549,16 +429,16 @@ include '../includes/admin_header.php';
                             <!-- Search Input -->
                             <div class="group">
                                 <label for="search" class="block mb-2 text-sm font-semibold text-gray-700 flex items-center gap-2">
-                                    <i class="ri-search-line text-indigo-600"></i>
-                                    Search Freelancers
+                                    <i class="ri-search-line text-cyan-600"></i>
+                                    Search Categories
                                 </label>
                                 <div class="relative">
                                     <input 
                                         type="text" 
                                         id="search" 
                                         name="search" 
-                                        class="w-full pl-11 pr-4 py-3 border-2 border-gray-300 rounded-xl transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 hover:border-indigo-400" 
-                                        placeholder="Username, name, email..." 
+                                        class="w-full pl-11 pr-4 py-3 border-2 border-gray-300 rounded-xl transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-cyan-100 focus:border-cyan-500 hover:border-cyan-400" 
+                                        placeholder="Category name, slug..." 
                                         value="<?php echo htmlspecialchars($search); ?>">
                                     <i class="ri-search-line absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
                                 </div>
@@ -567,14 +447,14 @@ include '../includes/admin_header.php';
                             <!-- Status Filter -->
                             <div class="group">
                                 <label for="status" class="block mb-2 text-sm font-semibold text-gray-700 flex items-center gap-2">
-                                    <i class="ri-toggle-line text-indigo-600"></i>
-                                    Account Status
+                                    <i class="ri-toggle-line text-cyan-600"></i>
+                                    Category Status
                                 </label>
                                 <div class="relative">
                                     <select 
                                         id="status" 
                                         name="status" 
-                                        class="w-full pl-11 pr-4 py-3 border-2 border-gray-300 rounded-xl transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 hover:border-indigo-400 appearance-none bg-white cursor-pointer">
+                                        class="w-full pl-11 pr-4 py-3 border-2 border-gray-300 rounded-xl transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-cyan-100 focus:border-cyan-500 hover:border-cyan-400 appearance-none bg-white cursor-pointer">
                                         <option value="">All Statuses</option>
                                         <option value="active" <?php echo $statusFilter === 'active' ? 'selected' : ''; ?>>✅ Active</option>
                                         <option value="inactive" <?php echo $statusFilter === 'inactive' ? 'selected' : ''; ?>>❌ Inactive</option>
@@ -588,12 +468,12 @@ include '../includes/admin_header.php';
                         <div class="flex gap-3 pt-2">
                             <button 
                                 type="submit" 
-                                class="btn-ripple flex-1 sm:flex-none px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-xl transition-all duration-300 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 font-semibold">
+                                class="btn-ripple flex-1 sm:flex-none px-6 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white rounded-xl transition-all duration-300 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 font-semibold">
                                 <i class="ri-search-line text-lg"></i>
                                 <span>Apply Filters</span>
                             </button>
                             <a 
-                                href="manage_freelancers.php" 
+                                href="manage_categories.php" 
                                 class="btn-ripple flex-1 sm:flex-none px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white rounded-xl transition-all duration-300 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 font-semibold">
                                 <i class="ri-refresh-line text-lg"></i>
                                 <span>Reset</span>
@@ -604,25 +484,25 @@ include '../includes/admin_header.php';
             </div>
         </div>
         
-        <!-- Freelancers Table Card -->
+        <!-- Categories Table Card -->
         <div class="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden animate-fade-in">
             <!-- Card Header -->
             <div class="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-5 border-b border-gray-200">
                 <div class="flex flex-wrap justify-between items-center gap-4">
                     <div class="flex items-center gap-3">
-                        <div class="p-2 bg-indigo-100 rounded-lg">
-                            <i class="ri-user-star-line text-indigo-600 text-xl"></i>
+                        <div class="p-2 bg-cyan-100 rounded-lg">
+                            <i class="ri-folder-line text-cyan-600 text-xl"></i>
                         </div>
                         <div>
-                            <h3 class="text-xl font-bold text-gray-900">All Freelancers</h3>
-                            <p class="text-sm text-gray-600"><?php echo $totalFreelancers; ?> total freelancers found</p>
+                            <h3 class="text-xl font-bold text-gray-900">All Categories</h3>
+                            <p class="text-sm text-gray-600"><?php echo $totalCategories; ?> total categories found</p>
                         </div>
                     </div>
                     <button 
-                        id="addFreelancerBtn" 
-                        class="btn-ripple px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-xl transition-all duration-300 flex items-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 font-semibold">
-                        <i class="ri-user-add-line text-lg"></i>
-                        <span>Add Freelancer</span>
+                        id="addCategoryBtn" 
+                        class="btn-ripple px-6 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white rounded-xl transition-all duration-300 flex items-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 font-semibold">
+                        <i class="ri-add-line text-lg"></i>
+                        <span>Add New Category</span>
                     </button>
                 </div>
             </div>
@@ -633,106 +513,100 @@ include '../includes/admin_header.php';
                     <thead class="bg-gray-50 border-b border-gray-200">
                         <tr>
                             <th class="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">ID</th>
-                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Freelancer</th>
-                            <th class="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">Email</th>
-                            <th class="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">Title</th>
-                            <th class="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">Rate/Hr</th>
-                            <th class="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">Jobs</th>
-                            <th class="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">Success</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Name</th>
+                            <th class="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">Slug</th>
+                            <th class="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">Parent</th>
+                            <th class="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">Gigs</th>
+                            <th class="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">Order</th>
                             <th class="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">Status</th>
                             <th class="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">Actions</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
-                        <?php if (empty($freelancers)): ?>
+                        <?php if (empty($categories)): ?>
                         <tr>
-                            <td colspan="9" class="px-6 py-16 text-center">
+                            <td colspan="8" class="px-6 py-16 text-center">
                                 <div class="flex flex-col items-center justify-center">
                                     <div class="mb-4 p-4 bg-gray-100 rounded-full">
-                                        <i class="ri-user-search-line text-6xl text-gray-400"></i>
+                                        <i class="ri-folder-line text-6xl text-gray-400"></i>
                                     </div>
-                                    <h4 class="text-xl font-bold text-gray-700 mb-2">No Freelancers Found</h4>
-                                    <p class="text-gray-500 text-sm">Try adjusting your filters or search terms</p>
+                                    <h4 class="text-xl font-bold text-gray-700 mb-2">No Categories Found</h4>
+                                    <p class="text-gray-500 text-sm">Try adjusting your filters or add a new category</p>
                                 </div>
                             </td>
                         </tr>
                         <?php else: ?>
-                        <?php foreach ($freelancers as $freelancer): ?>
+                        <?php foreach ($categories as $category): ?>
                         <tr class="table-row-hover">
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="text-sm font-bold text-gray-900">#<?php echo htmlspecialchars($freelancer['id']); ?></span>
+                                <span class="text-sm font-bold text-gray-900">#<?php echo htmlspecialchars($category['id']); ?></span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="flex items-center">
-                                    <div class="flex-shrink-0 h-10 w-10">
-                                        <div class="h-10 w-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold shadow-lg">
-                                            <?php echo strtoupper(substr($freelancer['first_name'], 0, 1) . substr($freelancer['last_name'], 0, 1)); ?>
-                                        </div>
+                                <div class="flex items-center gap-3">
+                                    <div class="p-2 bg-cyan-100 rounded-lg">
+                                        <i class="ri-folder-fill text-cyan-600"></i>
                                     </div>
-                                    <div class="ml-4">
+                                    <div>
                                         <div class="text-sm font-semibold text-gray-900">
-                                            <?php echo htmlspecialchars($freelancer['first_name'] . ' ' . $freelancer['last_name']); ?>
-                                        </div>
-                                        <div class="text-xs text-gray-500 flex items-center gap-1">
-                                            <i class="ri-at-line"></i>
-                                            <?php echo htmlspecialchars($freelancer['username']); ?>
+                                            <?php echo htmlspecialchars($category['name']); ?>
                                         </div>
                                     </div>
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-center">
-                                <div class="text-sm text-gray-900 flex items-center gap-2 justify-center">
-                                    <i class="ri-mail-line text-gray-400"></i>
-                                    <?php echo htmlspecialchars($freelancer['email']); ?>
-                                </div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-center">
-                                <span class="text-sm text-gray-700 font-medium">
-                                    <?php echo $freelancer['title'] ? htmlspecialchars($freelancer['title']) : '-'; ?>
+                                <span class="text-sm text-gray-600 font-mono bg-gray-100 px-2 py-1 rounded">
+                                    <?php echo htmlspecialchars($category['slug']); ?>
                                 </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-center">
-                                <span class="px-3 py-1.5 bg-emerald-100 text-emerald-800 rounded-full text-xs font-bold">
-                                    <?php echo $freelancer['hourly_rate'] ? '$' . number_format($freelancer['hourly_rate'], 2) : '-'; ?>
+                                <div class="text-sm text-gray-900">
+                                    <?php echo $category['parent_name'] ? htmlspecialchars($category['parent_name']) : '-'; ?>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-center">
+                                <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-bold">
+                                    <?php echo htmlspecialchars($category['gigs_count'] ?? 0); ?> gigs
                                 </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-center">
                                 <span class="text-sm font-semibold text-gray-900">
-                                    <?php echo htmlspecialchars($freelancer['completed_jobs'] ?? 0); ?>
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-center">
-                                <span class="px-3 py-1.5 bg-blue-100 text-blue-800 rounded-full text-xs font-bold">
-                                    <?php echo $freelancer['success_rate'] ? number_format($freelancer['success_rate'], 1) . '%' : '-'; ?>
+                                    <?php echo htmlspecialchars($category['display_order']); ?>
                                 </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-center">
                                 <span class="<?php 
-                                    echo $freelancer['status'] === 'active' 
+                                    echo $category['status'] === 'active' 
                                         ? 'bg-green-100 text-green-800 border border-green-200' 
                                         : 'bg-red-100 text-red-800 border border-red-200';
-                                ?> px-3 py-1.5 rounded-full text-xs font-bold inline-flex items-center gap-1.5 capitalize badge-dot badge-<?php echo htmlspecialchars($freelancer['status']); ?> shadow-sm">
-                                    <?php echo $freelancer['status'] === 'active' ? '✅ Active' : '❌ Inactive'; ?>
+                                ?> px-3 py-1.5 rounded-full text-xs font-bold shadow-sm">
+                                    <?php echo $category['status'] === 'active' ? '✅ Active' : '❌ Inactive'; ?>
                                 </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-center">
                                 <div class="flex items-center justify-center gap-2 flex-wrap">
                                     <button 
-                                        onclick="editFreelancer(<?php echo $freelancer['id']; ?>, '<?php echo htmlspecialchars($freelancer['username'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($freelancer['first_name'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($freelancer['last_name'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($freelancer['email'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($freelancer['title'] ?? '', ENT_QUOTES); ?>', <?php echo $freelancer['hourly_rate'] ?? 0; ?>, '<?php echo htmlspecialchars($freelancer['status']); ?>')"
+                                        onclick='editCategory(<?php echo json_encode([
+                                            "id" => $category["id"],
+                                            "name" => $category["name"],
+                                            "slug" => $category["slug"],
+                                            "parent_id" => $category["parent_id"],
+                                            "display_order" => $category["display_order"],
+                                            "status" => $category["status"]
+                                        ]); ?>)'
                                         class="p-2 bg-indigo-50 hover:bg-indigo-600 text-indigo-700 hover:text-white border border-indigo-200 hover:border-indigo-600 rounded-lg transition-all duration-200 transform hover:scale-110 shadow-sm hover:shadow-md"
-                                        title="Edit Freelancer">
+                                        title="Edit Category">
                                         <i class="ri-edit-line text-sm"></i>
                                     </button>
                                     <button 
-                                        onclick="confirmToggleStatus(<?php echo $freelancer['id']; ?>, '<?php echo $freelancer['status']; ?>', '<?php echo htmlspecialchars($freelancer['first_name'] . ' ' . $freelancer['last_name'], ENT_QUOTES); ?>')"
+                                        onclick="confirmToggleStatus(<?php echo $category['id']; ?>, '<?php echo $category['status']; ?>', '<?php echo htmlspecialchars($category['name'], ENT_QUOTES); ?>')"
                                         class="p-2 bg-blue-50 hover:bg-blue-600 text-blue-700 hover:text-white border border-blue-200 hover:border-blue-600 rounded-lg transition-all duration-200 transform hover:scale-110 shadow-sm hover:shadow-md"
                                         title="Toggle Status">
                                         <i class="ri-toggle-line text-sm"></i>
                                     </button>
                                     <button 
-                                        onclick="confirmDelete(<?php echo $freelancer['id']; ?>, '<?php echo htmlspecialchars($freelancer['username'], ENT_QUOTES); ?>')"
+                                        onclick="confirmDelete(<?php echo $category['id']; ?>, '<?php echo htmlspecialchars($category['name'], ENT_QUOTES); ?>')"
                                         class="p-2 bg-red-50 hover:bg-red-600 text-red-700 hover:text-white border border-red-200 hover:border-red-600 rounded-lg transition-all duration-200 transform hover:scale-110 shadow-sm hover:shadow-md"
-                                        title="Delete Freelancer">
+                                        title="Delete Category">
                                         <i class="ri-delete-bin-line text-sm"></i>
                                     </button>
                                 </div>
@@ -746,102 +620,86 @@ include '../includes/admin_header.php';
             
             <!-- Mobile Card View -->
             <div class="md:hidden p-4 space-y-4">
-                <?php if (empty($freelancers)): ?>
+                <?php if (empty($categories)): ?>
                 <div class="text-center py-12">
                     <div class="flex flex-col items-center justify-center">
                         <div class="mb-4 p-4 bg-gray-100 rounded-full">
-                            <i class="ri-user-search-line text-6xl text-gray-400"></i>
+                            <i class="ri-folder-line text-6xl text-gray-400"></i>
                         </div>
-                        <h4 class="text-xl font-bold text-gray-700 mb-2">No Freelancers Found</h4>
+                        <h4 class="text-xl font-bold text-gray-700 mb-2">No Categories Found</h4>
                         <p class="text-gray-500 text-sm">Try adjusting your filters</p>
                     </div>
                 </div>
                 <?php else: ?>
-                <?php foreach ($freelancers as $freelancer): ?>
+                <?php foreach ($categories as $category): ?>
                 <div class="card-hover bg-white rounded-xl border-2 border-gray-200 overflow-hidden shadow-lg">
                     <!-- Card Header -->
-                    <div class="bg-gradient-to-r from-indigo-50 to-purple-50 p-4 border-b border-gray-200">
+                    <div class="bg-gradient-to-r from-cyan-50 to-blue-50 p-4 border-b border-gray-200">
                         <div class="flex items-start justify-between gap-3">
                             <div class="flex items-center gap-3 flex-1">
-                                <div class="h-12 w-12 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold shadow-lg flex-shrink-0">
-                                    <?php echo strtoupper(substr($freelancer['first_name'], 0, 1) . substr($freelancer['last_name'], 0, 1)); ?>
+                                <div class="p-2 bg-cyan-600 rounded-lg">
+                                    <i class="ri-folder-fill text-white text-xl"></i>
                                 </div>
                                 <div class="min-w-0">
                                     <h4 class="font-bold text-gray-900 text-base truncate">
-                                        <?php echo htmlspecialchars($freelancer['first_name'] . ' ' . $freelancer['last_name']); ?>
+                                        <?php echo htmlspecialchars($category['name']); ?>
                                     </h4>
-                                    <p class="text-sm text-gray-600 flex items-center gap-1">
-                                        <i class="ri-at-line text-xs"></i>
-                                        <span class="truncate"><?php echo htmlspecialchars($freelancer['username']); ?></span>
+                                    <p class="text-sm text-gray-600 font-mono truncate">
+                                        <?php echo htmlspecialchars($category['slug']); ?>
                                     </p>
                                 </div>
                             </div>
-                            <div class="flex flex-col gap-2 items-end flex-shrink-0">
-                                <span class="<?php 
-                                    echo $freelancer['status'] === 'active' 
-                                        ? 'bg-green-100 text-green-800 border border-green-200' 
-                                        : 'bg-red-100 text-red-800 border border-red-200';
-                                ?> px-2.5 py-1 rounded-full text-xs font-bold capitalize shadow-sm whitespace-nowrap">
-                                    <?php echo $freelancer['status'] === 'active' ? '✅' : '❌'; ?>
-                                    <?php echo htmlspecialchars($freelancer['status']); ?>
-                                </span>
-                            </div>
+                            <span class="<?php 
+                                echo $category['status'] === 'active' 
+                                    ? 'bg-green-100 text-green-800 border border-green-200' 
+                                    : 'bg-red-100 text-red-800 border border-red-200';
+                            ?> px-2.5 py-1 rounded-full text-xs font-bold shadow-sm whitespace-nowrap">
+                                <?php echo $category['status'] === 'active' ? '✅' : '❌'; ?>
+                            </span>
                         </div>
                     </div>
                     
                     <!-- Card Body -->
                     <div class="p-4 space-y-3">
                         <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                            <div class="p-2 bg-indigo-100 rounded-lg">
-                                <i class="ri-mail-line text-indigo-600"></i>
+                            <div class="p-2 bg-purple-100 rounded-lg">
+                                <i class="ri-folder-2-line text-purple-600"></i>
                             </div>
-                            <div class="flex-1 min-w-0">
-                                <p class="text-xs text-gray-500 font-semibold uppercase mb-0.5">Email</p>
-                                <p class="text-sm text-gray-900 font-medium truncate"><?php echo htmlspecialchars($freelancer['email']); ?></p>
-                            </div>
-                        </div>
-                        
-                        <div class="grid grid-cols-2 gap-3">
-                            <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                                <div class="p-2 bg-purple-100 rounded-lg">
-                                    <i class="ri-briefcase-line text-purple-600"></i>
-                                </div>
-                                <div class="flex-1 min-w-0">
-                                    <p class="text-xs text-gray-500 font-semibold uppercase mb-0.5">Title</p>
-                                    <p class="text-sm text-gray-900 font-medium truncate"><?php echo $freelancer['title'] ? htmlspecialchars($freelancer['title']) : '-'; ?></p>
-                                </div>
-                            </div>
-                            
-                            <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                                <div class="p-2 bg-emerald-100 rounded-lg">
-                                    <i class="ri-money-dollar-circle-line text-emerald-600"></i>
-                                </div>
-                                <div class="flex-1 min-w-0">
-                                    <p class="text-xs text-gray-500 font-semibold uppercase mb-0.5">Rate/Hr</p>
-                                    <p class="text-sm text-gray-900 font-bold"><?php echo $freelancer['hourly_rate'] ? '$' . number_format($freelancer['hourly_rate'], 2) : '-'; ?></p>
-                                </div>
+                            <div class="flex-1">
+                                <p class="text-xs text-gray-500 font-semibold uppercase mb-0.5">Parent Category</p>
+                                <p class="text-sm text-gray-900 font-medium"><?php echo $category['parent_name'] ? htmlspecialchars($category['parent_name']) : 'None'; ?></p>
                             </div>
                         </div>
                         
                         <div class="grid grid-cols-2 gap-3">
                             <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                                 <div class="p-2 bg-blue-100 rounded-lg">
-                                    <i class="ri-task-line text-blue-600"></i>
+                                    <i class="ri-stack-line text-blue-600"></i>
                                 </div>
                                 <div class="flex-1">
-                                    <p class="text-xs text-gray-500 font-semibold uppercase mb-0.5">Jobs</p>
-                                    <p class="text-sm text-gray-900 font-bold"><?php echo htmlspecialchars($freelancer['completed_jobs'] ?? 0); ?></p>
+                                    <p class="text-xs text-gray-500 font-semibold uppercase mb-0.5">Gigs</p>
+                                    <p class="text-sm text-blue-600 font-bold"><?php echo htmlspecialchars($category['gigs_count'] ?? 0); ?></p>
                                 </div>
                             </div>
                             
                             <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                                <div class="p-2 bg-cyan-100 rounded-lg">
-                                    <i class="ri-trophy-line text-cyan-600"></i>
+                                <div class="p-2 bg-green-100 rounded-lg">
+                                    <i class="ri-sort-asc text-green-600"></i>
                                 </div>
                                 <div class="flex-1">
-                                    <p class="text-xs text-gray-500 font-semibold uppercase mb-0.5">Success</p>
-                                    <p class="text-sm text-gray-900 font-bold"><?php echo $freelancer['success_rate'] ? number_format($freelancer['success_rate'], 1) . '%' : '-'; ?></p>
+                                    <p class="text-xs text-gray-500 font-semibold uppercase mb-0.5">Order</p>
+                                    <p class="text-sm text-gray-900 font-bold"><?php echo htmlspecialchars($category['display_order']); ?></p>
                                 </div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                            <div class="p-2 bg-orange-100 rounded-lg">
+                                <i class="ri-hashtag text-orange-600"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-xs text-gray-500 font-semibold uppercase mb-0.5">Category ID</p>
+                                <p class="text-sm text-gray-900 font-bold">#<?php echo htmlspecialchars($category['id']); ?></p>
                             </div>
                         </div>
                     </div>
@@ -850,19 +708,26 @@ include '../includes/admin_header.php';
                     <div class="p-4 bg-gray-50 border-t border-gray-200">
                         <div class="grid grid-cols-3 gap-2">
                             <button 
-                                onclick="editFreelancer(<?php echo $freelancer['id']; ?>, '<?php echo htmlspecialchars($freelancer['username'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($freelancer['first_name'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($freelancer['last_name'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($freelancer['email'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($freelancer['title'] ?? '', ENT_QUOTES); ?>', <?php echo $freelancer['hourly_rate'] ?? 0; ?>, '<?php echo htmlspecialchars($freelancer['status']); ?>')"
+                                onclick='editCategory(<?php echo json_encode([
+                                    "id" => $category["id"],
+                                    "name" => $category["name"],
+                                    "slug" => $category["slug"],
+                                    "parent_id" => $category["parent_id"],
+                                    "display_order" => $category["display_order"],
+                                    "status" => $category["status"]
+                                ]); ?>)'
                                 class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-all duration-200 flex items-center justify-center gap-2 font-semibold text-sm shadow-md hover:shadow-lg">
-                                <i class="ri-edit-line"></i> 
+                                <i class="ri-edit-line"></i> Edit
                             </button>
                             <button 
-                                onclick="confirmToggleStatus(<?php echo $freelancer['id']; ?>, '<?php echo $freelancer['status']; ?>', '<?php echo htmlspecialchars($freelancer['first_name'] . ' ' . $freelancer['last_name'], ENT_QUOTES); ?>')"
+                                onclick="confirmToggleStatus(<?php echo $category['id']; ?>, '<?php echo $category['status']; ?>', '<?php echo htmlspecialchars($category['name'], ENT_QUOTES); ?>')"
                                 class="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all duration-200 flex items-center justify-center gap-2 font-semibold text-sm shadow-md hover:shadow-lg">
                                 <i class="ri-toggle-line"></i>
                             </button>
                             <button 
-                                onclick="confirmDelete(<?php echo $freelancer['id']; ?>, '<?php echo htmlspecialchars($freelancer['username'], ENT_QUOTES); ?>')"
+                                onclick="confirmDelete(<?php echo $category['id']; ?>, '<?php echo htmlspecialchars($category['name'], ENT_QUOTES); ?>')"
                                 class="px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-all duration-200 flex items-center justify-center gap-2 font-semibold text-sm shadow-md hover:shadow-lg">
-                                <i class="ri-delete-bin-line"></i> 
+                                <i class="ri-delete-bin-line"></i>
                             </button>
                         </div>
                     </div>
@@ -882,7 +747,7 @@ include '../includes/admin_header.php';
                         <?php if ($page > 1): ?>
                             <a 
                                 href="?<?php echo http_build_query(array_merge($_GET, ['page' => $page - 1])); ?>" 
-                                class="px-4 py-2 bg-white border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all duration-200 font-semibold text-sm shadow-sm hover:shadow-md">
+                                class="px-4 py-2 bg-white border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-cyan-600 hover:text-white hover:border-cyan-600 transition-all duration-200 font-semibold text-sm shadow-sm hover:shadow-md">
                                 <i class="ri-arrow-left-s-line"></i> Previous
                             </a>
                         <?php else: ?>
@@ -897,7 +762,7 @@ include '../includes/admin_header.php';
                         $end = min($totalPages, $page + $range);
                         
                         if ($start > 1): ?>
-                            <a href="?<?php echo http_build_query(array_merge($_GET, ['page' => 1])); ?>" class="hidden sm:block px-4 py-2 bg-white border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all duration-200 font-semibold text-sm shadow-sm hover:shadow-md">1</a>
+                            <a href="?<?php echo http_build_query(array_merge($_GET, ['page' => 1])); ?>" class="hidden sm:block px-4 py-2 bg-white border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-cyan-600 hover:text-white hover:border-cyan-600 transition-all duration-200 font-semibold text-sm shadow-sm hover:shadow-md">1</a>
                             <?php if ($start > 2): ?>
                                 <span class="hidden sm:block px-4 py-2 text-gray-400">...</span>
                             <?php endif; ?>
@@ -905,9 +770,9 @@ include '../includes/admin_header.php';
                         
                         <?php for ($i = $start; $i <= $end; $i++): ?>
                             <?php if ($i == $page): ?>
-                                <span class="px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 border-2 border-indigo-600 text-white rounded-lg font-bold text-sm shadow-md"><?php echo $i; ?></span>
+                                <span class="px-4 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 border-2 border-cyan-600 text-white rounded-lg font-bold text-sm shadow-md"><?php echo $i; ?></span>
                             <?php else: ?>
-                                <a href="?<?php echo http_build_query(array_merge($_GET, ['page' => $i])); ?>" class="hidden sm:block px-4 py-2 bg-white border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all duration-200 font-semibold text-sm shadow-sm hover:shadow-md"><?php echo $i; ?></a>
+                                <a href="?<?php echo http_build_query(array_merge($_GET, ['page' => $i])); ?>" class="hidden sm:block px-4 py-2 bg-white border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-cyan-600 hover:text-white hover:border-cyan-600 transition-all duration-200 font-semibold text-sm shadow-sm hover:shadow-md"><?php echo $i; ?></a>
                             <?php endif; ?>
                         <?php endfor; ?>
                         
@@ -915,13 +780,13 @@ include '../includes/admin_header.php';
                             <?php if ($end < $totalPages - 1): ?>
                                 <span class="hidden sm:block px-4 py-2 text-gray-400">...</span>
                             <?php endif; ?>
-                            <a href="?<?php echo http_build_query(array_merge($_GET, ['page' => $totalPages])); ?>" class="hidden sm:block px-4 py-2 bg-white border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all duration-200 font-semibold text-sm shadow-sm hover:shadow-md"><?php echo $totalPages; ?></a>
+                            <a href="?<?php echo http_build_query(array_merge($_GET, ['page' => $totalPages])); ?>" class="hidden sm:block px-4 py-2 bg-white border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-cyan-600 hover:text-white hover:border-cyan-600 transition-all duration-200 font-semibold text-sm shadow-sm hover:shadow-md"><?php echo $totalPages; ?></a>
                         <?php endif; ?>
                         
                         <?php if ($page < $totalPages): ?>
                             <a 
                                 href="?<?php echo http_build_query(array_merge($_GET, ['page' => $page + 1])); ?>" 
-                                class="px-4 py-2 bg-white border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all duration-200 font-semibold text-sm shadow-sm hover:shadow-md">
+                                class="px-4 py-2 bg-white border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-cyan-600 hover:text-white hover:border-cyan-600 transition-all duration-200 font-semibold text-sm shadow-sm hover:shadow-md">
                                 Next <i class="ri-arrow-right-s-line"></i>
                             </a>
                         <?php else: ?>
@@ -937,19 +802,19 @@ include '../includes/admin_header.php';
     </div>
 </div>
 
-<!-- Add Freelancer Modal -->
-<div id="addFreelancerModal" class="hidden fixed inset-0 z-50 overflow-y-auto modal-backdrop" style="background-color: rgba(0, 0, 0, 0.75);">
+<!-- Add Category Modal -->
+<div id="addCategoryModal" class="hidden fixed inset-0 z-50 overflow-y-auto modal-backdrop" style="background-color: rgba(0, 0, 0, 0.75);">
     <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0 mt-12">
-        <div class="fixed inset-0 transition-opacity" onclick="closeModal('addFreelancerModal')"></div>
+        <div class="fixed inset-0 transition-opacity" onclick="closeModal('addCategoryModal')"></div>
         
         <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full animate-scale-in">
-            <div class="bg-gradient-to-r from-green-600 to-emerald-600 px-6 py-5">
+            <div class="bg-gradient-to-r from-cyan-600 to-blue-600 px-6 py-5">
                 <div class="flex items-center justify-between">
                     <h3 class="text-xl font-bold text-white flex items-center gap-2">
-                        <i class="ri-user-add-line text-2xl"></i>
-                        Add New Freelancer
+                        <i class="ri-add-line text-2xl"></i>
+                        Add New Category
                     </h3>
-                    <button onclick="closeModal('addFreelancerModal')" class="text-white hover:text-gray-200 transition-colors">
+                    <button onclick="closeModal('addCategoryModal')" class="text-white hover:text-gray-200 transition-colors">
                         <i class="ri-close-line text-2xl"></i>
                     </button>
                 </div>
@@ -960,116 +825,82 @@ include '../includes/admin_header.php';
                 
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                        <i class="ri-user-line text-indigo-600"></i> Username
+                        <i class="ri-text text-cyan-600"></i> Category Name
                     </label>
                     <input 
                         type="text" 
-                        name="username" 
+                        name="name" 
                         required 
-                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-green-100 focus:border-green-500 transition-all duration-200" 
-                        placeholder="Enter username">
+                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-cyan-100 focus:border-cyan-500 transition-all duration-200" 
+                        placeholder="Enter category name">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                        <i class="ri-link text-cyan-600"></i> Slug
+                    </label>
+                    <input 
+                        type="text" 
+                        name="slug" 
+                        required 
+                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-cyan-100 focus:border-cyan-500 transition-all duration-200" 
+                        placeholder="category-slug">
+                    <p class="mt-1 text-xs text-gray-500">URL-friendly version (e.g., web-development)</p>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                        <i class="ri-folder-2-line text-cyan-600"></i> Parent Category
+                    </label>
+                    <select 
+                        name="parent_id" 
+                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-cyan-100 focus:border-cyan-500 transition-all duration-200">
+                        <option value="">None (Top Level)</option>
+                        <?php foreach ($allCategories as $cat): ?>
+                        <option value="<?php echo $cat['id']; ?>">
+                            <?php echo htmlspecialchars($cat['name']); ?>
+                        </option>
+                        <?php endforeach; ?>
+                    </select>
                 </div>
                 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                            <i class="ri-user-line text-indigo-600"></i> First Name
-                        </label>
-                        <input 
-                            type="text" 
-                            name="first_name" 
-                            required 
-                            class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-green-100 focus:border-green-500 transition-all duration-200" 
-                            placeholder="First name">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                            <i class="ri-user-line text-indigo-600"></i> Last Name
-                        </label>
-                        <input 
-                            type="text" 
-                            name="last_name" 
-                            required 
-                            class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-green-100 focus:border-green-500 transition-all duration-200" 
-                            placeholder="Last name">
-                    </div>
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                        <i class="ri-mail-line text-indigo-600"></i> Email
-                    </label>
-                    <input 
-                        type="email" 
-                        name="email" 
-                        required 
-                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-green-100 focus:border-green-500 transition-all duration-200" 
-                        placeholder="Enter email address">
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                        <i class="ri-lock-password-line text-indigo-600"></i> Password
-                    </label>
-                    <input 
-                        type="password" 
-                        name="password" 
-                        required 
-                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-green-100 focus:border-green-500 transition-all duration-200" 
-                        placeholder="Enter password">
-                </div>
-                
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                            <i class="ri-briefcase-line text-indigo-600"></i> Job Title
-                        </label>
-                        <input 
-                            type="text" 
-                            name="title" 
-                            class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-green-100 focus:border-green-500 transition-all duration-200" 
-                            placeholder="e.g., Web Developer">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                            <i class="ri-money-dollar-circle-line text-indigo-600"></i> Hourly Rate ($)
+                            <i class="ri-sort-asc text-cyan-600"></i> Display Order
                         </label>
                         <input 
                             type="number" 
-                            name="hourly_rate" 
-                            min="0" 
-                            step="0.01"
-                            class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-green-100 focus:border-green-500 transition-all duration-200" 
-                            placeholder="0.00">
+                            name="display_order" 
+                            value="0"
+                            class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-cyan-100 focus:border-cyan-500 transition-all duration-200">
                     </div>
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                        <i class="ri-toggle-line text-indigo-600"></i> Status
-                    </label>
-                    <select 
-                        name="status" 
-                        required 
-                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-green-100 focus:border-green-500 transition-all duration-200">
-                        <option value="active" selected>✅ Active</option>
-                        <option value="inactive">❌ Inactive</option>
-                    </select>
+                    
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                            <i class="ri-toggle-line text-cyan-600"></i> Status
+                        </label>
+                        <select 
+                            name="status" 
+                            required 
+                            class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-cyan-100 focus:border-cyan-500 transition-all duration-200">
+                            <option value="active" selected>✅ Active</option>
+                            <option value="inactive">❌ Inactive</option>
+                        </select>
+                    </div>
                 </div>
                 
                 <div class="flex gap-3 pt-4">
                     <button 
                         type="button" 
-                        onclick="closeModal('addFreelancerModal')" 
+                        onclick="closeModal('addCategoryModal')" 
                         class="flex-1 px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white rounded-xl transition-all duration-200 font-semibold shadow-lg hover:shadow-xl">
                         Cancel
                     </button>
                     <button 
                         type="submit" 
-                        class="flex-1 px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-xl transition-all duration-200 font-semibold shadow-lg hover:shadow-xl">
-                        Add Freelancer
+                        class="flex-1 px-6 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white rounded-xl transition-all duration-200 font-semibold shadow-lg hover:shadow-xl">
+                        Add Category
                     </button>
                 </div>
             </form>
@@ -1077,19 +908,19 @@ include '../includes/admin_header.php';
     </div>
 </div>
 
-<!-- Edit Freelancer Modal -->
-<div id="editFreelancerModal" class="hidden fixed inset-0 z-50 overflow-y-auto modal-backdrop" style="background-color: rgba(0, 0, 0, 0.75);">
+<!-- Edit Category Modal -->
+<div id="editCategoryModal" class="hidden fixed inset-0 z-50 overflow-y-auto modal-backdrop" style="background-color: rgba(0, 0, 0, 0.75);">
     <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0 mt-12">
-        <div class="fixed inset-0 transition-opacity" onclick="closeModal('editFreelancerModal')"></div>
+        <div class="fixed inset-0 transition-opacity" onclick="closeModal('editCategoryModal')"></div>
         
         <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full animate-scale-in">
             <div class="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-5">
                 <div class="flex items-center justify-between">
                     <h3 class="text-xl font-bold text-white flex items-center gap-2">
                         <i class="ri-edit-line text-2xl"></i>
-                        Edit Freelancer
+                        Edit Category
                     </h3>
-                    <button onclick="closeModal('editFreelancerModal')" class="text-white hover:text-gray-200 transition-colors">
+                    <button onclick="closeModal('editCategoryModal')" class="text-white hover:text-gray-200 transition-colors">
                         <i class="ri-close-line text-2xl"></i>
                     </button>
                 </div>
@@ -1101,105 +932,83 @@ include '../includes/admin_header.php';
                 
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                        <i class="ri-user-line text-indigo-600"></i> Username
+                        <i class="ri-text text-indigo-600"></i> Category Name
                     </label>
                     <input 
                         type="text" 
-                        id="edit_username" 
-                        name="username" 
+                        id="edit_name" 
+                        name="name" 
                         required 
                         class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 transition-all duration-200">
-                </div>
-                
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                            <i class="ri-user-line text-indigo-600"></i> First Name
-                        </label>
-                        <input 
-                            type="text" 
-                            id="edit_first_name" 
-                            name="first_name" 
-                            required 
-                            class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 transition-all duration-200">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                            <i class="ri-user-line text-indigo-600"></i> Last Name
-                        </label>
-                        <input 
-                            type="text" 
-                            id="edit_last_name" 
-                            name="last_name" 
-                            required 
-                            class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 transition-all duration-200">
-                    </div>
                 </div>
                 
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                        <i class="ri-mail-line text-indigo-600"></i> Email
+                        <i class="ri-link text-indigo-600"></i> Slug
                     </label>
                     <input 
-                        type="email" 
-                        id="edit_email" 
-                        name="email" 
+                        type="text" 
+                        id="edit_slug" 
+                        name="slug" 
                         required 
                         class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 transition-all duration-200">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                        <i class="ri-folder-2-line text-indigo-600"></i> Parent Category
+                    </label>
+                    <select 
+                        id="edit_parent_id" 
+                        name="parent_id" 
+                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 transition-all duration-200">
+                        <option value="">None (Top Level)</option>
+                        <?php foreach ($allCategories as $cat): ?>
+                        <option value="<?php echo $cat['id']; ?>">
+                            <?php echo htmlspecialchars($cat['name']); ?>
+                        </option>
+                        <?php endforeach; ?>
+                    </select>
                 </div>
                 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                            <i class="ri-briefcase-line text-indigo-600"></i> Job Title
-                        </label>
-                        <input 
-                            type="text" 
-                            id="edit_title" 
-                            name="title" 
-                            class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 transition-all duration-200">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                            <i class="ri-money-dollar-circle-line text-indigo-600"></i> Hourly Rate ($)
+                            <i class="ri-sort-asc text-indigo-600"></i> Display Order
                         </label>
                         <input 
                             type="number" 
-                            id="edit_hourly_rate" 
-                            name="hourly_rate" 
-                            min="0" 
-                            step="0.01"
+                            id="edit_display_order" 
+                            name="display_order" 
                             class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 transition-all duration-200">
                     </div>
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                        <i class="ri-toggle-line text-indigo-600"></i> Status
-                    </label>
-                    <select 
-                        id="edit_status" 
-                        name="status" 
-                        required 
-                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 transition-all duration-200">
-                        <option value="active">✅ Active</option>
-                        <option value="inactive">❌ Inactive</option>
-                    </select>
+                    
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                            <i class="ri-toggle-line text-indigo-600"></i> Status
+                        </label>
+                        <select 
+                            id="edit_status" 
+                            name="status" 
+                            required 
+                            class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 transition-all duration-200">
+                            <option value="active">✅ Active</option>
+                            <option value="inactive">❌ Inactive</option>
+                        </select>
+                    </div>
                 </div>
                 
                 <div class="flex gap-3 pt-4">
                     <button 
                         type="button" 
-                        onclick="closeModal('editFreelancerModal')" 
+                        onclick="closeModal('editCategoryModal')" 
                         class="flex-1 px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white rounded-xl transition-all duration-200 font-semibold shadow-lg hover:shadow-xl">
                         Cancel
                     </button>
                     <button 
                         type="submit" 
                         class="flex-1 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-xl transition-all duration-200 font-semibold shadow-lg hover:shadow-xl">
-                        Update Freelancer
+                        Update Category
                     </button>
                 </div>
             </form>
@@ -1218,7 +1027,7 @@ include '../includes/admin_header.php';
                     <div class="p-3 bg-white/20 rounded-xl">
                         <i class="ri-toggle-line text-white text-3xl"></i>
                     </div>
-                    <h3 class="text-xl font-bold text-white">Toggle Freelancer Status</h3>
+                    <h3 class="text-xl font-bold text-white">Toggle Category Status</h3>
                 </div>
             </div>
             
@@ -1261,7 +1070,7 @@ include '../includes/admin_header.php';
                     <div class="p-3 bg-white/20 rounded-xl">
                         <i class="ri-delete-bin-line text-white text-3xl"></i>
                     </div>
-                    <h3 class="text-xl font-bold text-white">Delete Freelancer</h3>
+                    <h3 class="text-xl font-bold text-white">Delete Category</h3>
                 </div>
             </div>
             
@@ -1277,7 +1086,7 @@ include '../includes/admin_header.php';
                             <i class="ri-error-warning-line text-red-600 text-xl mr-3 flex-shrink-0 mt-0.5"></i>
                             <div class="text-left">
                                 <p class="text-sm font-semibold text-red-800">Warning: This action cannot be undone!</p>
-                                <p class="text-xs text-red-700 mt-1">All freelancer data will be permanently deleted.</p>
+                                <p class="text-xs text-red-700 mt-1">All category data will be permanently deleted from the system.</p>
                             </div>
                         </div>
                     </div>
@@ -1294,7 +1103,7 @@ include '../includes/admin_header.php';
                         id="confirmDeleteBtn" 
                         href="#"
                         class="flex-1 px-6 py-3 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white rounded-xl transition-all duration-200 font-semibold shadow-lg hover:shadow-xl text-center">
-                        Delete Freelancer
+                        Delete Category
                     </a>
                 </div>
             </div>
@@ -1315,58 +1124,45 @@ function openModal(modalId) {
 }
 
 // Confirm Toggle Status
-function confirmToggleStatus(userId, currentStatus, userName) {
+function confirmToggleStatus(categoryId, currentStatus, categoryName) {
     const action = currentStatus === 'active' ? 'deactivate' : 'activate';
     const actionText = currentStatus === 'active' ? 'Deactivate' : 'Activate';
     
-    document.getElementById('toggleModalTitle').textContent = `${actionText} ${userName}?`;
-    document.getElementById('toggleModalMessage').textContent = `Are you sure you want to ${action} this freelancer account?`;
+    document.getElementById('toggleModalTitle').textContent = `${actionText} "${categoryName}"?`;
+    document.getElementById('toggleModalMessage').textContent = `Are you sure you want to ${action} this category?`;
     
     const urlParams = new URLSearchParams(window.location.search);
     const queryString = urlParams.toString();
-    const url = `?toggle_status=${userId}${queryString ? '&' + queryString : ''}`;
+    const url = `?toggle_status=${categoryId}${queryString ? '&' + queryString : ''}`;
     
     document.getElementById('confirmToggleBtn').href = url;
     openModal('confirmToggleModal');
 }
 
 // Confirm Delete
-function confirmDelete(userId, username) {
-    document.getElementById('deleteModalMessage').textContent = `You are about to delete the freelancer "${username}".`;
+function confirmDelete(categoryId, categoryName) {
+    document.getElementById('deleteModalMessage').textContent = `You are about to delete the category "${categoryName}".`;
     
     const urlParams = new URLSearchParams(window.location.search);
     const queryString = urlParams.toString();
-    const url = `?delete=${userId}${queryString ? '&' + queryString : ''}`;
+    const url = `?delete=${categoryId}${queryString ? '&' + queryString : ''}`;
     
     document.getElementById('confirmDeleteBtn').href = url;
     openModal('confirmDeleteModal');
 }
 
-// Edit Freelancer Function
-function editFreelancer(id, username, firstName, lastName, email, title, hourlyRate, status) {
-    document.getElementById('edit_id').value = id;
-    document.getElementById('edit_username').value = username;
-    document.getElementById('edit_first_name').value = firstName;
-    document.getElementById('edit_last_name').value = lastName;
-    document.getElementById('edit_email').value = email;
-    document.getElementById('edit_title').value = title || '';
-    document.getElementById('edit_hourly_rate').value = hourlyRate || '';
-    document.getElementById('edit_status').value = status;
-    openModal('editFreelancerModal');
-}
-
 // Event Listeners
 document.addEventListener('DOMContentLoaded', function() {
-    // Add Freelancer Button
-    document.getElementById('addFreelancerBtn')?.addEventListener('click', function() {
-        openModal('addFreelancerModal');
+    // Add Category Button
+    document.getElementById('addCategoryBtn')?.addEventListener('click', function() {
+        openModal('addCategoryModal');
     });
     
     // Close on Escape Key
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
-            closeModal('addFreelancerModal');
-            closeModal('editFreelancerModal');
+            closeModal('addCategoryModal');
+            closeModal('editCategoryModal');
             closeModal('confirmToggleModal');
             closeModal('confirmDeleteModal');
         }
@@ -1382,6 +1178,17 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 5000);
     });
 });
+
+// Edit Category Function
+function editCategory(categoryData) {
+    document.getElementById('edit_id').value = categoryData.id;
+    document.getElementById('edit_name').value = categoryData.name;
+    document.getElementById('edit_slug').value = categoryData.slug;
+    document.getElementById('edit_parent_id').value = categoryData.parent_id || '';
+    document.getElementById('edit_display_order').value = categoryData.display_order;
+    document.getElementById('edit_status').value = categoryData.status;
+    openModal('editCategoryModal');
+}
 </script>
 
 <?php include '../includes/admin_footer.php'; ?>

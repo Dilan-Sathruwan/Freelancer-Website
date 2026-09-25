@@ -1,10 +1,11 @@
 <?php
 session_start();
 include '../config/db.con.php';
+include '../includes/logging_functions.php';
 
 // Set page variables
-$page_title = 'Manage Admins';
-$active_page = 'admins';
+$page_title = 'Manage Gigs';
+$active_page = 'gigs';
 
 // Ensure only admins can access this page
 if (!isset($_SESSION['user_id']) || !isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
@@ -13,225 +14,241 @@ if (!isset($_SESSION['user_id']) || !isset($_SESSION['role']) || $_SESSION['role
 }
 
 // Pagination variables
-$adminsPerPage = 10;
+$gigsPerPage = 10;
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-$offset = ($page - 1) * $adminsPerPage;
+$offset = ($page - 1) * $gigsPerPage;
 
 // Search and filter variables
 $search = isset($_GET['search']) ? sanitizeInput($_GET['search']) : '';
+$categoryFilter = isset($_GET['category']) ? validateInteger($_GET['category']) : '';
 $statusFilter = isset($_GET['status']) ? sanitizeInput($_GET['status']) : '';
+$freelancerFilter = isset($_GET['freelancer']) ? validateInteger($_GET['freelancer']) : '';
 
 // Handle form submissions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Handle Add Admin
+    // Handle Add Gig
     if (isset($_POST['action']) && $_POST['action'] === 'add') {
-        $username = sanitizeInput($_POST['username']);
-        $first_name = sanitizeInput($_POST['first_name']);
-        $last_name = sanitizeInput($_POST['last_name']);
-        $email = validateEmailInput($_POST['email']);
+        $title = sanitizeInput($_POST['title']);
+        $description = sanitizeInput($_POST['description']);
+        $freelancer_id = validateInteger($_POST['freelancer_id']);
+        $category_id = validateInteger($_POST['category_id']);
+        $price = floatval($_POST['price']);
         $status = sanitizeInput($_POST['status']);
-        $password = $_POST['password'];
         
         // Validate required fields
-        if (empty($username) || empty($first_name) || empty($last_name) || empty($email) || empty($password)) {
-            $error = "All fields are required.";
+        if (empty($title) || empty($description) || !$freelancer_id || !$category_id || $price <= 0) {
+            $error = "All fields are required and price must be greater than 0.";
         } elseif (!in_array($status, ['active', 'inactive'])) {
             $error = "Invalid status selected.";
         } else {
             try {
-                // Check if username or email already exists
-                $stmt = $conn->prepare("SELECT id FROM users WHERE username = ? OR email = ?");
-                $stmt->execute([$username, $email]);
-                if ($stmt->fetch()) {
-                    $error = "Username or email already exists.";
-                } else {
-                    // Hash password
-                    $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-                    
-                    // Insert new admin
-                    $stmt = $conn->prepare("INSERT INTO users (username, password, role, first_name, last_name, email, status) VALUES (?, ?, 'admin', ?, ?, ?, ?)");
-                    $stmt->execute([$username, $hashedPassword, $first_name, $last_name, $email, $status]);
-                    $success = "Admin added successfully.";
-                }
+                // Insert new gig
+                $stmt = $conn->prepare("INSERT INTO gigs (freelancer_id, category_id, title, description, price, status, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())");
+                $stmt->execute([$freelancer_id, $category_id, $title, $description, $price, $status]);
+                
+                // Log admin add activity
+                $newValues = [
+                    'freelancer_id' => $freelancer_id,
+                    'category_id' => $category_id,
+                    'title' => $title,
+                    'description' => $description,
+                    'price' => $price,
+                    'status' => $status
+                ];
+                logAdminAdd($_SESSION['user_id'], 'gig', $newValues, 'Admin added new gig');
+                
+                $success = "Gig added successfully.";
             } catch (PDOException $e) {
-                error_log("Add admin error: " . $e->getMessage());
-                $error = "Error adding admin.";
+                error_log("Add gig error: " . $e->getMessage());
+                $error = "Error adding gig.";
             }
         }
     }
     
-    // Handle Edit Admin
+    // Handle Edit Gig
     if (isset($_POST['action']) && $_POST['action'] === 'edit') {
         $id = validateInteger($_POST['id']);
-        $username = sanitizeInput($_POST['username']);
-        $first_name = sanitizeInput($_POST['first_name']);
-        $last_name = sanitizeInput($_POST['last_name']);
-        $email = validateEmailInput($_POST['email']);
+        $title = sanitizeInput($_POST['title']);
+        $description = sanitizeInput($_POST['description']);
+        $category_id = validateInteger($_POST['category_id']);
+        $price = floatval($_POST['price']);
         $status = sanitizeInput($_POST['status']);
         
         // Validate required fields
-        if (!$id || empty($username) || empty($first_name) || empty($last_name) || empty($email)) {
-            $error = "All fields are required.";
+        if (!$id || empty($title) || empty($description) || !$category_id || $price <= 0) {
+            $error = "All fields are required and price must be greater than 0.";
         } elseif (!in_array($status, ['active', 'inactive'])) {
             $error = "Invalid status selected.";
         } else {
             try {
-                // Check if username or email already exists for other users
-                $stmt = $conn->prepare("SELECT id FROM users WHERE (username = ? OR email = ?) AND id != ?");
-                $stmt->execute([$username, $email, $id]);
-                if ($stmt->fetch()) {
-                    $error = "Username or email already exists for another admin.";
-                } else {
-                    // Update admin
-                    $stmt = $conn->prepare("UPDATE users SET username = ?, first_name = ?, last_name = ?, email = ?, status = ? WHERE id = ?");
-                    $stmt->execute([$username, $first_name, $last_name, $email, $status, $id]);
-                    $success = "Admin updated successfully.";
-                }
-            } catch (PDOException $e) {
-                error_log("Edit admin error: " . $e->getMessage());
-                $error = "Error updating admin.";
-            }
-        }
-    }
-    
-    // Handle Change Password
-    if (isset($_POST['action']) && $_POST['action'] === 'change_password') {
-        $id = validateInteger($_POST['id']);
-        $password = $_POST['password'];
-        $confirm_password = $_POST['confirm_password'];
-        
-        // Validate required fields
-        if (!$id || empty($password) || empty($confirm_password)) {
-            $error = "Password and confirmation are required.";
-        } elseif ($password !== $confirm_password) {
-            $error = "Passwords do not match.";
-        } elseif (strlen($password) < 6) {
-            $error = "Password must be at least 6 characters long.";
-        } else {
-            try {
-                // Hash password
-                $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+                // Get old values for logging
+                $oldStmt = $conn->prepare("SELECT category_id, title, description, price, status FROM gigs WHERE id = ?");
+                $oldStmt->execute([$id]);
+                $oldValues = $oldStmt->fetch();
                 
-                // Update password
-                $stmt = $conn->prepare("UPDATE users SET password = ? WHERE id = ?");
-                $stmt->execute([$hashedPassword, $id]);
-                $success = "Password updated successfully.";
+                // Update gig
+                $stmt = $conn->prepare("UPDATE gigs SET category_id = ?, title = ?, description = ?, price = ?, status = ? WHERE id = ?");
+                $stmt->execute([$category_id, $title, $description, $price, $status, $id]);
+                
+                // Log admin edit activity
+                $newValues = [
+                    'category_id' => $category_id,
+                    'title' => $title,
+                    'description' => $description,
+                    'price' => $price,
+                    'status' => $status
+                ];
+                logAdminEdit($_SESSION['user_id'], 'gig', $id, $oldValues, $newValues, 'Admin updated gig information');
+                
+                $success = "Gig updated successfully.";
             } catch (PDOException $e) {
-                error_log("Change password error: " . $e->getMessage());
-                $error = "Error updating password.";
+                error_log("Edit gig error: " . $e->getMessage());
+                $error = "Error updating gig.";
             }
         }
     }
 }
 
-// Handle admin status update
+// Handle gig status update
 if (isset($_GET['toggle_status'])) {
     $id = validateInteger($_GET['toggle_status']);
     
     if ($id) {
         try {
-            // Prevent deactivating yourself
-            if ($id == $_SESSION['user_id']) {
-                $error = "You cannot deactivate your own account.";
-            } else {
-                // Get current status
-                $stmt = $conn->prepare("SELECT status FROM users WHERE id = ? AND role = 'admin'");
-                $stmt->execute([$id]);
-                $admin = $stmt->fetch();
+            // Get current status
+            $stmt = $conn->prepare("SELECT status FROM gigs WHERE id = ?");
+            $stmt->execute([$id]);
+            $gig = $stmt->fetch();
+            
+            if ($gig) {
+                $newStatus = ($gig['status'] === 'active') ? 'inactive' : 'active';
                 
-                if ($admin) {
-                    $newStatus = ($admin['status'] === 'active') ? 'inactive' : 'active';
-                    $stmt = $conn->prepare("UPDATE users SET status = ? WHERE id = ?");
-                    $stmt->execute([$newStatus, $id]);
-                    $success = "Admin status updated successfully.";
-                }
+                // Log admin edit activity for status change
+                $oldValues = ['status' => $gig['status']];
+                $newValues = ['status' => $newStatus];
+                logAdminEdit($_SESSION['user_id'], 'gig', $id, $oldValues, $newValues, 'Admin changed gig status');
+                
+                $stmt = $conn->prepare("UPDATE gigs SET status = ? WHERE id = ?");
+                $stmt->execute([$newStatus, $id]);
+                $success = "Gig status updated successfully.";
             }
         } catch (PDOException $e) {
-            error_log("Update admin status error: " . $e->getMessage());
-            $error = "Error updating admin status.";
+            error_log("Update gig status error: " . $e->getMessage());
+            $error = "Error updating gig status.";
         }
     }
 }
 
-// Handle admin deletion
+// Handle gig deletion
 if (isset($_GET['delete'])) {
     $id = validateInteger($_GET['delete']);
     
     if ($id) {
         try {
-            // Don't allow deleting yourself
-            if ($id == $_SESSION['user_id']) {
-                $error = "You cannot delete your own account.";
-            } else {
-                // Check if admin exists
-                $stmt = $conn->prepare("SELECT username FROM users WHERE id = ? AND role = 'admin'");
-                $stmt->execute([$id]);
-                $adminToDelete = $stmt->fetch();
+            // Get gig info
+            $stmt = $conn->prepare("SELECT title FROM gigs WHERE id = ?");
+            $stmt->execute([$id]);
+            $gigToDelete = $stmt->fetch();
+            
+            if ($gigToDelete) {
+                // Get old values for logging
+                $oldStmt = $conn->prepare("SELECT title, description, price, status FROM gigs WHERE id = ?");
+                $oldStmt->execute([$id]);
+                $oldValues = $oldStmt->fetch();
                 
-                if ($adminToDelete) {
-                    // Delete the admin
-                    $stmt = $conn->prepare("DELETE FROM users WHERE id = ?");
-                    $stmt->execute([$id]);
-                    $success = "Admin '" . htmlspecialchars($adminToDelete['username']) . "' deleted successfully.";
-                } else {
-                    $error = "Admin not found.";
-                }
+                // Delete the gig
+                $stmt = $conn->prepare("DELETE FROM gigs WHERE id = ?");
+                $stmt->execute([$id]);
+                
+                // Log admin delete activity
+                logAdminDelete($_SESSION['user_id'], 'gig', $id, $oldValues, 'Admin deleted gig');
+                
+                $success = "Gig '" . htmlspecialchars($gigToDelete['title']) . "' deleted successfully.";
+            } else {
+                $error = "Gig not found.";
             }
         } catch (PDOException $e) {
-            error_log("Delete admin error: " . $e->getMessage());
-            $error = "Error deleting admin.";
+            error_log("Delete gig error: " . $e->getMessage());
+            $error = "Error deleting gig. The gig may have associated data.";
         }
     }
 }
 
 // Build query with filters
-$admins = [];
-$totalAdmins = 0;
+$gigs = [];
+$totalGigs = 0;
 $totalPages = 1;
 
 try {
     // Base query
-    $query = "SELECT id, username, first_name, last_name, email, status, created_at FROM users WHERE role = 'admin'";
-    $countQuery = "SELECT COUNT(*) FROM users WHERE role = 'admin'";
+    $query = "SELECT g.id, g.title, g.description, g.price, g.status, g.created_at, g.avg_rating, g.reviews_count,
+                     g.freelancer_id, g.category_id,
+                     u.username as freelancer_username, u.first_name, u.last_name, c.name as category_name
+              FROM gigs g
+              JOIN users u ON g.freelancer_id = u.id
+              JOIN categories c ON g.category_id = c.id";
+    $countQuery = "SELECT COUNT(*) FROM gigs g JOIN users u ON g.freelancer_id = u.id JOIN categories c ON g.category_id = c.id";
     
     // Add filters
     $params = [];
     $whereClause = "";
     
     if (!empty($search)) {
-        $whereClause .= (!empty($whereClause) ? " AND " : " AND ") . "(username LIKE ? OR first_name LIKE ? OR last_name LIKE ? OR email LIKE ?)";
+        $whereClause .= (!empty($whereClause) ? " AND " : "") . "(g.title LIKE ? OR g.description LIKE ?)";
         $searchParam = "%$search%";
-        $params = array_merge($params, [$searchParam, $searchParam, $searchParam, $searchParam]);
+        $params = array_merge($params, [$searchParam, $searchParam]);
+    }
+    
+    if (!empty($categoryFilter)) {
+        $whereClause .= (!empty($whereClause) ? " AND " : "") . "g.category_id = ?";
+        $params[] = $categoryFilter;
     }
     
     if (!empty($statusFilter)) {
-        $whereClause .= (!empty($whereClause) ? " AND " : " AND ") . "status = ?";
+        $whereClause .= (!empty($whereClause) ? " AND " : "") . "g.status = ?";
         $params[] = $statusFilter;
     }
     
+    if (!empty($freelancerFilter)) {
+        $whereClause .= (!empty($whereClause) ? " AND " : "") . "g.freelancer_id = ?";
+        $params[] = $freelancerFilter;
+    }
+    
     if (!empty($whereClause)) {
-        $query .= $whereClause;
-        $countQuery .= $whereClause;
+        $query .= " WHERE " . $whereClause;
+        $countQuery .= " WHERE " . $whereClause;
     }
     
     // Add ordering
-    $query .= " ORDER BY created_at DESC LIMIT ? OFFSET ?";
-    $params[] = (int)$adminsPerPage;
+    $query .= " ORDER BY g.created_at DESC LIMIT ? OFFSET ?";
+    $params[] = (int)$gigsPerPage;
     $params[] = (int)$offset;
     
     // Get total count for pagination
     $countStmt = $conn->prepare($countQuery);
-    $countStmt->execute(array_slice($params, 0, count($params) - 2));
-    $totalAdmins = $countStmt->fetchColumn();
-    $totalPages = ceil($totalAdmins / $adminsPerPage);
+    $countStmt->execute(array_slice($params, 0, count($params) - 2)); // Remove LIMIT/OFFSET params
+    $totalGigs = $countStmt->fetchColumn();
+    $totalPages = ceil($totalGigs / $gigsPerPage);
     
-    // Get admins
+    // Get gigs
     $stmt = $conn->prepare($query);
     $stmt->execute($params);
-    $admins = $stmt->fetchAll();
+    $gigs = $stmt->fetchAll();
+    
+    // Get freelancers for dropdown
+    $freelancersStmt = $conn->query("SELECT id, username, first_name, last_name FROM users WHERE role = 'freelancer' AND status = 'active' ORDER BY username");
+    $freelancers = $freelancersStmt->fetchAll();
+    
+    // Get categories for dropdown
+    $categoriesStmt = $conn->query("SELECT id, name FROM categories WHERE status = 'active' ORDER BY name");
+    $categories = $categoriesStmt->fetchAll();
 } catch (PDOException $e) {
-    error_log("Fetch admins error: " . $e->getMessage());
-    $error = "Error fetching admins: " . $e->getMessage();
+    error_log("Fetch gigs error: " . $e->getMessage());
+    $error = "Error fetching gigs.";
+    $gigs = [];
+    $totalGigs = 0;
+    $freelancers = [];
+    $categories = [];
 }
 
 include '../includes/admin_header.php';
@@ -384,20 +401,20 @@ include '../includes/admin_header.php';
                 <div>
                     <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 flex items-center gap-3">
                         <div class="p-3 bg-purple-600 rounded-xl shadow-lg">
-                            <i class="ri-shield-user-line text-white text-2xl"></i>
+                            <i class="ri-stack-line text-white text-2xl"></i>
                         </div>
                         <span class="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                            Admin Management
+                            Gig Management
                         </span>
                     </h1>
                     <p class="mt-2 text-gray-600 text-sm sm:text-base flex items-center gap-2">
                         <i class="ri-information-line"></i>
-                        Manage and monitor all system administrators
+                        Manage and monitor all gig listings
                     </p>
                 </div>
                 <div class="flex items-center gap-3">
                     <span class="px-4 py-2 bg-white rounded-lg shadow-md border border-gray-200 text-sm font-semibold text-gray-700">
-                        <i class="ri-admin-line text-purple-600"></i> Total: <span class="text-purple-600"><?php echo $totalAdmins; ?></span>
+                        <i class="ri-stack-line text-purple-600"></i> Total: <span class="text-purple-600"><?php echo $totalGigs; ?></span>
                     </span>
                 </div>
             </div>
@@ -457,12 +474,12 @@ include '../includes/admin_header.php';
                 </div>
                 <div class="p-6">
                     <form method="GET" class="space-y-4">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                             <!-- Search Input -->
                             <div class="group">
                                 <label for="search" class="block mb-2 text-sm font-semibold text-gray-700 flex items-center gap-2">
                                     <i class="ri-search-line text-purple-600"></i>
-                                    Search Admins
+                                    Search Gigs
                                 </label>
                                 <div class="relative">
                                     <input 
@@ -470,9 +487,55 @@ include '../includes/admin_header.php';
                                         id="search" 
                                         name="search" 
                                         class="w-full pl-11 pr-4 py-3 border-2 border-gray-300 rounded-xl transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-purple-100 focus:border-purple-500 hover:border-purple-400" 
-                                        placeholder="Username, name, email..." 
+                                        placeholder="Title, description..." 
                                         value="<?php echo htmlspecialchars($search); ?>">
                                     <i class="ri-search-line absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                                </div>
+                            </div>
+                            
+                            <!-- Category Filter -->
+                            <div class="group">
+                                <label for="category" class="block mb-2 text-sm font-semibold text-gray-700 flex items-center gap-2">
+                                    <i class="ri-price-tag-3-line text-purple-600"></i>
+                                    Category
+                                </label>
+                                <div class="relative">
+                                    <select 
+                                        id="category" 
+                                        name="category" 
+                                        class="w-full pl-11 pr-4 py-3 border-2 border-gray-300 rounded-xl transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-purple-100 focus:border-purple-500 hover:border-purple-400 appearance-none bg-white cursor-pointer">
+                                        <option value="">All Categories</option>
+                                        <?php foreach ($categories as $category): ?>
+                                        <option value="<?php echo $category['id']; ?>" <?php echo $categoryFilter == $category['id'] ? 'selected' : ''; ?>>
+                                            <?php echo htmlspecialchars($category['name']); ?>
+                                        </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                    <i class="ri-price-tag-3-line absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                                    <i class="ri-arrow-down-s-line absolute right-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                                </div>
+                            </div>
+                            
+                            <!-- Freelancer Filter -->
+                            <div class="group">
+                                <label for="freelancer" class="block mb-2 text-sm font-semibold text-gray-700 flex items-center gap-2">
+                                    <i class="ri-user-line text-purple-600"></i>
+                                    Freelancer
+                                </label>
+                                <div class="relative">
+                                    <select 
+                                        id="freelancer" 
+                                        name="freelancer" 
+                                        class="w-full pl-11 pr-4 py-3 border-2 border-gray-300 rounded-xl transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-purple-100 focus:border-purple-500 hover:border-purple-400 appearance-none bg-white cursor-pointer">
+                                        <option value="">All Freelancers</option>
+                                        <?php foreach ($freelancers as $freelancer): ?>
+                                        <option value="<?php echo $freelancer['id']; ?>" <?php echo $freelancerFilter == $freelancer['id'] ? 'selected' : ''; ?>>
+                                            <?php echo htmlspecialchars($freelancer['first_name'] . ' ' . $freelancer['last_name'] . ' (@' . $freelancer['username'] . ')'); ?>
+                                        </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                    <i class="ri-user-line absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                                    <i class="ri-arrow-down-s-line absolute right-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
                                 </div>
                             </div>
                             
@@ -480,7 +543,7 @@ include '../includes/admin_header.php';
                             <div class="group">
                                 <label for="status" class="block mb-2 text-sm font-semibold text-gray-700 flex items-center gap-2">
                                     <i class="ri-toggle-line text-purple-600"></i>
-                                    Account Status
+                                    Gig Status
                                 </label>
                                 <div class="relative">
                                     <select 
@@ -505,7 +568,7 @@ include '../includes/admin_header.php';
                                 <span>Apply Filters</span>
                             </button>
                             <a 
-                                href="manage_admins.php" 
+                                href="manage_gigs.php" 
                                 class="btn-ripple flex-1 sm:flex-none px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white rounded-xl transition-all duration-300 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 font-semibold">
                                 <i class="ri-refresh-line text-lg"></i>
                                 <span>Reset</span>
@@ -516,25 +579,25 @@ include '../includes/admin_header.php';
             </div>
         </div>
         
-        <!-- Admins Table Card -->
+        <!-- Gigs Table Card -->
         <div class="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden animate-fade-in">
             <!-- Card Header -->
             <div class="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-5 border-b border-gray-200">
                 <div class="flex flex-wrap justify-between items-center gap-4">
                     <div class="flex items-center gap-3">
                         <div class="p-2 bg-purple-100 rounded-lg">
-                            <i class="ri-shield-user-line text-purple-600 text-xl"></i>
+                            <i class="ri-stack-line text-purple-600 text-xl"></i>
                         </div>
                         <div>
-                            <h3 class="text-xl font-bold text-gray-900">All Administrators</h3>
-                            <p class="text-sm text-gray-600"><?php echo $totalAdmins; ?> total admins found</p>
+                            <h3 class="text-xl font-bold text-gray-900">All Gigs</h3>
+                            <p class="text-sm text-gray-600"><?php echo $totalGigs; ?> total gigs found</p>
                         </div>
                     </div>
                     <button 
-                        id="addAdminBtn" 
-                        class="btn-ripple px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-xl transition-all duration-300 flex items-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 font-semibold">
-                        <i class="ri-user-add-line text-lg"></i>
-                        <span>Add New Admin</span>
+                        id="addGigBtn" 
+                        class="btn-ripple px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl transition-all duration-300 flex items-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 font-semibold">
+                        <i class="ri-add-line text-lg"></i>
+                        <span>Add New Gig</span>
                     </button>
                 </div>
             </div>
@@ -545,95 +608,102 @@ include '../includes/admin_header.php';
                     <thead class="bg-gray-50 border-b border-gray-200">
                         <tr>
                             <th class="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">ID</th>
-                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Admin</th>
-                            <th class="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">Email</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Title</th>
+                            <th class="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">Freelancer</th>
+                            <th class="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">Category</th>
+                            <th class="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">Price</th>
+                            <th class="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">Rating</th>
                             <th class="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">Status</th>
-                            <th class="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">Created</th>
                             <th class="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">Actions</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
-                        <?php if (empty($admins)): ?>
+                        <?php if (empty($gigs)): ?>
                         <tr>
-                            <td colspan="6" class="px-6 py-16 text-center">
+                            <td colspan="8" class="px-6 py-16 text-center">
                                 <div class="flex flex-col items-center justify-center">
                                     <div class="mb-4 p-4 bg-gray-100 rounded-full">
-                                        <i class="ri-shield-user-line text-6xl text-gray-400"></i>
+                                        <i class="ri-stack-line text-6xl text-gray-400"></i>
                                     </div>
-                                    <h4 class="text-xl font-bold text-gray-700 mb-2">No Admins Found</h4>
-                                    <p class="text-gray-500 text-sm">Try adjusting your filters or search terms</p>
+                                    <h4 class="text-xl font-bold text-gray-700 mb-2">No Gigs Found</h4>
+                                    <p class="text-gray-500 text-sm">Start by adding your first gig</p>
                                 </div>
                             </td>
                         </tr>
                         <?php else: ?>
-                        <?php foreach ($admins as $admin): ?>
+                        <?php foreach ($gigs as $gig): ?>
                         <tr class="table-row-hover">
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="text-sm font-bold text-gray-900">#<?php echo htmlspecialchars($admin['id']); ?></span>
+                                <span class="text-sm font-bold text-gray-900">#<?php echo htmlspecialchars($gig['id']); ?></span>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="flex items-center">
-                                    <div class="flex-shrink-0 h-10 w-10">
-                                        <div class="h-10 w-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center text-white font-bold shadow-lg">
-                                            <?php echo strtoupper(substr($admin['first_name'], 0, 1) . substr($admin['last_name'], 0, 1)); ?>
-                                        </div>
-                                    </div>
-                                    <div class="ml-4">
-                                        <div class="text-sm font-semibold text-gray-900">
-                                            <?php echo htmlspecialchars($admin['first_name'] . ' ' . $admin['last_name']); ?>
-                                        </div>
-                                        <div class="text-xs text-gray-500 flex items-center gap-1">
-                                            <i class="ri-at-line"></i>
-                                            <?php echo htmlspecialchars($admin['username']); ?>
-                                        </div>
-                                    </div>
+                            <td class="px-6 py-4">
+                                <div class="text-sm font-semibold text-gray-900 max-w-xs truncate">
+                                    <?php echo htmlspecialchars($gig['title']); ?>
+                                </div>
+                                <div class="text-xs text-gray-500 mt-1">
+                                    <i class="ri-calendar-line"></i>
+                                    <?php echo date('M j, Y', strtotime($gig['created_at'])); ?>
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-center">
-                                <div class="text-sm text-gray-900 flex items-center gap-2 text-center justify-center">
-                                    <i class="ri-mail-line text-gray-400"></i>
-                                    <?php echo htmlspecialchars($admin['email']); ?>
+                                <div class="text-sm text-gray-900 font-medium">
+                                    <?php echo htmlspecialchars($gig['first_name'] . ' ' . $gig['last_name']); ?>
                                 </div>
+                                <div class="text-xs text-gray-500">@<?php echo htmlspecialchars($gig['freelancer_username']); ?></div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-center">
+                                <span class="px-3 py-1.5 bg-blue-100 text-blue-800 border border-blue-200 rounded-full text-xs font-bold shadow-sm">
+                                    <?php echo htmlspecialchars($gig['category_name']); ?>
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-center">
+                                <span class="text-sm font-bold text-purple-600">
+                                    $<?php echo number_format($gig['price'], 2); ?>
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-center">
+                                <div class="flex items-center justify-center gap-1">
+                                    <i class="ri-star-fill text-yellow-500"></i>
+                                    <span class="text-sm font-semibold text-gray-900">
+                                        <?php echo $gig['avg_rating'] ? number_format($gig['avg_rating'], 1) : 'N/A'; ?>
+                                    </span>
+                                </div>
+                                <div class="text-xs text-gray-500"><?php echo htmlspecialchars($gig['reviews_count'] ?? 0); ?> reviews</div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-center">
                                 <span class="<?php 
-                                    echo $admin['status'] === 'active' 
+                                    echo $gig['status'] === 'active' 
                                         ? 'bg-green-100 text-green-800 border border-green-200' 
                                         : 'bg-red-100 text-red-800 border border-red-200';
-                                ?> px-3 py-1.5 rounded-full text-xs font-bold inline-flex items-center gap-1.5 capitalize shadow-sm">
-                                    <?php echo $admin['status'] === 'active' ? '✅ Active' : '❌ Inactive'; ?>
+                                ?> px-3 py-1.5 rounded-full text-xs font-bold shadow-sm">
+                                    <?php echo $gig['status'] === 'active' ? '✅ Active' : '❌ Inactive'; ?>
                                 </span>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 text-center">
-                                <div class="flex items-center gap-1 text-center justify-center">
-                                    <i class="ri-calendar-line text-gray-400"></i>
-                                    <?php echo date('M j, Y', strtotime($admin['created_at'])); ?>
-                                </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-center">
                                 <div class="flex items-center justify-center gap-2 flex-wrap">
                                     <button 
-                                        onclick="editAdmin(<?php echo $admin['id']; ?>, '<?php echo htmlspecialchars($admin['username'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($admin['first_name'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($admin['last_name'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($admin['email'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($admin['status']); ?>')"
+                                        onclick='editGig(<?php echo json_encode([
+                                            "id" => $gig["id"],
+                                            "title" => $gig["title"],
+                                            "description" => $gig["description"],
+                                            "category_id" => $gig["category_id"],
+                                            "price" => $gig["price"],
+                                            "status" => $gig["status"]
+                                        ]); ?>)'
                                         class="p-2 bg-indigo-50 hover:bg-indigo-600 text-indigo-700 hover:text-white border border-indigo-200 hover:border-indigo-600 rounded-lg transition-all duration-200 transform hover:scale-110 shadow-sm hover:shadow-md"
-                                        title="Edit Admin">
+                                        title="Edit Gig">
                                         <i class="ri-edit-line text-sm"></i>
                                     </button>
                                     <button 
-                                        onclick="changePassword(<?php echo $admin['id']; ?>)"
-                                        class="p-2 bg-yellow-50 hover:bg-yellow-600 text-yellow-700 hover:text-white border border-yellow-200 hover:border-yellow-600 rounded-lg transition-all duration-200 transform hover:scale-110 shadow-sm hover:shadow-md"
-                                        title="Change Password">
-                                        <i class="ri-lock-password-line text-sm"></i>
-                                    </button>
-                                    <button 
-                                        onclick="confirmToggleStatus(<?php echo $admin['id']; ?>, '<?php echo $admin['status']; ?>', '<?php echo htmlspecialchars($admin['first_name'] . ' ' . $admin['last_name'], ENT_QUOTES); ?>')"
+                                        onclick="confirmToggleStatus(<?php echo $gig['id']; ?>, '<?php echo $gig['status']; ?>', '<?php echo htmlspecialchars($gig['title'], ENT_QUOTES); ?>')"
                                         class="p-2 bg-blue-50 hover:bg-blue-600 text-blue-700 hover:text-white border border-blue-200 hover:border-blue-600 rounded-lg transition-all duration-200 transform hover:scale-110 shadow-sm hover:shadow-md"
                                         title="Toggle Status">
                                         <i class="ri-toggle-line text-sm"></i>
                                     </button>
                                     <button 
-                                        onclick="confirmDelete(<?php echo $admin['id']; ?>, '<?php echo htmlspecialchars($admin['username'], ENT_QUOTES); ?>')"
+                                        onclick="confirmDelete(<?php echo $gig['id']; ?>, '<?php echo htmlspecialchars($gig['title'], ENT_QUOTES); ?>')"
                                         class="p-2 bg-red-50 hover:bg-red-600 text-red-700 hover:text-white border border-red-200 hover:border-red-600 rounded-lg transition-all duration-200 transform hover:scale-110 shadow-sm hover:shadow-md"
-                                        title="Delete Admin">
+                                        title="Delete Gig">
                                         <i class="ri-delete-bin-line text-sm"></i>
                                     </button>
                                 </div>
@@ -647,104 +717,113 @@ include '../includes/admin_header.php';
             
             <!-- Mobile Card View -->
             <div class="md:hidden p-4 space-y-4">
-                <?php if (empty($admins)): ?>
+                <?php if (empty($gigs)): ?>
                 <div class="text-center py-12">
                     <div class="flex flex-col items-center justify-center">
                         <div class="mb-4 p-4 bg-gray-100 rounded-full">
-                            <i class="ri-shield-user-line text-6xl text-gray-400"></i>
+                            <i class="ri-stack-line text-6xl text-gray-400"></i>
                         </div>
-                        <h4 class="text-xl font-bold text-gray-700 mb-2">No Admins Found</h4>
-                        <p class="text-gray-500 text-sm">Try adjusting your filters</p>
+                        <h4 class="text-xl font-bold text-gray-700 mb-2">No Gigs Found</h4>
+                        <p class="text-gray-500 text-sm">Start by adding your first gig</p>
                     </div>
                 </div>
                 <?php else: ?>
-                <?php foreach ($admins as $admin): ?>
+                <?php foreach ($gigs as $gig): ?>
                 <div class="card-hover bg-white rounded-xl border-2 border-gray-200 overflow-hidden shadow-lg">
                     <!-- Card Header -->
                     <div class="bg-gradient-to-r from-purple-50 to-pink-50 p-4 border-b border-gray-200">
                         <div class="flex items-start justify-between gap-3">
-                            <div class="flex items-center gap-3 flex-1">
-                                <div class="h-12 w-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center text-white font-bold shadow-lg flex-shrink-0">
-                                    <?php echo strtoupper(substr($admin['first_name'], 0, 1) . substr($admin['last_name'], 0, 1)); ?>
-                                </div>
-                                <div class="min-w-0">
-                                    <h4 class="font-bold text-gray-900 text-base truncate">
-                                        <?php echo htmlspecialchars($admin['first_name'] . ' ' . $admin['last_name']); ?>
-                                    </h4>
-                                    <p class="text-sm text-gray-600 flex items-center gap-1">
-                                        <i class="ri-at-line text-xs"></i>
-                                        <span class="truncate"><?php echo htmlspecialchars($admin['username']); ?></span>
-                                    </p>
-                                </div>
+                            <div class="flex-1 min-w-0">
+                                <h4 class="font-bold text-gray-900 text-base mb-1">
+                                    <?php echo htmlspecialchars($gig['title']); ?>
+                                </h4>
+                                <p class="text-sm text-gray-600">
+                                    <i class="ri-user-line text-xs"></i>
+                                    <?php echo htmlspecialchars($gig['first_name'] . ' ' . $gig['last_name']); ?>
+                                </p>
                             </div>
-                            <div class="flex flex-col gap-2 items-end flex-shrink-0">
-                                <span class="<?php 
-                                    echo $admin['status'] === 'active' 
-                                        ? 'bg-green-100 text-green-800 border border-green-200' 
-                                        : 'bg-red-100 text-red-800 border border-red-200';
-                                ?> px-2.5 py-1 rounded-full text-xs font-bold shadow-sm whitespace-nowrap">
-                                    <?php echo $admin['status'] === 'active' ? '✅' : '❌'; ?>
-                                    <?php echo htmlspecialchars($admin['status']); ?>
-                                </span>
-                            </div>
+                            <span class="<?php 
+                                echo $gig['status'] === 'active' 
+                                    ? 'bg-green-100 text-green-800 border border-green-200' 
+                                    : 'bg-red-100 text-red-800 border border-red-200';
+                            ?> px-2.5 py-1 rounded-full text-xs font-bold shadow-sm whitespace-nowrap">
+                                <?php echo $gig['status'] === 'active' ? '✅' : '❌'; ?>
+                            </span>
                         </div>
                     </div>
                     
                     <!-- Card Body -->
                     <div class="p-4 space-y-3">
                         <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                            <div class="p-2 bg-purple-100 rounded-lg">
-                                <i class="ri-mail-line text-purple-600"></i>
+                            <div class="p-2 bg-blue-100 rounded-lg">
+                                <i class="ri-price-tag-3-line text-blue-600"></i>
                             </div>
-                            <div class="flex-1 min-w-0">
-                                <p class="text-xs text-gray-500 font-semibold uppercase mb-0.5">Email</p>
-                                <p class="text-sm text-gray-900 font-medium truncate"><?php echo htmlspecialchars($admin['email']); ?></p>
+                            <div class="flex-1">
+                                <p class="text-xs text-gray-500 font-semibold uppercase mb-0.5">Category</p>
+                                <p class="text-sm text-gray-900 font-medium"><?php echo htmlspecialchars($gig['category_name']); ?></p>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                                <div class="p-2 bg-purple-100 rounded-lg">
+                                    <i class="ri-money-dollar-circle-line text-purple-600"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <p class="text-xs text-gray-500 font-semibold uppercase mb-0.5">Price</p>
+                                    <p class="text-sm text-purple-600 font-bold">$<?php echo number_format($gig['price'], 2); ?></p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                                <div class="p-2 bg-yellow-100 rounded-lg">
+                                    <i class="ri-star-fill text-yellow-600"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <p class="text-xs text-gray-500 font-semibold uppercase mb-0.5">Rating</p>
+                                    <p class="text-sm text-gray-900 font-bold">
+                                        <?php echo $gig['avg_rating'] ? number_format($gig['avg_rating'], 1) : 'N/A'; ?>
+                                        <span class="text-xs text-gray-500">(<?php echo $gig['reviews_count'] ?? 0; ?>)</span>
+                                    </p>
+                                </div>
                             </div>
                         </div>
                         
                         <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                            <div class="p-2 bg-pink-100 rounded-lg">
-                                <i class="ri-calendar-line text-pink-600"></i>
+                            <div class="p-2 bg-green-100 rounded-lg">
+                                <i class="ri-calendar-line text-green-600"></i>
                             </div>
                             <div class="flex-1">
                                 <p class="text-xs text-gray-500 font-semibold uppercase mb-0.5">Created</p>
-                                <p class="text-sm text-gray-900 font-medium"><?php echo date('M j, Y', strtotime($admin['created_at'])); ?></p>
-                            </div>
-                        </div>
-                        
-                        <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                            <div class="p-2 bg-blue-100 rounded-lg">
-                                <i class="ri-hashtag text-blue-600"></i>
-                            </div>
-                            <div class="flex-1">
-                                <p class="text-xs text-gray-500 font-semibold uppercase mb-0.5">Admin ID</p>
-                                <p class="text-sm text-gray-900 font-bold">#<?php echo htmlspecialchars($admin['id']); ?></p>
+                                <p class="text-sm text-gray-900 font-medium"><?php echo date('M j, Y', strtotime($gig['created_at'])); ?></p>
                             </div>
                         </div>
                     </div>
                     
                     <!-- Card Footer -->
                     <div class="p-4 bg-gray-50 border-t border-gray-200">
-                        <div class="grid grid-cols-2 gap-2">
+                        <div class="grid grid-cols-3 gap-2">
                             <button 
-                                onclick="editAdmin(<?php echo $admin['id']; ?>, '<?php echo htmlspecialchars($admin['username'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($admin['first_name'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($admin['last_name'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($admin['email'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($admin['status']); ?>')"
+                                onclick='editGig(<?php echo json_encode([
+                                    "id" => $gig["id"],
+                                    "title" => $gig["title"],
+                                    "description" => $gig["description"],
+                                    "category_id" => $gig["category_id"],
+                                    "price" => $gig["price"],
+                                    "status" => $gig["status"]
+                                ]); ?>)'
                                 class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-all duration-200 flex items-center justify-center gap-2 font-semibold text-sm shadow-md hover:shadow-lg">
                                 <i class="ri-edit-line"></i> Edit
                             </button>
                             <button 
-                                onclick="changePassword(<?php echo $admin['id']; ?>)"
-                                class="px-4 py-2.5 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg transition-all duration-200 flex items-center justify-center gap-2 font-semibold text-sm shadow-md hover:shadow-lg">
-                                <i class="ri-lock-password-line"></i> Password
-                            </button>
-                            <button 
-                                onclick="confirmToggleStatus(<?php echo $admin['id']; ?>, '<?php echo $admin['status']; ?>', '<?php echo htmlspecialchars($admin['first_name'] . ' ' . $admin['last_name'], ENT_QUOTES); ?>')"
+                                onclick="confirmToggleStatus(<?php echo $gig['id']; ?>, '<?php echo $gig['status']; ?>', '<?php echo htmlspecialchars($gig['title'], ENT_QUOTES); ?>')"
                                 class="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all duration-200 flex items-center justify-center gap-2 font-semibold text-sm shadow-md hover:shadow-lg">
-                                <i class="ri-toggle-line"></i> <?php echo $admin['status'] === 'active' ? 'Deactivate' : 'Activate'; ?>
+                                <i class="ri-toggle-line"></i>
                             </button>
                             <button 
-                                onclick="confirmDelete(<?php echo $admin['id']; ?>, '<?php echo htmlspecialchars($admin['username'], ENT_QUOTES); ?>')"
+                                onclick="confirmDelete(<?php echo $gig['id']; ?>, '<?php echo htmlspecialchars($gig['title'], ENT_QUOTES); ?>')"
                                 class="px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-all duration-200 flex items-center justify-center gap-2 font-semibold text-sm shadow-md hover:shadow-lg">
-                                <i class="ri-delete-bin-line"></i> Delete
+                                <i class="ri-delete-bin-line"></i>
                             </button>
                         </div>
                     </div>
@@ -819,19 +898,19 @@ include '../includes/admin_header.php';
     </div>
 </div>
 
-<!-- Add Admin Modal -->
-<div id="addAdminModal" class="hidden fixed inset-0 z-50 overflow-y-auto modal-backdrop" style="background-color: rgba(0, 0, 0, 0.75);">
+<!-- Add Gig Modal -->
+<div id="addGigModal" class="hidden fixed inset-0 z-50 overflow-y-auto modal-backdrop" style="background-color: rgba(0, 0, 0, 0.75);">
     <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0 mt-12">
-        <div class="fixed inset-0 transition-opacity" onclick="closeModal('addAdminModal')"></div>
+        <div class="fixed inset-0 transition-opacity" onclick="closeModal('addGigModal')"></div>
         
-        <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full animate-scale-in">
-            <div class="bg-gradient-to-r from-green-600 to-emerald-600 px-6 py-5">
+        <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full animate-scale-in">
+            <div class="bg-gradient-to-r from-purple-600 to-pink-600 px-6 py-5">
                 <div class="flex items-center justify-between">
                     <h3 class="text-xl font-bold text-white flex items-center gap-2">
-                        <i class="ri-user-add-line text-2xl"></i>
-                        Add New Admin
+                        <i class="ri-add-line text-2xl"></i>
+                        Add New Gig
                     </h3>
-                    <button onclick="closeModal('addAdminModal')" class="text-white hover:text-gray-200 transition-colors">
+                    <button onclick="closeModal('addGigModal')" class="text-white hover:text-gray-200 transition-colors">
                         <i class="ri-close-line text-2xl"></i>
                     </button>
                 </div>
@@ -842,90 +921,104 @@ include '../includes/admin_header.php';
                 
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                        <i class="ri-user-line text-purple-600"></i> Username
+                        <i class="ri-text text-purple-600"></i> Gig Title
                     </label>
                     <input 
                         type="text" 
-                        name="username" 
+                        name="title" 
                         required 
-                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-green-100 focus:border-green-500 transition-all duration-200" 
-                        placeholder="Enter username">
+                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-purple-100 focus:border-purple-500 transition-all duration-200" 
+                        placeholder="Enter gig title">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                        <i class="ri-file-text-line text-purple-600"></i> Description
+                    </label>
+                    <textarea 
+                        name="description" 
+                        required 
+                        rows="4"
+                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-purple-100 focus:border-purple-500 transition-all duration-200" 
+                        placeholder="Enter gig description"></textarea>
                 </div>
                 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                            <i class="ri-user-line text-purple-600"></i> First Name
+                            <i class="ri-user-line text-purple-600"></i> Freelancer
                         </label>
-                        <input 
-                            type="text" 
-                            name="first_name" 
+                        <select 
+                            name="freelancer_id" 
                             required 
-                            class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-green-100 focus:border-green-500 transition-all duration-200" 
-                            placeholder="First name">
+                            class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-purple-100 focus:border-purple-500 transition-all duration-200">
+                            <option value="">Select Freelancer</option>
+                            <?php foreach ($freelancers as $freelancer): ?>
+                            <option value="<?php echo $freelancer['id']; ?>">
+                                <?php echo htmlspecialchars($freelancer['first_name'] . ' ' . $freelancer['last_name'] . ' (@' . $freelancer['username'] . ')'); ?>
+                            </option>
+                            <?php endforeach; ?>
+                        </select>
                     </div>
                     
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                            <i class="ri-user-line text-purple-600"></i> Last Name
+                            <i class="ri-price-tag-3-line text-purple-600"></i> Category
                         </label>
-                        <input 
-                            type="text" 
-                            name="last_name" 
+                        <select 
+                            name="category_id" 
                             required 
-                            class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-green-100 focus:border-green-500 transition-all duration-200" 
-                            placeholder="Last name">
+                            class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-purple-100 focus:border-purple-500 transition-all duration-200">
+                            <option value="">Select Category</option>
+                            <?php foreach ($categories as $category): ?>
+                            <option value="<?php echo $category['id']; ?>">
+                                <?php echo htmlspecialchars($category['name']); ?>
+                            </option>
+                            <?php endforeach; ?>
+                        </select>
                     </div>
                 </div>
                 
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                        <i class="ri-mail-line text-purple-600"></i> Email
-                    </label>
-                    <input 
-                        type="email" 
-                        name="email" 
-                        required 
-                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-green-100 focus:border-green-500 transition-all duration-200" 
-                        placeholder="Enter email address">
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                        <i class="ri-lock-password-line text-purple-600"></i> Password
-                    </label>
-                    <input 
-                        type="password" 
-                        name="password" 
-                        required 
-                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-green-100 focus:border-green-500 transition-all duration-200" 
-                        placeholder="Enter password">
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                        <i class="ri-toggle-line text-purple-600"></i> Status
-                    </label>
-                    <select 
-                        name="status" 
-                        required 
-                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-green-100 focus:border-green-500 transition-all duration-200">
-                        <option value="active" selected>✅ Active</option>
-                        <option value="inactive">❌ Inactive</option>
-                    </select>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                            <i class="ri-money-dollar-circle-line text-purple-600"></i> Price ($)
+                        </label>
+                        <input 
+                            type="number" 
+                            name="price" 
+                            step="0.01" 
+                            min="0" 
+                            required 
+                            class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-purple-100 focus:border-purple-500 transition-all duration-200" 
+                            placeholder="0.00">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                            <i class="ri-toggle-line text-purple-600"></i> Status
+                        </label>
+                        <select 
+                            name="status" 
+                            required 
+                            class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-purple-100 focus:border-purple-500 transition-all duration-200">
+                            <option value="active" selected>✅ Active</option>
+                            <option value="inactive">❌ Inactive</option>
+                        </select>
+                    </div>
                 </div>
                 
                 <div class="flex gap-3 pt-4">
                     <button 
                         type="button" 
-                        onclick="closeModal('addAdminModal')" 
+                        onclick="closeModal('addGigModal')" 
                         class="flex-1 px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white rounded-xl transition-all duration-200 font-semibold shadow-lg hover:shadow-xl">
                         Cancel
                     </button>
                     <button 
                         type="submit" 
-                        class="flex-1 px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-xl transition-all duration-200 font-semibold shadow-lg hover:shadow-xl">
-                        Add Admin
+                        class="flex-1 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl transition-all duration-200 font-semibold shadow-lg hover:shadow-xl">
+                        Add Gig
                     </button>
                 </div>
             </form>
@@ -933,19 +1026,19 @@ include '../includes/admin_header.php';
     </div>
 </div>
 
-<!-- Edit Admin Modal -->
-<div id="editAdminModal" class="hidden fixed inset-0 z-50 overflow-y-auto modal-backdrop" style="background-color: rgba(0, 0, 0, 0.75);">
+<!-- Edit Gig Modal -->
+<div id="editGigModal" class="hidden fixed inset-0 z-50 overflow-y-auto modal-backdrop" style="background-color: rgba(0, 0, 0, 0.75);">
     <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0 mt-12">
-        <div class="fixed inset-0 transition-opacity" onclick="closeModal('editAdminModal')"></div>
+        <div class="fixed inset-0 transition-opacity" onclick="closeModal('editGigModal')"></div>
         
-        <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full animate-scale-in">
-            <div class="bg-gradient-to-r from-purple-600 to-pink-600 px-6 py-5">
+        <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full animate-scale-in">
+            <div class="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-5">
                 <div class="flex items-center justify-between">
                     <h3 class="text-xl font-bold text-white flex items-center gap-2">
                         <i class="ri-edit-line text-2xl"></i>
-                        Edit Admin
+                        Edit Gig
                     </h3>
-                    <button onclick="closeModal('editAdminModal')" class="text-white hover:text-gray-200 transition-colors">
+                    <button onclick="closeModal('editGigModal')" class="text-white hover:text-gray-200 transition-colors">
                         <i class="ri-close-line text-2xl"></i>
                     </button>
                 </div>
@@ -957,63 +1050,71 @@ include '../includes/admin_header.php';
                 
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                        <i class="ri-user-line text-purple-600"></i> Username
+                        <i class="ri-text text-indigo-600"></i> Gig Title
                     </label>
                     <input 
                         type="text" 
-                        id="edit_username" 
-                        name="username" 
+                        id="edit_title" 
+                        name="title" 
                         required 
-                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-purple-100 focus:border-purple-500 transition-all duration-200">
+                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 transition-all duration-200">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                        <i class="ri-file-text-line text-indigo-600"></i> Description
+                    </label>
+                    <textarea 
+                        id="edit_description" 
+                        name="description" 
+                        required 
+                        rows="4"
+                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 transition-all duration-200"></textarea>
                 </div>
                 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                            <i class="ri-user-line text-purple-600"></i> First Name
+                            <i class="ri-price-tag-3-line text-indigo-600"></i> Category
                         </label>
-                        <input 
-                            type="text" 
-                            id="edit_first_name" 
-                            name="first_name" 
+                        <select 
+                            id="edit_category_id" 
+                            name="category_id" 
                             required 
-                            class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-purple-100 focus:border-purple-500 transition-all duration-200">
+                            class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 transition-all duration-200">
+                            <option value="">Select Category</option>
+                            <?php foreach ($categories as $category): ?>
+                            <option value="<?php echo $category['id']; ?>">
+                                <?php echo htmlspecialchars($category['name']); ?>
+                            </option>
+                            <?php endforeach; ?>
+                        </select>
                     </div>
                     
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                            <i class="ri-user-line text-purple-600"></i> Last Name
+                            <i class="ri-money-dollar-circle-line text-indigo-600"></i> Price ($)
                         </label>
                         <input 
-                            type="text" 
-                            id="edit_last_name" 
-                            name="last_name" 
+                            type="number" 
+                            id="edit_price" 
+                            name="price" 
+                            step="0.01" 
+                            min="0" 
                             required 
-                            class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-purple-100 focus:border-purple-500 transition-all duration-200">
+                            class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 transition-all duration-200">
                     </div>
                 </div>
                 
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                        <i class="ri-mail-line text-purple-600"></i> Email
-                    </label>
-                    <input 
-                        type="email" 
-                        id="edit_email" 
-                        name="email" 
-                        required 
-                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-purple-100 focus:border-purple-500 transition-all duration-200">
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                        <i class="ri-toggle-line text-purple-600"></i> Status
+                        <i class="ri-toggle-line text-indigo-600"></i> Status
                     </label>
                     <select 
                         id="edit_status" 
                         name="status" 
                         required 
-                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-purple-100 focus:border-purple-500 transition-all duration-200">
+                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 transition-all duration-200">
                         <option value="active">✅ Active</option>
                         <option value="inactive">❌ Inactive</option>
                     </select>
@@ -1022,84 +1123,14 @@ include '../includes/admin_header.php';
                 <div class="flex gap-3 pt-4">
                     <button 
                         type="button" 
-                        onclick="closeModal('editAdminModal')" 
+                        onclick="closeModal('editGigModal')" 
                         class="flex-1 px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white rounded-xl transition-all duration-200 font-semibold shadow-lg hover:shadow-xl">
                         Cancel
                     </button>
                     <button 
                         type="submit" 
-                        class="flex-1 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl transition-all duration-200 font-semibold shadow-lg hover:shadow-xl">
-                        Update Admin
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Change Password Modal -->
-<div id="changePasswordModal" class="hidden fixed inset-0 z-50 overflow-y-auto modal-backdrop" style="background-color: rgba(0, 0, 0, 0.75);">
-    <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0 mt-14">
-        <div class="fixed inset-0 transition-opacity" onclick="closeModal('changePasswordModal')"></div>
-        
-        <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full animate-scale-in">
-            <div class="bg-gradient-to-r from-yellow-600 to-orange-600 px-6 py-5">
-                <div class="flex items-center justify-between">
-                    <h3 class="text-xl font-bold text-white flex items-center gap-2">
-                        <i class="ri-lock-password-line text-2xl"></i>
-                        Change Password
-                    </h3>
-                    <button onclick="closeModal('changePasswordModal')" class="text-white hover:text-gray-200 transition-colors">
-                        <i class="ri-close-line text-2xl"></i>
-                    </button>
-                </div>
-            </div>
-            
-            <form method="POST" class="p-6 space-y-5">
-                <input type="hidden" name="action" value="change_password">
-                <input type="hidden" id="password_id" name="id">
-                
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                        <i class="ri-lock-line text-yellow-600"></i> New Password
-                    </label>
-                    <input 
-                        type="password" 
-                        id="password" 
-                        name="password" 
-                        required 
-                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-yellow-100 focus:border-yellow-500 transition-all duration-200" 
-                        placeholder="Enter new password">
-                    <p class="mt-2 text-xs text-gray-500 flex items-center gap-1">
-                        <i class="ri-information-line"></i>
-                        Password must be at least 6 characters long
-                    </p>
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                        <i class="ri-lock-line text-yellow-600"></i> Confirm Password
-                    </label>
-                    <input 
-                        type="password" 
-                        id="confirm_password" 
-                        name="confirm_password" 
-                        required 
-                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-yellow-100 focus:border-yellow-500 transition-all duration-200" 
-                        placeholder="Confirm new password">
-                </div>
-                
-                <div class="flex gap-3 pt-4">
-                    <button 
-                        type="button" 
-                        onclick="closeModal('changePasswordModal')" 
-                        class="flex-1 px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white rounded-xl transition-all duration-200 font-semibold shadow-lg hover:shadow-xl">
-                        Cancel
-                    </button>
-                    <button 
-                        type="submit" 
-                        class="flex-1 px-6 py-3 bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-700 hover:to-orange-700 text-white rounded-xl transition-all duration-200 font-semibold shadow-lg hover:shadow-xl">
-                        Change Password
+                        class="flex-1 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-xl transition-all duration-200 font-semibold shadow-lg hover:shadow-xl">
+                        Update Gig
                     </button>
                 </div>
             </form>
@@ -1118,7 +1149,7 @@ include '../includes/admin_header.php';
                     <div class="p-3 bg-white/20 rounded-xl">
                         <i class="ri-toggle-line text-white text-3xl"></i>
                     </div>
-                    <h3 class="text-xl font-bold text-white">Toggle Admin Status</h3>
+                    <h3 class="text-xl font-bold text-white">Toggle Gig Status</h3>
                 </div>
             </div>
             
@@ -1161,7 +1192,7 @@ include '../includes/admin_header.php';
                     <div class="p-3 bg-white/20 rounded-xl">
                         <i class="ri-delete-bin-line text-white text-3xl"></i>
                     </div>
-                    <h3 class="text-xl font-bold text-white">Delete Admin</h3>
+                    <h3 class="text-xl font-bold text-white">Delete Gig</h3>
                 </div>
             </div>
             
@@ -1177,7 +1208,7 @@ include '../includes/admin_header.php';
                             <i class="ri-error-warning-line text-red-600 text-xl mr-3 flex-shrink-0 mt-0.5"></i>
                             <div class="text-left">
                                 <p class="text-sm font-semibold text-red-800">Warning: This action cannot be undone!</p>
-                                <p class="text-xs text-red-700 mt-1">All admin data will be permanently deleted from the system.</p>
+                                <p class="text-xs text-red-700 mt-1">All gig data will be permanently deleted from the system.</p>
                             </div>
                         </div>
                     </div>
@@ -1194,7 +1225,7 @@ include '../includes/admin_header.php';
                         id="confirmDeleteBtn" 
                         href="#"
                         class="flex-1 px-6 py-3 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white rounded-xl transition-all duration-200 font-semibold shadow-lg hover:shadow-xl text-center">
-                        Delete Admin
+                        Delete Gig
                     </a>
                 </div>
             </div>
@@ -1214,66 +1245,36 @@ function openModal(modalId) {
     document.body.style.overflow = 'hidden';
 }
 
-// Edit Admin Function
-function editAdmin(id, username, firstName, lastName, email, status) {
-    document.getElementById('edit_id').value = id;
-    document.getElementById('edit_username').value = username;
-    document.getElementById('edit_first_name').value = firstName;
-    document.getElementById('edit_last_name').value = lastName;
-    document.getElementById('edit_email').value = email;
-    document.getElementById('edit_status').value = status;
-    openModal('editAdminModal');
-}
-
-// Change Password Function
-function changePassword(id) {
-    document.getElementById('password_id').value = id;
-    document.getElementById('password').value = '';
-    document.getElementById('confirm_password').value = '';
-    openModal('changePasswordModal');
-}
-
 // Confirm Toggle Status
-function confirmToggleStatus(adminId, currentStatus, adminName) {
+function confirmToggleStatus(gigId, currentStatus, gigTitle) {
     const action = currentStatus === 'active' ? 'deactivate' : 'activate';
     const actionText = currentStatus === 'active' ? 'Deactivate' : 'Activate';
     
-    document.getElementById('toggleModalTitle').textContent = `${actionText} ${adminName}?`;
-    document.getElementById('toggleModalMessage').textContent = `Are you sure you want to ${action} this administrator account?`;
-    
-    const urlParams = new URLSearchParams(window.location.search);
-    const queryString = urlParams.toString();
-    const url = `?toggle_status=${adminId}${queryString ? '&' + queryString : ''}`;
-    
-    document.getElementById('confirmToggleBtn').href = url;
+    document.getElementById('toggleModalTitle').textContent = `${actionText} "${gigTitle}"?`;
+    document.getElementById('toggleModalMessage').textContent = `Are you sure you want to ${action} this gig?`;
+    document.getElementById('confirmToggleBtn').href = `?toggle_status=${gigId}`;
     openModal('confirmToggleModal');
 }
 
 // Confirm Delete
-function confirmDelete(adminId, username) {
-    document.getElementById('deleteModalMessage').textContent = `You are about to delete the admin "${username}".`;
-    
-    const urlParams = new URLSearchParams(window.location.search);
-    const queryString = urlParams.toString();
-    const url = `?delete=${adminId}${queryString ? '&' + queryString : ''}`;
-    
-    document.getElementById('confirmDeleteBtn').href = url;
+function confirmDelete(gigId, gigTitle) {
+    document.getElementById('deleteModalMessage').textContent = `You are about to delete the gig "${gigTitle}".`;
+    document.getElementById('confirmDeleteBtn').href = `?delete=${gigId}`;
     openModal('confirmDeleteModal');
 }
 
 // Event Listeners
 document.addEventListener('DOMContentLoaded', function() {
-    // Add Admin Button
-    document.getElementById('addAdminBtn')?.addEventListener('click', function() {
-        openModal('addAdminModal');
+    // Add Gig Button
+    document.getElementById('addGigBtn')?.addEventListener('click', function() {
+        openModal('addGigModal');
     });
     
     // Close on Escape Key
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
-            closeModal('addAdminModal');
-            closeModal('editAdminModal');
-            closeModal('changePasswordModal');
+            closeModal('addGigModal');
+            closeModal('editGigModal');
             closeModal('confirmToggleModal');
             closeModal('confirmDeleteModal');
         }
@@ -1289,6 +1290,17 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 5000);
     });
 });
+
+// Edit Gig Function
+function editGig(gigData) {
+    document.getElementById('edit_id').value = gigData.id;
+    document.getElementById('edit_title').value = gigData.title;
+    document.getElementById('edit_description').value = gigData.description;
+    document.getElementById('edit_category_id').value = gigData.category_id;
+    document.getElementById('edit_price').value = gigData.price;
+    document.getElementById('edit_status').value = gigData.status;
+    openModal('editGigModal');
+}
 </script>
 
 <?php include '../includes/admin_footer.php'; ?>
