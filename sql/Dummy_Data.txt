@@ -10,37 +10,104 @@ SET AUTOCOMMIT = 0;
 START TRANSACTION;
 
 -- ============================================================
--- 1. INSERT USERS (Admin, Freelancers, Clients)
+-- 0. CLEAN EXISTING DATA (Enables Safe Re-execution Without Duplicate Key Errors)
+-- ============================================================
+
+DELETE FROM admin_logs;
+DELETE FROM activity_log;
+DELETE FROM promo_codes;
+DELETE FROM support_responses;
+DELETE FROM support_tickets;
+DELETE FROM portfolio;
+DELETE FROM favorites;
+DELETE FROM notifications;
+DELETE FROM messages;
+DELETE FROM conversations;
+DELETE FROM reviews;
+DELETE FROM withdrawal_requests;
+DELETE FROM transactions;
+DELETE FROM order_status_history;
+DELETE FROM order_deliverables;
+DELETE FROM projects;
+DELETE FROM job_requests;
+DELETE FROM orders;
+DELETE FROM wallets;
+DELETE FROM gig_requirements;
+DELETE FROM gig_faqs;
+DELETE FROM gig_packages;
+DELETE FROM gigs;
+DELETE FROM freelancer_skills;
+DELETE FROM skills;
+DELETE FROM categories;
+DELETE FROM freelancers;
+DELETE FROM client_profiles;
+DELETE FROM freelancer_profiles;
+DELETE FROM users;
+
+-- Reset Auto-Increment Counters
+ALTER TABLE admin_logs AUTO_INCREMENT = 1;
+ALTER TABLE activity_log AUTO_INCREMENT = 1;
+ALTER TABLE promo_codes AUTO_INCREMENT = 1;
+ALTER TABLE support_responses AUTO_INCREMENT = 1;
+ALTER TABLE support_tickets AUTO_INCREMENT = 1;
+ALTER TABLE portfolio AUTO_INCREMENT = 1;
+ALTER TABLE favorites AUTO_INCREMENT = 1;
+ALTER TABLE notifications AUTO_INCREMENT = 1;
+ALTER TABLE messages AUTO_INCREMENT = 1;
+ALTER TABLE conversations AUTO_INCREMENT = 1;
+ALTER TABLE reviews AUTO_INCREMENT = 1;
+ALTER TABLE withdrawal_requests AUTO_INCREMENT = 1;
+ALTER TABLE transactions AUTO_INCREMENT = 1;
+ALTER TABLE order_status_history AUTO_INCREMENT = 1;
+ALTER TABLE order_deliverables AUTO_INCREMENT = 1;
+ALTER TABLE projects AUTO_INCREMENT = 1;
+ALTER TABLE job_requests AUTO_INCREMENT = 1;
+ALTER TABLE orders AUTO_INCREMENT = 1;
+ALTER TABLE wallets AUTO_INCREMENT = 1;
+ALTER TABLE gig_requirements AUTO_INCREMENT = 1;
+ALTER TABLE gig_faqs AUTO_INCREMENT = 1;
+ALTER TABLE gig_packages AUTO_INCREMENT = 1;
+ALTER TABLE gigs AUTO_INCREMENT = 1;
+ALTER TABLE freelancer_skills AUTO_INCREMENT = 1;
+ALTER TABLE skills AUTO_INCREMENT = 1;
+ALTER TABLE categories AUTO_INCREMENT = 1;
+ALTER TABLE freelancers AUTO_INCREMENT = 1;
+ALTER TABLE client_profiles AUTO_INCREMENT = 1;
+ALTER TABLE freelancer_profiles AUTO_INCREMENT = 1;
+ALTER TABLE users AUTO_INCREMENT = 1;
+
+-- ============================================================
+-- 1. INSERT USERS (Admin, Freelancers, Clients - All Passwords: '123')
 -- ============================================================
 
 INSERT INTO users (id, username, password, role, first_name, last_name, email, phone, profile_picture, bio, country, city, address, postal_code, status, email_verified, last_login, last_activity, created_at) VALUES
 -- Admin Users
-(1, 'admin', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin', 'John', 'Admin', 'admin@freelancerhub.com', '+1234567890', 'admin.jpg', 'System Administrator', 'USA', 'New York', '123 Admin Street', '10001', 'active', 1, NOW(), NOW(), '2023-01-01 10:00:00'),
-(2, 'admin2', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin', 'Sarah', 'Manager', 'manager@freelancerhub.com', '+1234567891', 'admin2.jpg', 'Platform Manager', 'USA', 'Los Angeles', '456 Manager Ave', '90001', 'active', 1, NOW(), NOW(), '2023-01-02 10:00:00'),
+(1, 'admin', '$2y$10$TllQCRSeSJ2vZghTIg/OOeKUzqiCHL5ZgFdet8gs6BdV05/8yqJOG', 'admin', 'John', 'Admin', 'admin@freelancerhub.com', '+1234567890', 'admin.jpg', 'System Administrator', 'USA', 'New York', '123 Admin Street', '10001', 'active', 1, NOW(), NOW(), '2023-01-01 10:00:00'),
+(2, 'admin2', '$2y$10$TllQCRSeSJ2vZghTIg/OOeKUzqiCHL5ZgFdet8gs6BdV05/8yqJOG', 'admin', 'Sarah', 'Manager', 'manager@freelancerhub.com', '+1234567891', 'admin2.jpg', 'Platform Manager', 'USA', 'Los Angeles', '456 Manager Ave', '90001', 'active', 1, NOW(), NOW(), '2023-01-02 10:00:00'),
 
 -- Freelancers (IDs 3-12)
-(3, 'user1', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'freelancer', 'Alex', 'Johnson', 'alex.johnson@email.com', '+1234567892', 'freelancer1.jpg', 'Full-stack web developer with 5+ years of experience in React, Node.js, and cloud technologies.', 'USA', 'San Francisco', '789 Tech Street', '94102', 'active', 1, NOW(), NOW(), '2023-02-01 10:00:00'),
-(4, 'user2', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'freelancer', 'Maria', 'Garcia', 'maria.garcia@email.com', '+1234567893', 'freelancer2.jpg', 'Creative graphic designer specializing in branding, logos, and UI/UX design.', 'Spain', 'Barcelona', '123 Design Plaza', '08001', 'active', 1, NOW(), NOW(), '2023-02-05 10:00:00'),
-(5, 'user3', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'freelancer', 'James', 'Smith', 'james.smith@email.com', '+1234567894', 'freelancer3.jpg', 'SEO expert and content writer with proven track record of ranking websites on Google first page.', 'UK', 'London', '456 SEO Lane', 'SW1A 1AA', 'active', 1, NOW(), NOW(), '2023-02-10 10:00:00'),
-(6, 'user4', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'freelancer', 'Emily', 'Chen', 'emily.chen@email.com', '+1234567895', 'freelancer4.jpg', 'Mobile app developer specializing in iOS and Android native development.', 'Canada', 'Toronto', '789 Mobile Rd', 'M5H 2N2', 'active', 1, NOW(), NOW(), '2023-02-15 10:00:00'),
-(7, 'user5', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'freelancer', 'David', 'Kumar', 'david.kumar@email.com', '+1234567896', 'freelancer5.jpg', 'Professional video editor and motion graphics designer. Adobe Premiere & After Effects expert.', 'India', 'Mumbai', '321 Video Street', '400001', 'active', 1, NOW(), NOW(), '2023-02-20 10:00:00'),
-(8, 'user6', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'freelancer', 'Sophie', 'Martin', 'sophie.martin@email.com', '+1234567897', 'freelancer6.jpg', 'Digital marketing strategist specializing in Facebook Ads, Google Ads, and social media marketing.', 'France', 'Paris', '654 Marketing Blvd', '75001', 'active', 1, NOW(), NOW(), '2023-03-01 10:00:00'),
-(9, 'user7', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'freelancer', 'Michael', 'Brown', 'michael.brown@email.com', '+1234567898', 'freelancer7.jpg', 'WordPress expert with 7+ years experience. Custom themes, plugins, and WooCommerce specialist.', 'Australia', 'Sydney', '987 WordPress Way', '2000', 'active', 1, NOW(), NOW(), '2023-03-05 10:00:00'),
-(10, 'user8', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'freelancer', 'Anna', 'Kowalski', 'anna.kowalski@email.com', '+1234567899', 'freelancer8.jpg', '3D modeling and animation artist. Blender and Maya expert for games and product visualization.', 'Poland', 'Warsaw', '147 3D Avenue', '00-001', 'active', 1, NOW(), NOW(), '2023-03-10 10:00:00'),
-(11, 'user9', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'freelancer', 'Carlos', 'Rodriguez', 'carlos.rodriguez@email.com', '+1234567800', 'freelancer9.jpg', 'Data scientist and machine learning engineer. Python, TensorFlow, and big data specialist.', 'Mexico', 'Mexico City', '258 Data Drive', '01000', 'active', 1, NOW(), NOW(), '2023-03-15 10:00:00'),
-(12, 'user10', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'freelancer', 'Lisa', 'Anderson', 'lisa.anderson@email.com', '+1234567801', 'freelancer10.jpg', 'Professional translator and copywriter. English, Spanish, French, and German fluent.', 'Germany', 'Berlin', '369 Language St', '10115', 'active', 1, NOW(), NOW(), '2023-03-20 10:00:00'),
+(3, 'user1', '$2y$10$TllQCRSeSJ2vZghTIg/OOeKUzqiCHL5ZgFdet8gs6BdV05/8yqJOG', 'freelancer', 'Alex', 'Johnson', 'alex.johnson@email.com', '+1234567892', 'freelancer1.jpg', 'Full-stack web developer with 5+ years of experience in React, Node.js, and cloud technologies.', 'USA', 'San Francisco', '789 Tech Street', '94102', 'active', 1, NOW(), NOW(), '2023-02-01 10:00:00'),
+(4, 'user2', '$2y$10$TllQCRSeSJ2vZghTIg/OOeKUzqiCHL5ZgFdet8gs6BdV05/8yqJOG', 'freelancer', 'Maria', 'Garcia', 'maria.garcia@email.com', '+1234567893', 'freelancer2.jpg', 'Creative graphic designer specializing in branding, logos, and UI/UX design.', 'Spain', 'Barcelona', '123 Design Plaza', '08001', 'active', 1, NOW(), NOW(), '2023-02-05 10:00:00'),
+(5, 'user3', '$2y$10$TllQCRSeSJ2vZghTIg/OOeKUzqiCHL5ZgFdet8gs6BdV05/8yqJOG', 'freelancer', 'James', 'Smith', 'james.smith@email.com', '+1234567894', 'freelancer3.jpg', 'SEO expert and content writer with proven track record of ranking websites on Google first page.', 'UK', 'London', '456 SEO Lane', 'SW1A 1AA', 'active', 1, NOW(), NOW(), '2023-02-10 10:00:00'),
+(6, 'user4', '$2y$10$TllQCRSeSJ2vZghTIg/OOeKUzqiCHL5ZgFdet8gs6BdV05/8yqJOG', 'freelancer', 'Emily', 'Chen', 'emily.chen@email.com', '+1234567895', 'freelancer4.jpg', 'Mobile app developer specializing in iOS and Android native development.', 'Canada', 'Toronto', '789 Mobile Rd', 'M5H 2N2', 'active', 1, NOW(), NOW(), '2023-02-15 10:00:00'),
+(7, 'user5', '$2y$10$TllQCRSeSJ2vZghTIg/OOeKUzqiCHL5ZgFdet8gs6BdV05/8yqJOG', 'freelancer', 'David', 'Kumar', 'david.kumar@email.com', '+1234567896', 'freelancer5.jpg', 'Professional video editor and motion graphics designer. Adobe Premiere & After Effects expert.', 'India', 'Mumbai', '321 Video Street', '400001', 'active', 1, NOW(), NOW(), '2023-02-20 10:00:00'),
+(8, 'user6', '$2y$10$TllQCRSeSJ2vZghTIg/OOeKUzqiCHL5ZgFdet8gs6BdV05/8yqJOG', 'freelancer', 'Sophie', 'Martin', 'sophie.martin@email.com', '+1234567897', 'freelancer6.jpg', 'Digital marketing strategist specializing in Facebook Ads, Google Ads, and social media marketing.', 'France', 'Paris', '654 Marketing Blvd', '75001', 'active', 1, NOW(), NOW(), '2023-03-01 10:00:00'),
+(9, 'user7', '$2y$10$TllQCRSeSJ2vZghTIg/OOeKUzqiCHL5ZgFdet8gs6BdV05/8yqJOG', 'freelancer', 'Michael', 'Brown', 'michael.brown@email.com', '+1234567898', 'freelancer7.jpg', 'WordPress expert with 7+ years experience. Custom themes, plugins, and WooCommerce specialist.', 'Australia', 'Sydney', '987 WordPress Way', '2000', 'active', 1, NOW(), NOW(), '2023-03-05 10:00:00'),
+(10, 'user8', '$2y$10$TllQCRSeSJ2vZghTIg/OOeKUzqiCHL5ZgFdet8gs6BdV05/8yqJOG', 'freelancer', 'Anna', 'Kowalski', 'anna.kowalski@email.com', '+1234567899', 'freelancer8.jpg', '3D modeling and animation artist. Blender and Maya expert for games and product visualization.', 'Poland', 'Warsaw', '147 3D Avenue', '00-001', 'active', 1, NOW(), NOW(), '2023-03-10 10:00:00'),
+(11, 'user9', '$2y$10$TllQCRSeSJ2vZghTIg/OOeKUzqiCHL5ZgFdet8gs6BdV05/8yqJOG', 'freelancer', 'Carlos', 'Rodriguez', 'carlos.rodriguez@email.com', '+1234567800', 'freelancer9.jpg', 'Data scientist and machine learning engineer. Python, TensorFlow, and big data specialist.', 'Mexico', 'Mexico City', '258 Data Drive', '01000', 'active', 1, NOW(), NOW(), '2023-03-15 10:00:00'),
+(12, 'user10', '$2y$10$TllQCRSeSJ2vZghTIg/OOeKUzqiCHL5ZgFdet8gs6BdV05/8yqJOG', 'freelancer', 'Lisa', 'Anderson', 'lisa.anderson@email.com', '+1234567801', 'freelancer10.jpg', 'Professional translator and copywriter. English, Spanish, French, and German fluent.', 'Germany', 'Berlin', '369 Language St', '10115', 'active', 1, NOW(), NOW(), '2023-03-20 10:00:00'),
 
 -- Clients (IDs 13-22)
-(13, 'client1', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'client', 'Robert', 'Wilson', 'robert.wilson@company.com', '+1234567802', 'client1.jpg', 'Tech startup founder looking for talented developers', 'USA', 'Austin', '111 Startup Ave', '73301', 'active', 1, NOW(), NOW(), '2023-04-01 10:00:00'),
-(14, 'client2', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'client', 'Jennifer', 'Lee', 'jennifer.lee@business.com', '+1234567803', 'client2.jpg', 'Marketing director at e-commerce company', 'USA', 'Seattle', '222 Business Park', '98101', 'active', 1, NOW(), NOW(), '2023-04-05 10:00:00'),
-(15, 'client3', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'client', 'Thomas', 'Davis', 'thomas.davis@firm.com', '+1234567804', 'client3.jpg', 'Small business owner', 'UK', 'Manchester', '333 Commerce St', 'M1 1AA', 'active', 1, NOW(), NOW(), '2023-04-10 10:00:00'),
-(16, 'client4', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'client', 'Patricia', 'Martinez', 'patricia.martinez@corp.com', '+1234567805', 'client4.jpg', 'HR Manager at tech company', 'Spain', 'Madrid', '444 Corporate Blvd', '28001', 'active', 1, NOW(), NOW(), '2023-04-15 10:00:00'),
-(17, 'client5', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'client', 'Daniel', 'Taylor', 'daniel.taylor@agency.com', '+1234567806', 'client5.jpg', 'Creative director at advertising agency', 'Canada', 'Vancouver', '555 Agency Road', 'V6B 1A1', 'active', 1, NOW(), NOW(), '2023-04-20 10:00:00'),
-(18, 'client6', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'client', 'Jessica', 'White', 'jessica.white@enterprise.com', '+1234567807', 'client6.jpg', 'Project manager', 'Australia', 'Melbourne', '666 Project Lane', '3000', 'active', 1, NOW(), NOW(), '2023-04-25 10:00:00'),
-(19, 'client7', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'client', 'Andrew', 'Thompson', 'andrew.thompson@shop.com', '+1234567808', 'client7.jpg', 'E-commerce store owner', 'USA', 'Miami', '777 Shop Street', '33101', 'active', 1, NOW(), NOW(), '2023-05-01 10:00:00'),
-(20, 'client8', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'client', 'Michelle', 'Harris', 'michelle.harris@brand.com', '+1234567809', 'client8.jpg', 'Brand manager', 'France', 'Lyon', '888 Brand Ave', '69001', 'active', 1, NOW(), NOW(), '2023-05-05 10:00:00'),
-(21, 'client9', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'client', 'Christopher', 'Clark', 'christopher.clark@startup.com', '+1234567810', 'client9.jpg', 'Startup CEO', 'Germany', 'Munich', '999 Innovation St', '80331', 'active', 1, NOW(), NOW(), '2023-05-10 10:00:00'),
-(22, 'client10', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'client', 'Amanda', 'Lopez', 'amanda.lopez@company.com', '+1234567811', 'client10.jpg', 'Product owner', 'Italy', 'Rome', '101 Product Road', '00100', 'active', 1, NOW(), NOW(), '2023-05-15 10:00:00');
+(13, 'client1', '$2y$10$TllQCRSeSJ2vZghTIg/OOeKUzqiCHL5ZgFdet8gs6BdV05/8yqJOG', 'client', 'Robert', 'Wilson', 'robert.wilson@company.com', '+1234567802', 'client1.jpg', 'Tech startup founder looking for talented developers', 'USA', 'Austin', '111 Startup Ave', '73301', 'active', 1, NOW(), NOW(), '2023-04-01 10:00:00'),
+(14, 'client2', '$2y$10$TllQCRSeSJ2vZghTIg/OOeKUzqiCHL5ZgFdet8gs6BdV05/8yqJOG', 'client', 'Jennifer', 'Lee', 'jennifer.lee@business.com', '+1234567803', 'client2.jpg', 'Marketing director at e-commerce company', 'USA', 'Seattle', '222 Business Park', '98101', 'active', 1, NOW(), NOW(), '2023-04-05 10:00:00'),
+(15, 'client3', '$2y$10$TllQCRSeSJ2vZghTIg/OOeKUzqiCHL5ZgFdet8gs6BdV05/8yqJOG', 'client', 'Thomas', 'Davis', 'thomas.davis@firm.com', '+1234567804', 'client3.jpg', 'Small business owner', 'UK', 'Manchester', '333 Commerce St', 'M1 1AA', 'active', 1, NOW(), NOW(), '2023-04-10 10:00:00'),
+(16, 'client4', '$2y$10$TllQCRSeSJ2vZghTIg/OOeKUzqiCHL5ZgFdet8gs6BdV05/8yqJOG', 'client', 'Patricia', 'Martinez', 'patricia.martinez@corp.com', '+1234567805', 'client4.jpg', 'HR Manager at tech company', 'Spain', 'Madrid', '444 Corporate Blvd', '28001', 'active', 1, NOW(), NOW(), '2023-04-15 10:00:00'),
+(17, 'client5', '$2y$10$TllQCRSeSJ2vZghTIg/OOeKUzqiCHL5ZgFdet8gs6BdV05/8yqJOG', 'client', 'Daniel', 'Taylor', 'daniel.taylor@agency.com', '+1234567806', 'client5.jpg', 'Creative director at advertising agency', 'Canada', 'Vancouver', '555 Agency Road', 'V6B 1A1', 'active', 1, NOW(), NOW(), '2023-04-20 10:00:00'),
+(18, 'client6', '$2y$10$TllQCRSeSJ2vZghTIg/OOeKUzqiCHL5ZgFdet8gs6BdV05/8yqJOG', 'client', 'Jessica', 'White', 'jessica.white@enterprise.com', '+1234567807', 'client6.jpg', 'Project manager', 'Australia', 'Melbourne', '666 Project Lane', '3000', 'active', 1, NOW(), NOW(), '2023-04-25 10:00:00'),
+(19, 'client7', '$2y$10$TllQCRSeSJ2vZghTIg/OOeKUzqiCHL5ZgFdet8gs6BdV05/8yqJOG', 'client', 'Andrew', 'Thompson', 'andrew.thompson@shop.com', '+1234567808', 'client7.jpg', 'E-commerce store owner', 'USA', 'Miami', '777 Shop Street', '33101', 'active', 1, NOW(), NOW(), '2023-05-01 10:00:00'),
+(20, 'client8', '$2y$10$TllQCRSeSJ2vZghTIg/OOeKUzqiCHL5ZgFdet8gs6BdV05/8yqJOG', 'client', 'Michelle', 'Harris', 'michelle.harris@brand.com', '+1234567809', 'client8.jpg', 'Brand manager', 'France', 'Lyon', '888 Brand Ave', '69001', 'active', 1, NOW(), NOW(), '2023-05-05 10:00:00'),
+(21, 'client9', '$2y$10$TllQCRSeSJ2vZghTIg/OOeKUzqiCHL5ZgFdet8gs6BdV05/8yqJOG', 'client', 'Christopher', 'Clark', 'christopher.clark@startup.com', '+1234567810', 'client9.jpg', 'Startup CEO', 'Germany', 'Munich', '999 Innovation St', '80331', 'active', 1, NOW(), NOW(), '2023-05-10 10:00:00'),
+(22, 'client10', '$2y$10$TllQCRSeSJ2vZghTIg/OOeKUzqiCHL5ZgFdet8gs6BdV05/8yqJOG', 'client', 'Amanda', 'Lopez', 'amanda.lopez@company.com', '+1234567811', 'client10.jpg', 'Product owner', 'Italy', 'Rome', '101 Product Road', '00100', 'active', 1, NOW(), NOW(), '2023-05-15 10:00:00');
 
 -- ============================================================
 -- 2. INSERT FREELANCER PROFILES
@@ -75,6 +142,22 @@ INSERT INTO client_profiles (user_id, company_name, company_website, company_siz
 (22, 'ProductFlow', 'https://productflow.it', '11-50', 'Software', 9300.00, 11, 10, 1, '2023-05-15 10:00:00');
 
 -- ============================================================
+-- ============================================================
+-- 3B. INSERT FREELANCERS (Compatibility Table)
+-- ============================================================
+
+INSERT INTO freelancers (id, user_id, username, profile_picture, skills, hourly_rate, location, rating, bio, created_at) VALUES
+(1, 3, 'user1', 'freelancer1.jpg', 'React, Node.js, Cloud, Full-Stack', 75.00, 'San Francisco, USA', 4.95, 'Full-stack web developer with 5+ years of experience in React, Node.js, and cloud technologies.', '2023-02-01 10:00:00'),
+(2, 4, 'user2', 'freelancer2.jpg', 'Branding, Logos, UI/UX, Figma', 60.00, 'Barcelona, Spain', 4.98, 'Creative graphic designer specializing in branding, logos, and UI/UX design.', '2023-02-05 10:00:00'),
+(3, 5, 'user3', 'freelancer3.jpg', 'SEO, Content Writing, Google Ads', 55.00, 'London, UK', 4.85, 'SEO expert and content writer with proven track record of ranking websites on Google first page.', '2023-02-10 10:00:00'),
+(4, 6, 'user4', 'freelancer4.jpg', 'iOS, Android, Swift, Kotlin, Flutter', 80.00, 'Toronto, Canada', 4.92, 'Mobile app developer specializing in iOS and Android native development.', '2023-02-15 10:00:00'),
+(5, 7, 'user5', 'freelancer5.jpg', 'Video Editing, After Effects, Premiere', 50.00, 'Mumbai, India', 4.78, 'Professional video editor and motion graphics designer. Adobe Premiere & After Effects expert.', '2023-02-20 10:00:00'),
+(6, 8, 'user6', 'freelancer6.jpg', 'Facebook Ads, Google Ads, SMM', 65.00, 'Paris, France', 4.90, 'Digital marketing strategist specializing in Facebook Ads, Google Ads, and social media marketing.', '2023-03-01 10:00:00'),
+(7, 9, 'user7', 'freelancer7.jpg', 'WordPress, WooCommerce, PHP, Elementor', 45.00, 'Sydney, Australia', 4.88, 'WordPress expert with 7+ years experience. Custom themes, plugins, and WooCommerce specialist.', '2023-03-05 10:00:00'),
+(8, 10, 'user8', 'freelancer8.jpg', 'Blender, Maya, 3D Modeling, Animation', 70.00, 'Warsaw, Poland', 4.75, '3D modeling and animation artist. Blender and Maya expert for games and product visualization.', '2023-03-10 10:00:00'),
+(9, 11, 'user9', 'freelancer9.jpg', 'Python, Machine Learning, TensorFlow, AI', 90.00, 'Mexico City, Mexico', 4.94, 'Data scientist and machine learning engineer. Python, TensorFlow, and big data specialist.', '2023-03-15 10:00:00'),
+(10, 12, 'user10', 'freelancer10.jpg', 'Translation, Copywriting, English, German', 40.00, 'Berlin, Germany', 4.91, 'Professional translator and copywriter. English, Spanish, French, and German fluent.', '2023-03-20 10:00:00');
+
 -- 4. INSERT CATEGORIES
 -- ============================================================
 
@@ -407,6 +490,44 @@ INSERT INTO orders (id, order_number, client_id, freelancer_id, gig_id, package_
 (20, 'ORD-2024-000020', 14, 3, 1, 'standard', 'completed', 2500.00, 375.00, 2875.00, 21, 'CRM system for sales team.', '2024-03-15 10:00:00', '2024-04-04 16:00:00', '2024-04-07 10:00:00', '2024-03-15 09:00:00');
 
 -- ============================================================
+-- ============================================================
+-- 12B. INSERT JOB REQUESTS (Client & Freelancer Dashboards)
+-- ============================================================
+
+INSERT INTO job_requests (id, client_id, freelancer_id, gig_id, status, request_date, completion_date, created_at) VALUES
+(1, 13, 3, 1, 'completed', '2024-01-05 09:00:00', '2024-01-20 10:00:00', '2024-01-05 09:00:00'),
+(2, 14, 4, 3, 'completed', '2024-01-10 10:00:00', '2024-01-18 09:00:00', '2024-01-10 10:00:00'),
+(3, 15, 5, 5, 'completed', '2024-01-12 13:00:00', '2024-01-23 10:00:00', '2024-01-12 13:00:00'),
+(4, 16, 6, 7, 'completed', '2024-01-15 08:00:00', '2024-02-07 10:00:00', '2024-01-15 08:00:00'),
+(5, 13, 3, 2, 'accepted', '2024-05-20 09:00:00', NULL, '2024-05-20 09:00:00'),
+(6, 14, 4, 4, 'accepted', '2024-05-22 10:00:00', NULL, '2024-05-22 10:00:00'),
+(7, 15, 5, 6, 'accepted', '2024-05-18 09:00:00', NULL, '2024-05-18 09:00:00'),
+(8, 18, 9, 14, 'pending', '2024-05-25 10:00:00', NULL, '2024-05-25 10:00:00'),
+(9, 19, 10, 15, 'pending', '2024-05-25 14:00:00', NULL, '2024-05-25 14:00:00');
+
+-- ============================================================
+-- 12C. INSERT PROJECTS (Direct Custom Project Hiring)
+-- ============================================================
+
+INSERT INTO projects (id, client_id, freelancer_id, title, description, budget, deadline, status, created_at) VALUES
+(1, 13, 3, 'Enterprise Analytics Dashboard Integration', 'Custom dashboard connecting existing REST APIs with interactive visualization charts.', 2200.00, '2024-06-30', 'in_progress', '2024-05-10 10:00:00'),
+(2, 14, 4, 'Complete Brand Identity Redesign', 'Logo, typography guidelines, stationery package, and digital brand style guide.', 1200.00, '2024-04-15', 'completed', '2024-03-01 11:00:00'),
+(3, 16, 6, 'Health & Fitness Cross-Platform App', 'Flutter iOS and Android application with Bluetooth heart rate monitor integration.', 3500.00, '2024-07-15', 'pending', '2024-05-22 09:00:00');
+
+-- ============================================================
+-- 12D. INSERT ORDER DELIVERABLES & STATUS HISTORY
+-- ============================================================
+
+INSERT INTO order_deliverables (order_id, file_path, file_name, file_size, file_type, mime_type, description, uploaded_by, is_final_delivery, download_count, created_at) VALUES
+(1, 'uploads/deliverables/order_1_fullstack_app_v1.zip', 'order_1_fullstack_app_v1.zip', 15482300, 'zip', 'application/zip', 'Complete source code and setup instructions', 'freelancer', 1, 3, '2024-01-18 15:30:00'),
+(2, 'uploads/deliverables/order_2_logo_assets.zip', 'order_2_logo_assets.zip', 8421000, 'zip', 'application/zip', 'Vector AI, SVG, and high-res PNG logo files', 'freelancer', 1, 2, '2024-01-16 14:00:00'),
+(3, 'uploads/deliverables/order_3_seo_report.pdf', 'order_3_seo_report.pdf', 3200100, 'pdf', 'application/pdf', 'Full SEO audit and keyword ranking strategy', 'freelancer', 1, 1, '2024-01-21 16:00:00');
+
+INSERT INTO order_status_history (order_id, from_status, to_status, changed_by, reason, created_at) VALUES
+(1, 'pending', 'in_progress', 3, 'Freelancer started working on order', '2024-01-05 10:00:00'),
+(1, 'in_progress', 'delivered', 3, 'Completed full-stack build and uploaded source archive', '2024-01-18 15:30:00'),
+(1, 'delivered', 'completed', 13, 'Client approved deliverable and finalized order', '2024-01-20 10:00:00');
+
 -- 13. INSERT TRANSACTIONS
 -- ============================================================
 
@@ -431,6 +552,15 @@ INSERT INTO transactions (transaction_id, order_id, user_id, transaction_type, a
 ('TXN-2024-000013', NULL, 5, 'withdrawal', 2500.00, 'USD', 'completed', 'bank_transfer', 'Withdrawal to bank account', '2024-03-01 10:00:00', '2024-03-01 09:00:00');
 
 -- ============================================================
+-- ============================================================
+-- 13B. INSERT WITHDRAWAL REQUESTS
+-- ============================================================
+
+INSERT INTO withdrawal_requests (id, user_id, amount, withdrawal_method, account_details, status, transaction_id, processed_by, processed_at, created_at) VALUES
+(1, 3, 5000.00, 'bank_transfer', 'Bank of America - Account ending in 4821', 'completed', 11, 1, '2024-02-01 10:00:00', '2024-02-01 09:00:00'),
+(2, 4, 3000.00, 'paypal', 'maria.garcia@email.com', 'completed', 12, 1, '2024-02-15 10:00:00', '2024-02-15 09:00:00'),
+(3, 5, 2500.00, 'bank_transfer', 'Barclays UK - Account ending in 9102', 'completed', 13, 2, '2024-03-01 10:00:00', '2024-03-01 09:00:00');
+
 -- 14. INSERT REVIEWS
 -- ============================================================
 
@@ -582,6 +712,17 @@ INSERT INTO activity_log (user_id, activity_type, entity_type, entity_id, descri
 (4, 'gig_updated', 'gig', 3, 'Updated gig pricing', '192.168.1.103', '2024-03-15 14:00:00');
 
 -- ============================================================
+-- 22. INSERT ADMIN LOGS (Audit Trail)
+-- ============================================================
+
+INSERT INTO admin_logs (admin_id, action, entity_type, entity_id, old_values, new_values, details, ip_address, created_at) VALUES
+(1, 'login', 'admin', 1, NULL, NULL, 'Admin logged in successfully', '192.168.1.1', '2024-05-25 08:30:00'),
+(1, 'approve_gig', 'gig', 1, '{"status": "pending_approval"}', '{"status": "active"}', 'Approved gig: Full-stack web application', '192.168.1.1', '2024-05-25 08:45:00'),
+(1, 'approve_gig', 'gig', 3, '{"status": "pending_approval"}', '{"status": "active"}', 'Approved gig: Brand identity and logo design', '192.168.1.1', '2024-05-25 08:46:00'),
+(2, 'login', 'admin', 2, NULL, NULL, 'Admin logged in successfully', '192.168.1.2', '2024-05-25 09:15:00'),
+(2, 'verify_user', 'user', 13, '{"email_verified": 0}', '{"email_verified": 1}', 'Verified client account: TechVenture Inc', '192.168.1.2', '2024-05-25 09:30:00'),
+(1, 'update_category', 'category', 1, '{"display_order": 2}', '{"display_order": 1}', 'Updated category display order', '192.168.1.1', '2024-05-25 10:00:00');
+-- ============================================================
 -- COMMIT AND RE-ENABLE FOREIGN KEY CHECKS
 -- ============================================================
 
@@ -590,28 +731,28 @@ SET FOREIGN_KEY_CHECKS = 1;
 SET AUTOCOMMIT = 1;
 
 -- ============================================================
--- UPDATE STATISTICS
+-- UPDATE STATISTICS (Pure Standard SQL - No Stored Procedures)
 -- ============================================================
 
 -- Update gig statistics
-CALL sp_update_gig_stats(1);
-CALL sp_update_gig_stats(2);
-CALL sp_update_gig_stats(3);
-CALL sp_update_gig_stats(4);
-CALL sp_update_gig_stats(5);
-CALL sp_update_gig_stats(6);
-CALL sp_update_gig_stats(7);
-CALL sp_update_gig_stats(8);
-CALL sp_update_gig_stats(9);
-CALL sp_update_gig_stats(10);
-CALL sp_update_gig_stats(11);
-CALL sp_update_gig_stats(12);
-CALL sp_update_gig_stats(13);
-CALL sp_update_gig_stats(14);
-CALL sp_update_gig_stats(15);
-CALL sp_update_gig_stats(16);
-CALL sp_update_gig_stats(17);
-CALL sp_update_gig_stats(18);
+UPDATE gigs g
+SET 
+    avg_rating = COALESCE((SELECT AVG(rating) FROM reviews WHERE gig_id = g.id AND status = 'active'), 0),
+    reviews_count = COALESCE((SELECT COUNT(*) FROM reviews WHERE gig_id = g.id AND status = 'active'), 0);
+
+-- Update freelancer profile statistics
+UPDATE freelancer_profiles fp
+SET 
+    completed_jobs = (SELECT COUNT(*) FROM orders WHERE freelancer_id = fp.user_id AND status = 'completed'),
+    cancelled_jobs = (SELECT COUNT(*) FROM orders WHERE freelancer_id = fp.user_id AND status = 'cancelled'),
+    total_earnings = COALESCE((SELECT SUM(amount) FROM orders WHERE freelancer_id = fp.user_id AND status = 'completed'), 0.00);
+
+-- Update client profile statistics
+UPDATE client_profiles cp
+SET 
+    jobs_posted = (SELECT COUNT(*) FROM orders WHERE client_id = cp.user_id),
+    jobs_completed = (SELECT COUNT(*) FROM orders WHERE client_id = cp.user_id AND status = 'completed'),
+    total_spent = COALESCE((SELECT SUM(total_amount) FROM orders WHERE client_id = cp.user_id AND status = 'completed'), 0.00);
 
 -- Update category counts
 UPDATE categories SET gigs_count = (SELECT COUNT(*) FROM gigs WHERE category_id = categories.id AND status = 'active');
@@ -627,6 +768,7 @@ SELECT 'Sample data insertion complete!' AS Status,
        (SELECT COUNT(*) FROM users) AS Total_Users,
        (SELECT COUNT(*) FROM gigs WHERE status = 'active') AS Active_Gigs,
        (SELECT COUNT(*) FROM orders) AS Total_Orders,
+       (SELECT COUNT(*) FROM job_requests) AS Total_Job_Requests,
        (SELECT COUNT(*) FROM reviews) AS Total_Reviews,
        (SELECT COUNT(*) FROM messages) AS Total_Messages,
        (SELECT COUNT(*) FROM transactions) AS Total_Transactions;
@@ -635,11 +777,11 @@ SELECT 'Sample data insertion complete!' AS Status,
 -- VERIFICATION QUERIES (Optional - for testing)
 -- ============================================================
 
--- Check freelancer dashboard
--- SELECT * FROM v_freelancer_dashboard WHERE freelancer_id = 3;
+-- Check freelancer profile & metrics
+-- SELECT u.username, fp.title, fp.hourly_rate, fp.completed_jobs, fp.total_earnings FROM users u JOIN freelancer_profiles fp ON u.id = fp.user_id WHERE u.id = 3;
 
 -- Check popular gigs
--- SELECT * FROM v_popular_gigs LIMIT 5;
+-- SELECT g.id, g.title, g.price, g.avg_rating, g.reviews_count FROM gigs g WHERE g.status = 'active' ORDER BY g.reviews_count DESC LIMIT 5;
 
 -- Check active orders
 -- SELECT order_number, client_id, freelancer_id, status, total_amount FROM orders WHERE status IN ('pending', 'in_progress', 'delivered');

@@ -19,12 +19,28 @@ if (!isset($_SESSION['user_id']) || !isset($_SESSION['role']) || $_SESSION['role
     <meta name="theme-color" content="#667eea">
     <title><?php echo isset($page_title) ? htmlspecialchars($page_title) . ' - FreelanceHub Admin' : 'FreelanceHub Admin'; ?></title>
     
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="../assets/img/favicon.ico" type="image/x-icon">
+    <link rel="icon" type="image/svg+xml" href="../assets/img/favicon.svg">
+
+    <!-- Suppress Tailwind Play CDN notice -->
+    <script>
+        (function() {
+            var origWarn = console.warn;
+            console.warn = function() {
+                if (arguments[0] && typeof arguments[0] === 'string' && arguments[0].indexOf('cdn.tailwindcss.com') !== -1) return;
+                origWarn.apply(console, arguments);
+            };
+        })();
+    </script>
+
     <!-- Preconnect for performance -->
     <link rel="preconnect" href="https://cdn.tailwindcss.com">
     <link rel="preconnect" href="https://cdn.jsdelivr.net">
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+
     
     <!-- Remix Icon -->
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">

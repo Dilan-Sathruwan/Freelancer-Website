@@ -306,3 +306,6 @@ function rateLimit($identifier, $limit = 10, $window = 60) {
     
     return true;
 }
+
+// Automatically include universal image and asset resolver
+include_once dirname(__DIR__) . '/includes/image_helper.php';
