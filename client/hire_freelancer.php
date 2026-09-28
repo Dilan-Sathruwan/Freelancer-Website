@@ -51,6 +51,7 @@ if (!$freelancer) {
 $displayName = trim(($freelancer['first_name'] ?? '') . ' ' . ($freelancer['last_name'] ?? '')) ?: ($freelancer['username'] ?? 'Freelancer');
 $profilePic = resolveAvatarUrl($freelancer['profile_picture'] ?? null, '../', $displayName);
 $rating = (float)($freelancer['rating'] ?? 5.0);
+$csrfToken = generateCSRFToken();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -203,6 +204,7 @@ $rating = (float)($freelancer['rating'] ?? 5.0);
                     </h3>
 
                     <form action="hire_freelancer_action.php" method="POST" class="space-y-6">
+                        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken); ?>">
                         <!-- Project Title -->
                         <div>
                             <label for="projectTitle" class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">

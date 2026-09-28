@@ -44,6 +44,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 if ($user['status'] !== 'active') {
                     $error = "This account is currently deactivated or suspended. Please contact platform support.";
                 } else {
+                    session_regenerate_id(true);
+
                     // Set session variables
                     $_SESSION['user_id'] = $user['id'];
                     $_SESSION['username'] = $user['username'];

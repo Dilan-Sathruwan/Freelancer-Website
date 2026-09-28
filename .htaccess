@@ -5,6 +5,13 @@
 # 1. Prevent Directory Browsing
 Options -Indexes
 
+# Block direct access to SQL/setup artifacts
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^(?:sql|setup)/.*\.(?:sql|txt)$ - [F,L,NC]
+    RewriteRule ^Dummy_Data\.txt$ - [F,L,NC]
+</IfModule>
+
 # 2. Character Encoding
 AddDefaultCharset UTF-8
 

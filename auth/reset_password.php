@@ -4,42 +4,85 @@ include_once dirname(__DIR__) . "/config/db.con.php";
 
 $message = '';
 $error = '';
+$resetMode = isset($_GET['token'], $_GET['uid']) || (($_POST['action'] ?? '') === 'reset_password');
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $username = sanitizeInput($_POST['username'] ?? '');
-    $newPassword = $_POST['new_password'] ?? '';
-    $confirmPassword = $_POST['confirm_password'] ?? '';
+    $action = $_POST['action'] ?? 'request_reset';
 
-    if (empty($username) || empty($newPassword) || empty($confirmPassword)) {
-        $error = "Please fill in all required fields.";
-    } elseif ($newPassword !== $confirmPassword) {
-        $error = "Passwords do not match. Please re-enter both fields.";
-    } elseif (strlen($newPassword) < 6) {
-        $error = "New password must be at least 6 characters in length.";
-    } else {
-        try {
-            // Check if user exists
-            $stmt = $conn->prepare("SELECT id FROM users WHERE username = ? OR email = ?");
-            $stmt->execute([$username, $username]);
-            $user = $stmt->fetch();
-            $stmt->closeCursor();
+    if ($action === 'request_reset') {
+        $username = sanitizeInput($_POST['username'] ?? '');
 
-            if ($user) {
-                // Hash the new password
-                $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);
+        if (empty($username)) {
+            $error = "Please enter your username or registered email.";
+        } else {
+            try {
+                $stmt = $conn->prepare("SELECT id, email, username FROM users WHERE username = ? OR email = ? LIMIT 1");
+                $stmt->execute([$username, $username]);
+                $user = $stmt->fetch();
+                $stmt->closeCursor();
 
-                // Update the password
-                $updateStmt = $conn->prepare("UPDATE users SET password = ? WHERE id = ?");
-                $updateStmt->execute([$hashedPassword, $user['id']]);
-                $updateStmt->closeCursor();
+                if ($user) {
+                    $resetToken = bin2hex(random_bytes(32));
+                    $resetTokenHash = hash('sha256', $resetToken);
+                    $expiresAt = date('Y-m-d H:i:s', time() + 3600);
 
-                $message = "Your password has been successfully updated! You can now sign in with your new credentials.";
-            } else {
-                $error = "No user account was found matching that username or email address.";
+                    $saveStmt = $conn->prepare("UPDATE users SET reset_token = ?, reset_token_expires = ? WHERE id = ?");
+                    $saveStmt->execute([$resetTokenHash, $expiresAt, $user['id']]);
+
+                    $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+                    $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+                    $resetLink = "{$scheme}://{$host}/auth/reset_password.php?uid={$user['id']}&token={$resetToken}";
+                    $mailBody = "Hi {$user['username']},\n\nUse this secure link to reset your password (valid for 1 hour):\n{$resetLink}\n\nIf you did not request this, ignore this email.";
+                    @mail($user['email'], 'FreelanceHub Password Reset', $mailBody, "From: no-reply@{$host}");
+                }
+
+                $message = "If the account exists, a one-time password reset link has been sent to its registered email address.";
+            } catch (PDOException $e) {
+                error_log("Password reset request error: " . $e->getMessage());
+                $error = "An error occurred while preparing your password reset request. Please try again.";
             }
-        } catch (PDOException $e) {
-            error_log("Password reset error: " . $e->getMessage());
-            $error = "An error occurred while resetting your password. Please try again.";
+        }
+    } elseif ($action === 'reset_password') {
+        $resetMode = true;
+        $userId = isset($_POST['uid']) ? (int)$_POST['uid'] : 0;
+        $token = trim($_POST['token'] ?? '');
+        $newPassword = $_POST['new_password'] ?? '';
+        $confirmPassword = $_POST['confirm_password'] ?? '';
+
+        if ($userId <= 0 || $token === '' || empty($newPassword) || empty($confirmPassword)) {
+            $error = "Invalid or incomplete password reset request.";
+        } elseif ($newPassword !== $confirmPassword) {
+            $error = "Passwords do not match. Please re-enter both fields.";
+        } elseif (strlen($newPassword) < 6) {
+            $error = "New password must be at least 6 characters in length.";
+        } else {
+            try {
+                $stmt = $conn->prepare("SELECT id, reset_token, reset_token_expires FROM users WHERE id = ? LIMIT 1");
+                $stmt->execute([$userId]);
+                $user = $stmt->fetch();
+                $stmt->closeCursor();
+
+                $isValidToken = $user
+                    && !empty($user['reset_token'])
+                    && !empty($user['reset_token_expires'])
+                    && strtotime((string)$user['reset_token_expires']) >= time()
+                    && hash_equals((string)$user['reset_token'], hash('sha256', $token));
+
+                if (!$isValidToken) {
+                    $error = "This password reset link is invalid or has expired. Please request a new one.";
+                } else {
+                    $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);
+                    $updateStmt = $conn->prepare("UPDATE users SET password = ?, reset_token = NULL, reset_token_expires = NULL WHERE id = ?");
+                    $updateStmt->execute([$hashedPassword, $user['id']]);
+                    $updateStmt->closeCursor();
+
+                    $message = "Your password has been successfully updated! You can now sign in with your new credentials.";
+                    $resetMode = false;
+                }
+            } catch (PDOException $e) {
+                error_log("Password reset completion error: " . $e->getMessage());
+                $error = "An error occurred while resetting your password. Please try again.";
+            }
         }
     }
 }
@@ -126,7 +169,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         <i class="ri-key-2-line"></i>
                     </div>
                     <h1 class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">Reset Password</h1>
-                    <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">Enter your account credentials to set a new password</p>
+                    <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
+                        <?= $resetMode ? 'Set a new password using your one-time secure reset link' : 'Request a secure reset link for your account'; ?>
+                    </p>
                 </div>
 
                 <!-- Flash Alerts -->
@@ -151,45 +196,52 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 <?php endif; ?>
 
                 <form method="POST" action="" class="space-y-5">
-                    <div>
-                        <label for="username" class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Username or Registered Email</label>
-                        <div class="relative">
-                            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
-                                <i class="ri-user-smile-line"></i>
-                            </span>
-                            <input type="text" id="username" name="username" required placeholder="Enter username or email" value="<?= htmlspecialchars($_POST['username'] ?? ''); ?>" class="w-full pl-10 pr-4 py-3 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all">
-                        </div>
-                    </div>
+                    <?php if ($resetMode): ?>
+                        <input type="hidden" name="action" value="reset_password">
+                        <input type="hidden" name="uid" value="<?= htmlspecialchars($_POST['uid'] ?? ($_GET['uid'] ?? '')); ?>">
+                        <input type="hidden" name="token" value="<?= htmlspecialchars($_POST['token'] ?? ($_GET['token'] ?? '')); ?>">
 
-                    <div>
-                        <label for="new_password" class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">New Password</label>
-                        <div class="relative">
-                            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
-                                <i class="ri-lock-2-line"></i>
-                            </span>
-                            <input type="password" id="new_password" name="new_password" required placeholder="Min. 6 characters" class="w-full pl-10 pr-10 py-3 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all">
-                            <button type="button" onclick="togglePasswordVisibility('new_password', 'eye-npwd')" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 focus:outline-none cursor-pointer">
-                                <i id="eye-npwd" class="ri-eye-line"></i>
-                            </button>
+                        <div>
+                            <label for="new_password" class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">New Password</label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
+                                    <i class="ri-lock-2-line"></i>
+                                </span>
+                                <input type="password" id="new_password" name="new_password" required placeholder="Min. 6 characters" class="w-full pl-10 pr-10 py-3 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all">
+                                <button type="button" onclick="togglePasswordVisibility('new_password', 'eye-npwd')" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 focus:outline-none cursor-pointer">
+                                    <i id="eye-npwd" class="ri-eye-line"></i>
+                                </button>
+                            </div>
                         </div>
-                    </div>
 
-                    <div>
-                        <label for="confirm_password" class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Confirm New Password</label>
-                        <div class="relative">
-                            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
-                                <i class="ri-lock-check-line"></i>
-                            </span>
-                            <input type="password" id="confirm_password" name="confirm_password" required placeholder="Re-type new password" class="w-full pl-10 pr-10 py-3 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all">
-                            <button type="button" onclick="togglePasswordVisibility('confirm_password', 'eye-cpwd')" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 focus:outline-none cursor-pointer">
-                                <i id="eye-cpwd" class="ri-eye-line"></i>
-                            </button>
+                        <div>
+                            <label for="confirm_password" class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Confirm New Password</label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
+                                    <i class="ri-lock-check-line"></i>
+                                </span>
+                                <input type="password" id="confirm_password" name="confirm_password" required placeholder="Re-type new password" class="w-full pl-10 pr-10 py-3 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all">
+                                <button type="button" onclick="togglePasswordVisibility('confirm_password', 'eye-cpwd')" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 focus:outline-none cursor-pointer">
+                                    <i id="eye-cpwd" class="ri-eye-line"></i>
+                                </button>
+                            </div>
                         </div>
-                    </div>
+                    <?php else: ?>
+                        <input type="hidden" name="action" value="request_reset">
+                        <div>
+                            <label for="username" class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Username or Registered Email</label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
+                                    <i class="ri-user-smile-line"></i>
+                                </span>
+                                <input type="text" id="username" name="username" required placeholder="Enter username or email" value="<?= htmlspecialchars($_POST['username'] ?? ''); ?>" class="w-full pl-10 pr-4 py-3 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all">
+                            </div>
+                        </div>
+                    <?php endif; ?>
 
                     <div>
                         <button type="submit" class="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-sm shadow-xl shadow-purple-500/20 hover:shadow-purple-500/30 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer">
-                            <span>Update Password</span>
+                            <span><?= $resetMode ? 'Update Password' : 'Send Reset Link'; ?></span>
                             <i class="ri-arrow-right-line"></i>
                         </button>
                     </div>
