@@ -111,7 +111,7 @@
         const statsObserver = new IntersectionObserver((entries, observer) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
-                    const numberElements = entry.target.querySelectorAll('.text-3xl');
+                    const numberElements = entry.target.querySelectorAll('[data-counter-target]');
                     numberElements.forEach(el => {
                         const raw = el.textContent;
                         const match = raw.match(/\d[\d,]*/);

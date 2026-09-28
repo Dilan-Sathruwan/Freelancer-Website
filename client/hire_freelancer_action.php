@@ -17,6 +17,14 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
+$csrfToken = $_POST['csrf_token'] ?? '';
+if (!validateCSRFToken($csrfToken)) {
+    $_SESSION['error'] = "Invalid request token. Please try again.";
+    $freelancerId = isset($_POST['freelancerId']) ? (int)$_POST['freelancerId'] : 0;
+    header("Location: hire_freelancer.php?freelancer_id=" . $freelancerId);
+    exit;
+}
+
 $clientId = (int)$_SESSION['user_id'];
 $freelancerId = isset($_POST['freelancerId']) ? (int)$_POST['freelancerId'] : 0;
 $projectTitle = trim($_POST['projectTitle'] ?? '');

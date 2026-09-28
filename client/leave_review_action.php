@@ -17,6 +17,19 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
+$csrfToken = $_POST['csrf_token'] ?? '';
+if (!validateCSRFToken($csrfToken)) {
+    $_SESSION['error'] = "Invalid request token. Please try again.";
+    $freelancerId = isset($_POST['freelancerId']) ? (int)$_POST['freelancerId'] : 0;
+    $projectId = !empty($_POST['projectId']) && is_numeric($_POST['projectId']) ? (int)$_POST['projectId'] : null;
+    $gigId = !empty($_POST['gigId']) && is_numeric($_POST['gigId']) ? (int)$_POST['gigId'] : null;
+    $redirect = "leave_review.php?freelancer_id=" . $freelancerId;
+    if ($projectId) $redirect .= "&project_id=" . $projectId;
+    if ($gigId) $redirect .= "&gig_id=" . $gigId;
+    header("Location: " . $redirect);
+    exit;
+}
+
 $clientId = (int)$_SESSION['user_id'];
 $freelancerId = isset($_POST['freelancerId']) ? (int)$_POST['freelancerId'] : 0;
 $projectId = !empty($_POST['projectId']) && is_numeric($_POST['projectId']) ? (int)$_POST['projectId'] : null;
@@ -70,10 +83,6 @@ try {
     $stmtAvg->execute([$freelancerId]);
     $avgRow = $stmtAvg->fetch(PDO::FETCH_ASSOC);
     $newAvg = $avgRow && $avgRow['avg_rating'] !== null ? round((float)$avgRow['avg_rating'], 2) : (float)$rating;
-
-    // Update freelancer_profiles
-    $stmtProfile = $conn->prepare("UPDATE freelancer_profiles SET rating = ? WHERE user_id = ?");
-    $stmtProfile->execute([$newAvg, $freelancerId]);
 
     // Update freelancers table (for backward compatibility)
     $stmtFreelancers = $conn->prepare("UPDATE freelancers SET rating = ? WHERE user_id = ? OR id = ?");

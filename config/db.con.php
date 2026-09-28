@@ -7,12 +7,26 @@
  */
 
 // Database configuration with environment-based settings
+if (!function_exists('getRequiredEnv')) {
+    function getRequiredEnv(string $key): string {
+        $value = getenv($key);
+        if ($value === false || trim($value) === '') {
+            error_log("Missing required database environment variable: {$key}");
+            http_response_code(500);
+            die("Database configuration error. Please contact support.");
+        }
+        return $value;
+    }
+}
+
 define('DB_HOST', getenv('DB_HOST') ?: 'localhost');
 define('DB_PORT', getenv('DB_PORT') ?: '3306');
-define('DB_NAME', getenv('DB_NAME') ?: 'freelancerwebsite');
-define('DB_USER', getenv('DB_USER') ?: 'root');
-define('DB_PASS', getenv('DB_PASS') ?: '');
+define('DB_NAME', getRequiredEnv('DB_NAME'));
+define('DB_USER', getRequiredEnv('DB_USER'));
+define('DB_PASS', getRequiredEnv('DB_PASS'));
 define('DB_CHARSET', 'utf8mb4');
+define('DB_BASELINE_MIGRATION', dirname(__DIR__) . '/sql/migrations/001_baseline_schema.sql');
+define('DB_SEED_MIGRATION', dirname(__DIR__) . '/sql/migrations/002_seed_dummy_data.sql');
 
 // Enhanced security options for PDO
 $options = [
@@ -36,6 +50,20 @@ try {
     
     // Test connection with a simple query
     $conn->query("SELECT 1");
+
+    // Ensure documented schema/seed migration path exists and core tables are provisioned
+    if (!file_exists(DB_BASELINE_MIGRATION) || !file_exists(DB_SEED_MIGRATION)) {
+        throw new RuntimeException('Database migration files are missing. Expected sql/migrations/001_baseline_schema.sql and 002_seed_dummy_data.sql.');
+    }
+
+    $requiredTables = ['users', 'freelancers', 'freelancer_profiles', 'projects', 'reviews', 'gigs', 'orders', 'wallets'];
+    $tableCheck = $conn->prepare("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = ? AND table_name = ?");
+    foreach ($requiredTables as $table) {
+        $tableCheck->execute([DB_NAME, $table]);
+        if ((int)$tableCheck->fetchColumn() === 0) {
+            throw new RuntimeException('Database schema is not provisioned. Run sql/migrations/001_baseline_schema.sql then sql/migrations/002_seed_dummy_data.sql.');
+        }
+    }
     
 } catch (PDOException $e) {
     // Log detailed error for administrators only
@@ -44,6 +72,10 @@ try {
     // Generic error for users
     http_response_code(500);
     die("Database connection error. Please try again later.");
+} catch (RuntimeException $e) {
+    error_log("Database Provisioning Error [DB_CON]: " . $e->getMessage());
+    http_response_code(500);
+    die("Database setup error. Please run the documented migrations.");
 }
 
 /**

@@ -29,13 +29,17 @@ $sql = "
     SELECT u.id AS user_id, u.username, u.first_name, u.last_name, u.profile_picture,
            COALESCE(f.skills, fp.title, 'Freelancer') AS skills
     FROM users u
-    LEFT JOIN freelancers f ON (f.user_id = u.id OR f.id = :freelancer_id)
+    LEFT JOIN freelancers f ON (f.user_id = u.id OR f.id = :freelancer_id_join)
     LEFT JOIN freelancer_profiles fp ON fp.user_id = u.id
-    WHERE u.id = :freelancer_id OR f.id = :freelancer_id
+    WHERE u.id = :freelancer_id_user OR f.id = :freelancer_id_match
     LIMIT 1
 ";
 $stmt = $conn->prepare($sql);
-$stmt->execute(['freelancer_id' => $freelancerId]);
+$stmt->execute([
+    'freelancer_id_join' => $freelancerId,
+    'freelancer_id_user' => $freelancerId,
+    'freelancer_id_match' => $freelancerId,
+]);
 $freelancer = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if (!$freelancer) {
@@ -46,6 +50,7 @@ if (!$freelancer) {
 
 $displayName = trim(($freelancer['first_name'] ?? '') . ' ' . ($freelancer['last_name'] ?? '')) ?: ($freelancer['username'] ?? 'Freelancer');
 $profilePic = resolveAvatarUrl($freelancer['profile_picture'] ?? null, '../', $displayName);
+$csrfToken = generateCSRFToken();
 
 // Check if review already exists
 $review = null;
@@ -191,6 +196,7 @@ if ($projectId) {
                     <?php endif; ?>
 
                     <form action="leave_review_action.php" method="POST" class="space-y-6">
+                        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken); ?>">
                         <!-- Star Rating Selector -->
                         <div>
                             <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">

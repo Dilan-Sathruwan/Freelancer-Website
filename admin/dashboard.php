@@ -7,10 +7,14 @@ include '../includes/logging_functions.php';
 $page_title = 'Admin Dashboard';
 $active_page = 'dashboard';
 
-// Log admin dashboard access
-if (isset($_SESSION['user_id'])) {
-    logAdminActivity($_SESSION['user_id'], 'dashboard_access', 'admin', $_SESSION['user_id'], null, null, 'Admin accessed dashboard');
+// Ensure only admins can access dashboard logic
+if (!isset($_SESSION['user_id']) || !isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
+    header("Location: ../auth/login.php");
+    exit;
 }
+
+// Log admin dashboard access
+logAdminActivity($_SESSION['user_id'], 'dashboard_access', 'admin', $_SESSION['user_id'], null, null, 'Admin accessed dashboard');
 
 try {
     // Get user counts
